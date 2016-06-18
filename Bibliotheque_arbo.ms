@@ -24,7 +24,13 @@ struct Element (
 	public
 		parent 			= undefined,
 		enfants 			= #(),		
+		
 	public
+		fn compteElements = (
+			i=0
+			if classof this == Element do  i+=1
+			return i
+		),
 		fn ajouterEnfant 	_enfant 	= (),
 		fn definirParent 	_parent 	= ( parent = _parent ),
 		fn retirer  			 = (
@@ -34,7 +40,8 @@ struct Element (
 				parent = undefined
 				return this
 			) else return undefined
-		)
+		),
+		fn getNbrEnfants = ( return 0)
 	
 )	-- fin Struct Element
 
@@ -57,6 +64,17 @@ struct Noeud (
 	public
 		parent  			= undefined ,
 		enfants 			= #(),
+	
+	
+	
+		fn compteElements = (
+			i=0
+			for enfant in enfants do 
+					i+=enfant.compteElements ()
+			
+			return i
+		),
+			
 	public
 		fn ajouterEnfant 		_enfant 	= (
 			append enfants 	_enfant 
@@ -71,7 +89,8 @@ struct Noeud (
 				parent = undefined
 				return this
 			) else return undefined
-		)
+		),
+		fn getNbrEnfants = ( return compteElements () )
 	
 )	-- fin Struct noeud
 
@@ -346,24 +365,24 @@ struct Arborescence (
 		
 		
 	public
-		fn chercherTags 	txt =	(
+		fn chercherTags 	txt  =	(
 -- 			debug ( "recherche de tag : " + txt )
 			
-			rechercheNoeud = getParNomUnique "RECHERCHE" 
+-- 			rechercheNoeud = getParNomUnique "RECHERCHE" 
 			elemsResult = #()
-			rechercheNoeud.enfants = #()
+-- 			rechercheNoeud.enfants = #()
 			tagsRecherche = filterString	txt 	m_separateur
 			elementsTotal = getElements()
-			debug ( "	elementsTotal : " + elementsTotal as string)
+-- 			debug ( "	elementsTotal : " + elementsTotal as string)
 			
 			for tagRecherche in tagsRecherche do
 				for elem in elementsTotal do (
 					result = chercherTagDansNoeud 	elem 	tagRecherche
 					if result!= undefined do appendifunique elemsResult	 result
 				)
-			
-			rechercheNoeud.enfants = elemsResult
-			ecrireFichier ()
+			return elemsResult
+-- 			rechercheNoeud.enfants = elemsResult
+-- 			ecrireFichier ()
 		),
 			
 	private

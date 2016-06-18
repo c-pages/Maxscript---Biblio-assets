@@ -54,6 +54,8 @@ struct Appercus (
 	public
 		
 		fn creerNomRendu	_prefix= (
+			
+			debug ("______________creerNomRendu_______ "  + _prefix )
 			local nouveauNom =""
 			listeAppercus = getFiles ( dossierAppercus + "\\*.jpg" )
 			
@@ -69,6 +71,7 @@ struct Appercus (
 				if present == false then trouveNouveauNom = true
 				else		i += 1
 			)
+			debug ("nouveau nom appercu : " + nouveauNom )
 			nouveauNom  
 		),
 		
@@ -76,11 +79,14 @@ struct Appercus (
 		
 		
 		fn creerCalqueImport = (
-			-- on creer le calque dans lequel on va faire l'import  et on l'initialise --
-			calqueImport 				= LayerManager.newLayerFromName nomCalqueImport
-			calqueImport.on 			= true
-			calqueImport.lock  		= false
-			calqueImport.current 	= true
+			calqueImport				= LayerManager.getLayerFromName nomCalqueImport
+			if calqueImport == undefined do (
+				-- on creer le calque dans lequel on va faire l'import  et on l'initialise --
+				calqueImport 				= LayerManager.newLayerFromName nomCalqueImport
+				calqueImport.on 			= true
+				calqueImport.lock  		= false
+				calqueImport.current 	= true
+			)
 		),
 		fn isoler  = (
 			debug "appercu->isoler"
@@ -273,7 +279,7 @@ struct Appercus (
 			
 			-- l'état des lumieres avant appercu --
 			a_lumieresEtats = #()
-			for L in Lights do (
+			for L in Lights where classOf L != Targetobject do (
 					append a_lumieresEtats L.on
 					L.on = false
 			)
@@ -328,14 +334,13 @@ struct Appercus (
 		),
 		
 		
-		
 		fn rendre detail: =(
 			debug "appercu->rendre"
-			local nomRendu
-			if not detail then 
-				nomRendu = dossierAppercus + "\\" + ( creerNomRendu nomAppercu ) + ".jpg"
-			else			
-				nomRendu = dossierAppercus + "\\" + ( creerNomRendu nomDetail ) + ".jpg"
+			local nomRendu 
+			local prefix = if not detail then ( ""+ nomAppercu )
+														else	( ""+ nomDetail )
+			
+			nomRendu = dossierAppercus + "\\" + ( creerNomRendu 	prefix ) + ".jpg"
 			
 			Rendu = 	render cameraAppercu 			outputSize:tailleAppercu   \
 							outputfile:nomRendu 			vfb:false 			quiet:false	\
@@ -344,6 +349,8 @@ struct Appercus (
 -- 			display  Rendu
 			nomRendu
 		),
+		
+		
 		fn remettreRenduInitial = (
 			renderers.current = moteurRenduPrecedant
 		),
@@ -377,25 +384,16 @@ struct Appercus (
 	public
 		fn creer		_fichier 	detail:false	= (
 			
-			local nomAppercu
-			local sceneCourante = ""
-			holdMaxFile() 
--- 			if maxFileName != "" do
--- 				sceneCourante = maxFilePath + maxFileName
--- 			if checkForSave() do (
 				
-				resetMaxFile #noPrompt
-				
-				creerCalqueImport()
-				Importer 	_fichier
-				preparerRendu 	detail:detail
-				nomAppercu = rendre  detail:detail
-				debug ( "--------------> NOM APPERCU = " + nomAppercu )
+			creerCalqueImport()
+			Importer 	_fichier
+			preparerRendu 	detail:detail
+			nomRenduAppercu = rendre  detail:detail
+			debug ( "--------------> NOM nomRenduAppercu = " + nomRenduAppercu )
 				
 -- 			)
-			fetchMaxFile quiet:true
 -- 			if sceneCourante != "" do		loadMaxFile  	sceneCourante 	quiet:true
-			nomAppercu
+			nomRenduAppercu
 			
 		)
 -- 		,

@@ -136,10 +136,12 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	local elemNodesVueSelect = #()
 	local noeudSelect
 	local noeudVueSelect 
+-- 	local noeudVueSelectBack
 	
 	-- drag end drop du dotNet ---
 	local dragDropEffect = dotNetClass "System.Windows.Forms.DragDropEffects"
 	
+	local ui_listBtns_infos=#()
 	
 --------------------------------------
 ---------- L'INTERFACE ----------
@@ -170,7 +172,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	---- Navigation  ----
 	dotNetControl 	ui_arborescence 		"TreeView" pos:UIpos_exploration width:200 height:150 	enabled:true																		---------- l'arborescence 
-	MultiListBox 		ui_lstBoxTags			"Tags" 		pos:( UIpos_exploration + [0,150 + UItaille_ecart.x]) width:200 height:( 50 )
+	MultiListBox 		ui_lstBoxTags			"Mots clés:" 		pos:( UIpos_exploration + [0,150 + UItaille_ecart.x]) width:200 height:( 50 )
 	edittext 				ui_editRecherche 	"" 		pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x ,  UIpos_exploration.y ] width:200 height:17		
 	dotNetControl 	ui_listeVue 			"system.windows.forms.listView" pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x , UIpos_exploration.y + ui_editRecherche.height + UItaille_ecart.y ] width:200 height:200 border:false											---------- le contenu du dossier 	
 		
@@ -216,7 +218,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 ----------------------------------------
 	--- les Mise a jour UI ------
 	fn maj_UI	= (
-		
+		ui_listBtns_infos = #( ui_lblNom, ui_editNom, ui_lblFichier,	ui_editFichier ,	ui_btnOuvrirFichierMax ,	ui_lblAppercu	,	\
+										ui_editAppercu 		,	ui_btnOurvirAppercu	,	ui_btnCreerAppercu	,	ui_lblDetail			,	ui_editDetail		, \	
+										ui_btnOurvirDetail	,	ui_btnCreerDetail	,	ui_lblTags	,	ui_editTags 		,	ui_lblNotes 	,	ui_editNotes 	,		ui_bmpDetail  )
 		--- les ENABLED  ---
 		ui_btnCreerAssetSelection.enabled  			= (selection as array ).count > 0 
 		ui_btnImporterAssetDansScene.enabled 	=  ui_listeVue.SelectedItems.count > 0 
@@ -228,7 +232,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		if noeudVueSelect != undefined do 
 			ui_arborescence.SelectedNode = noeudVueSelect
 		
-		ui_arborescence.ExpandAll()
+-- 		ui_arborescence.ExpandAll()
 		
 -- 		ui_arborescence. noeudSelect
 		--- les tags ---
@@ -241,6 +245,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 				
 				append listTagsTmp		tag
 			)
+			sort  listTagsTmp
 			ui_lstBoxTags.items = listTagsTmp
 		) catch ()
 	)
@@ -251,9 +256,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		-- on redim et repositionne les elements ---
 		hauteurExplorateur 			= tailleRollOut.y -  ( UIpos_exploration.y +  UItaille_marge.y )
 		
--- 	edittext 			ui_editRecherche 	"" 		pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x ,  UIpos_exploration.y ] width:200 height:17		
--- 	dotNetControl 	ui_listeVue 			"system.windows.forms.listView" pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x , UIpos_exploration.y + ui_editRecherche.height + UItaille_ecart.y ]
--- 		ui_lstBoxTags			"Tags" 		pos:( UIpos_exploration + [0,150 + UItaille_ecart.x]) width:200 height:( 50 - UItaille_ecart.x)
 		ui_lstBoxTags.height = 150
 		ui_arborescence.height 	= hauteurExplorateur - ( ui_lstBoxTags.height + 4* UItaille_ecart.y  )
 		ui_lstBoxTags.pos = ui_arborescence.pos + [0 , ui_arborescence.height  + 4*UItaille_ecart.y]
@@ -301,7 +303,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			tabEdit_1 		= 	UItaille_ecart.x
 			tabEdit_2 		= 	tabEdit_1 + 60
 			hauteur 			= [0,25]
-			petiteHauteur = [0,15]
+			petiteHauteur = [0,18]
 			largeurTitre 	= [60,0]
 			
 			ui_lblNom.pos  					= repere
@@ -328,7 +330,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			
 			ui_lblDetail.pos				= ui_bmpDetail.pos -  hauteur
 			ui_editDetail.pos				= ui_lblDetail.pos + largeurTitre
-			ui_btnCreerDetail.pos		= ui_lblDetail.pos + largeurTitre +  [ui_editFichier.width - 38 ,0]+ [UItaille_ecart.x, 0] 
+			ui_btnCreerDetail.pos		= ui_lblDetail.pos + largeurTitre +  [ui_editFichier.width - 41 ,0]+ [UItaille_ecart.x, 0] 
 			ui_btnOurvirDetail.pos		= ui_lblDetail.pos + largeurTitre +  [ui_editFichier.width,0]+ [UItaille_ecart.x, 0]
 			
 			ui_lblNotes.pos				= repere + 4 * hauteur + petiteHauteur
@@ -344,57 +346,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		)
 		
 		ui_editRecherche.width  =  ui_listeVue.width - UItaille_ecart.x 
-		
-		
-		
-		/*
-		if b_afficheInfos then 
-			biblio.m_rollPrincipal.width = ( ui_grpInfos.pos.x + ui_grpInfos.width + 2*UItaille_marge.x )
-		else
-			biblio.m_rollPrincipal.width = ( ui_listeVue.pos.x + ui_listeVue.width + 2*UItaille_marge.x )
-		*/
-		
-		
-		/*
-		if b_afficheInfos then (
-			
-			ui_grpInfos.pos.x 			= tailleRollOut.x - ( UItaille_marge.x + ui_grpInfos.width )
-			ui_grpInfos.height			= hauteurExplorateur - ( UItaille_petitsBtns.y + UItaille_ecart.y ) 
--- 			ui_lblIinfos.pos 				= [ui_grpInfos.pos.x  + UItaille_ecart.x , ui_grpInfos.pos.y  + UItaille_ecart.y * 3]
--- 			ui_lblIinfos.height			= ui_grpInfos.height - 4*UItaille_ecart.y
-			ui_listeVue.width			= tailleRollOut.x  - ( ui_arborescence.width + ui_grpInfos.width + 4* UItaille_ecart.x + UItaille_marge.x ) 
-			ui_listeVue.height			= hauteurExplorateur
-			ui_btnAfficherInfo.pos 		= [ui_grpInfos.pos.x ,  ui_grpInfos.pos.y  + ui_grpInfos.height + UItaille_ecart.y ]      
--- 			ui_btnEditerElement.pos 	= [ui_btnAfficherInfo.pos.x  + UItaille_petitsBtns.x + UItaille_ecart.x,  ui_btnAfficherInfo.pos.y ]        
-
-		) else (
-						
-			ui_listeVue.width			= tailleRollOut.x  - ( ui_arborescence.width + 5* UItaille_ecart.x + UItaille_petitsBtns.x  ) 
-			ui_listeVue.height			= hauteurExplorateur
-			ui_btnAfficherInfo.pos 		= [ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x   ,  ui_listeVue.pos.y  + ui_listeVue.height - ( UItaille_petitsBtns.y ) ]     
-			
-		)
-		*/
-		
-		
-	/* 
-	label 		ui_lblNom 					"Nom: " pos:[17,23] width:36 height:19
-	edittext 	ui_editNom 				"" 		pos:[59,23] width:333 height:22
-	
-	label 		ui_lblFichier				"Fichier: " pos:[17,50] width:44 height:19
-	edittext 	ui_editFichier 				"" pos:[59,50] width:303 height:22
-	button 		 "..." pos:[366,51] width:25 height:22
-	
-	label 							"Mots clés : ( Séparer chaque tags par un ';' )" pos:[16,118] width:217 height:19
-	edittext		 				"" pos:[16,136] width:375 height:22
-	
-	label 		 				"Notes :" pos:[16,167] width:217 height:19	
-	edittext 	 				"" pos:[16,185] width:375 height:122
-	
-	label 						"Apperçu:" pos:[17,78] width:44 height:19
-	edittext	 	 			"" pos:[59,78] width:303 height:22
-	button 			"..." pos:[366,79] width:25 height:22 
-	*/
 		
 		
 		
@@ -486,10 +437,13 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 
 	---- remplir le tree view avec l'arbo de la biblio ----
 	fn ajouterEnfantTreeView		_noeudArbo	 _noeudTV 	     =	(
-		nouveauNoeudTV = _noeudTV.Nodes.add 		_noeudArbo.nom
-		nouveauNoeudTV.name = _noeudArbo.nomUnique
-		for enfant in _noeudArbo.enfants where classof enfant == Noeud do
-			ajouterEnfantTreeView 	enfant  	nouveauNoeudTV
+		if _noeudArbo.nomUnique !="RECHERCHE" do (
+			
+			nouveauNoeudTV = _noeudTV.Nodes.add 		(_noeudArbo.nom + " (" + _noeudArbo.getNbrEnfants() as string + ")")
+			nouveauNoeudTV.name = _noeudArbo.nomUnique
+			for enfant in _noeudArbo.enfants where classof enfant == Noeud do
+				ajouterEnfantTreeView 	enfant  	nouveauNoeudTV
+		)
 	)
 	
 	fn remplirTreeView	 _arbo	=	(		
@@ -498,6 +452,15 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		-- ajout du premier element --		
 		ajouterEnfantTreeView 	_arbo  	ui_arborescence
+		
+		-- ajout de la recherche --
+		nmRech = "RECHERCHE"
+		noeudTVRech = ui_arborescence.Nodes.add 		nmRech
+		noeudTVRech.name = nmRech
+		nouedRecherche = biblio.arbo.getParNomUnique 	nmRech
+		for enfant in nouedRecherche.enfants where classof enfant == Noeud do
+			ajouterEnfantTreeView 	enfant  	noeudTVRech
+		
 	)
 	
 	fn getListeSelection = (
@@ -530,7 +493,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			
 			img = dotNetClass "System.Drawing.Image" --create an image
 			if doesfileexist enfant.appercu then (
-				debug "	APPERCU" 
+-- 				debug "	APPERCU" 
 				appercusImages.images.add ( img.fromFile enfant.appercu )
 			) else (
 				appercusImages.images.add ( img.fromFile appercuVide )
@@ -540,17 +503,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		ui_listeVue.LargeImageList = appercusImages
 		ui_listeVue.items.addRange listeElementAAfficher	
 		
--- 		
--- 		--- les tags ---
--- 		ui_lstBoxTags.items = #()
--- 		listTagsTmp = #()
--- 		tags = biblio.arbo.getToutTags 	node:_noeud
--- 		debug (" TOUT LES TAGS : " + tags as string )
--- 		for  tag in tags do(
--- 			
--- 			append listTagsTmp		tag
--- 		)
--- 		ui_lstBoxTags.items = listTagsTmp
 	)
 	
 	fn afficherInfos = (
@@ -562,14 +514,65 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		affTags 		=""
 		affNotes 	=""
 		ui_bmpDetail.bitmap  = (bitmap 255 255 color:gray)
-		for elem in elemSelect do (
+		
+		b_solo = elemSelect.count == 1
+		for btn in ui_listBtns_infos do
+			btn.enabled = b_solo
+		if elemSelect.count>0 do (
+			ui_editTags.enabled =true
+			ui_lblTags.enabled =true
+			ui_editNotes.enabled =true
+			ui_lblNotes.enabled =true
+		)
+		
+		if b_solo then (
+			elem = elemSelect[1]
+			affTags 		=	elem.tags as string
 			affNom 		=	elem.nom
-			affFichier 	=	elem.fichier
+			affFichier 		=	elem.fichier
 			affAppercu 	=	elem.appercu
 			affTags 		=	elem.tags as string
 			affNotes 	=	elem.notes
 			affDetail 	=	elem.detail
 			ui_bmpDetail.fileName = elem.detail
+		) else (
+			listTags = #()
+			b_notesPresente = true
+			for elem in elemSelect do (
+				-- les notes -
+				if affNotes == "" then affNotes = elem.notes
+				else if not affNotes == elem.notes do b_notesPresente = false
+					
+				
+				-- les tags ---
+				listTagsElem = biblio.arbo.getToutTags 	node:elem
+				for tag in listTagsElem do (
+					appendIfUnique listTags tag
+				)
+			)
+			
+			
+			if not b_notesPresente then affNotes = ""
+				
+			
+			listTags_2 = #()
+			for tag in listTags do (
+				b_present = true
+				for elem in elemSelect do (
+					listTagsElem = biblio.arbo.getToutTags 	node:elem
+					if findItem listTagsElem tag == 0 do b_present = false
+				)
+				if b_present do append listTags_2  tag
+			)
+		
+			txtTags = ""
+			for tag in listTags_2 do txtTags += tag + " "
+			affTags 		=	txtTags
+				
+				
+-- 				affNom 		=	elem.nom
+-- 				affFichier 		=	elem.fichier
+-- 				affAppercu 	=	elem.appercu
 		)
 		ui_editNom.text			=	affNom
 		ui_editFichier.text		=	affFichier
@@ -590,35 +593,28 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 
 		local testItem= ui_arborescence.GetNodeAt (dotNetObject "System.Drawing.Point" mousePos.x mousePos.y)
 		if testItem != undefined then (
-			arg.Effect=arg.AllowedEffect
 			
-		noeudSelect = biblio.arbo.getParNomUnique 	testItem.name
-			
-		noeudVueSelect  = testItem
--- 			adresseDossierDestinationDragAndDrop = substring testItem.FullPath 1  (testItem.FullPath).count
--- 			NoeudDestination =testItem
--- 			GLOBAL  NoeudBack = testItem
-			
--- 			debug ( "node survol : " + testItem.name as string )
-		) else (
+			noeudTest = biblio.arbo.getParNomUnique 	testItem.name
+				
+			if noeudTest.nomUnique != "RECHERCHE" then (
+				arg.Effect=arg.AllowedEffect
+				noeudSelect = biblio.arbo.getParNomUnique 	testItem.name
+				noeudVueSelect  = testItem
+				
+			) else (
+				noeudSelect = undefined
+				
 			arg.Effect=dragDropEffect.none
+			noeudVueSelect  = undefined
+			)
+			
+		) else (
 			noeudSelect = undefined
 				
+			arg.Effect=dragDropEffect.none
 			noeudVueSelect  = undefined
 		)
-		/* 
-		local testItem= ui_arborescence.GetNodeAt (dotNetObject "System.Drawing.Point" mousePos.x mousePos.y)
-		if testItem != undefined then (
-			arg.Effect=arg.AllowedEffect
-			
--- 			adresseDossierDestinationDragAndDrop = substring testItem.FullPath 1  (testItem.FullPath).count
--- 			NoeudDestination =testItem
--- 			GLOBAL  NoeudBack = testItem
-			
-			
-		) else (
-			arg.Effect=dragDropEffect.none
-		) */
+	
 		
 		
 	)
@@ -654,33 +650,80 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	on ui_btnCreerAssetFichier pressed do biblio.ajouterAssetFichier() 
 	
 	
+	on ui_btnCreerAssetDossier pressed do (
+		dossier = getSavePath "" initialDir:"F:\Bibeul 3D\ARCHMODELS"
+		if dossier!=undefined do ( 
+			debug "Nouvel asset dossier"
+			biblio.ajouterAssetDossier 	dossier 
+		)
+	)
+	
 ----- L'arborescence ------------------
+	
+	on ui_arborescence	 afterLabelEdit arg do
+		(
+			
+			--print arg.label
+			if arg.label!=undefined do (
+				debug ("RENAME" )
+				
+				
+				if noeudSelect != undefined do (
+					noeudSelect.nom = arg.label
+					biblio.arbo.ecrirefichier()
+				)
+				
+				--- maj interface ---
+				maj_UI ()
+				afficherInfos()
+				
+				
+			/* --	print adresseDossierCourantAbsolu
+			--	print arg.node.text
+			--	print ( fnFindDossierParent adresseDossierCourantAbsolu ) 
+				nouveauNom = ( fnFindDossierParent adresseDossierCourantAbsolu ) + arg.label
+			--	print (" nouveauNom : " + nouveauNom )
+				 ancienNom = (trimright adresseDossierCourantAbsolu "\\")
+			--	print ancienNom 
+				renameFile  ancienNom nouveauNom
+
+ */			)
+
+		)
 	on ui_arborescence		 mouseUp arg do  (
 		
-		---- click droit ----
-		if not (arg.Button.value__ == 1048576) then ( 
-			debug "DROITE"
-		
-		---- click gauche ----
-		) else (
-			debug "GAUCHE"
+		--else (
+-- 			debug "->>>>>>>>>>>>>------------->>>>>>>>>>>>----------->GAUCHE"
 			noeudClique = ui_arborescence.GetNodeAt (dotNetObject "System.Drawing.Point" arg.x arg.y)
 			if noeudClique != undefined do (
--- 				debug ("noeudClique.text : " + noeudClique.text as string)
--- 				debug ("noeudClique.name : " + noeudClique.name as string)
 				
 				-- on se deplace dans l'arborescence ---
 				_noeudArbo = biblio.arbo.getParNomUnique 	noeudClique.name 
+				
 				if _noeudArbo!=undefined then (
+					
+					
+					if _noeudArbo.nomUnique != "RECHERCHE" /*and _noeudArbo.nomUnique != "ROOT" */ then (
+						---- click droit ----
+						if not (arg.Button.value__ == 1048576) then ( 
+							debug "DROITE"
+							biblio.menu.creerMenuTest()
+							
+							
+						---- click gauche ----
+						) 
+					)	
 					AfficherElements 		_noeudArbo
 					noeudSelect  = _noeudArbo
 					noeudVueSelect = noeudClique
 					elemSelect = #()
 					elemIDVueSelect  = #()
 					elemNodesVueSelect  = #()
+					--else noeudSelect = noeudVueSelect = undefined
+					
 				)	else noeudSelect = noeudVueSelect = undefined
 				
-			)
+			--)
 			
 			--- maj interface ---
 			maj_UI ()
@@ -690,7 +733,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	)
 	on ui_arborescence 	ItemDrag 	arg do
 	(
-		debug " ------------- ItemDrag --------------"
+		debug " ------------- ItemDrag ARBO --------------"
+		
+-- 		noeudVueSelectBack = noeudVueSelect
 		
 		local sel = ui_listeVue.selectedItems
 
@@ -730,12 +775,10 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		debug ("	noeudVueSelect : " + noeudVueSelect as string )
 		debug (" --------- ----------------------- --------- " )
 		hitNodeDrop = ui_arborescence.GetNodeAt (dotNetObject "System.Drawing.Point" arg.x arg.y)	
--- 		if hitNodeDragDrop != undefined do
--- 			debug ("	NODE SURVOL  : " + hitNodeDragDrop.name as string )
--- 		debug (" --------- ----------------------- --------- " )
-		
--- 		show  arg
--- 		if hitNodeDrop != undefined do (
+-- 		
+-- 		if noeudSelect.nomUnique !="RECHERCHE" then (
+				
+					
 			selectionElems_NomsUniques = for elemNodes in elemNodesVueSelect collect elemNodes.name
 			noeudSelecBack = noeudSelect
 			elemNodesSelecBack = elemNodesVueSelect
@@ -746,19 +789,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			--- maj interface ---
 			remplirTreeView 	biblio.arbo.root
 			
-			/* 
-			_noeudArbo = biblio.arbo.getParNomUnique 	noeudClique.name 
-					if _noeudArbo!=undefined then (
-						AfficherElements 		_noeudArbo
-						noeudSelect  = _noeudArbo
-						noeudVueSelect = noeudClique
-						elemSelect = #()
-						elemIDVueSelect  = #()
-					)	else noeudSelect = noeudVueSelect = undefined
-					
-					 */
-					
--- 			ui_listeVue.SelectedItems 			= elemNodesVueSelect
 			AfficherElements 	noeudSelect
 			noeudSelecNomUnique = noeudSelect.nomUnique
 			
@@ -780,47 +810,17 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			if noeudSelectmp != undefined do 
 				ui_arborescence.SelectedNode  = noeudSelectmp
 			
--- 			for  _node in elemNodesVueSelect do
--- 				_node.Selected = true
--- 			debug ("######################  "  + elemNodesVueSelect as string )
-			
 			maj_UI ()
 			afficherInfos()
+-- 		) else (
+-- 			
+-- 			noeudVueSelect = noeudVueSelectBack
+-- 			maj_UI ()
+-- 			afficherInfos()
+-- 			
 -- 		)
-		--	print "FIN drag"
-			--print ("fichier deplacés : " + 
-		--	print ("Destination : " + adresseDossierDestinationDragAndDrop )
-		--	print ("liste des elements : " + ListElementsSelectionNom as string)
--- 			showproperties  arg
-		/*
-		
-			if ListElementsSelectionNom!= undefined do (
-					
-				--print ("hitNodeDragDrop.text : " + hitNodeDragDrop.text as string)
-				fnDeplacerLISTEdotNET ListElementsSelectionNom adresseDossierDestinationDragAndDrop
-				
-				
-				
-			--	fnSelectNode hitNode
-				
-			)*/
-		)
-	/* 
-	on ui_arborescence DragOver s e do
-	(
-		debug " ------------- DragOver  ARBO --------------"
-		local pos=ui_arborescence.PointToClient		 ui_arborescence.MousePosition
-		
-		checkDragDropInsertionMarkStatus 	pos	 arg
--- 		debug ( "s : "  + s as string +  "e : "  + e as string ) 
--- 		debug ( "e.data.ContainsFileDropList()  : "  + e.data.ContainsFileDropList() as string  ) 
--- 		e.Effect = 	if e.data.ContainsFileDropList() 
--- 								then 	e.Effect.Move 
--- 								else 	e.Effect.None
 	)
-	
-	 */
-		
+
 		
 		
 		
@@ -829,11 +829,11 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		---- click droit ----
 		if not (arg.Button.value__ == 1048576) then ( 
-			debug "DROITE"
+			debug "  ui_listeVue  DROITE"
 		
 		---- click gauche ----
 		) else (
-			debug "GAUCHE"
+			debug "   ui_listeVue     GAUCHE"
 			
 			
 			--- maj interface ---
@@ -846,7 +846,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 					append 	elemSelect 			elem
 					append 	elemNodesVueSelect		ui_listeVue.SelectedItems.item[i]
 					append 	elemIDVueSelect		ui_listeVue.SelectedItems.item[i].index
-					debug (" <<< elem : " + elem as string  + " >>>")
+-- 					debug (" <<< elem : " + elem as string  + " >>>")
 				)
 			)
 			
@@ -867,18 +867,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			debug "////////////// mouseDown : GAUCHE //////"
 			
 			show arg 
-					debug ("	arg : " + arg as string )
--- 					debug ("	arg.data : " + arg.data as string )
-			--- maj interface ---
--- 			elemSelect = #()
--- 			elemIDVueSelect = #()
--- 			elemNodesVueSelect = #()
-			
-			
-			
-			
--- 			if elemSelect.count == 0 do (
-			
+				debug ("	arg : " + arg as string )
+
+						
 			hitNode = ui_listeVue.GetItemAt  arg.x 	arg.y
 			
 			if hitNode != undefined then (
@@ -887,15 +878,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 					if ui_listeVue.SelectedItems.item[i] == hitNode then b_present = true
 					
 					if b_present	then (
--- 						for i = 0 to ui_listeVue.SelectedItems.count - 1 do (
--- 							elem = 	biblio.arbo.getParNomUnique 	 ui_listeVue.SelectedItems.item[i].name
--- 							if elem != undefined do (
--- 								append 	elemSelect 					elem
--- 								append 	elemIDVueSelect			ui_listeVue.SelectedItems.item[i].index
--- 								append 	elemNodesVueSelect		ui_listeVue.SelectedItems.item[i]
--- 								debug (" <<< elem : " + elem as string  + " >>>")
--- 							)
--- 						)
+						
 					) else (
 						debug ( "hitNode : " + hitNode as string )
 						debug ( "	nom : " + hitNode.name as string )
@@ -922,12 +905,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		local sel = ui_listeVue.selectedItems
 		
--- 		 elemIDVueSelect = #()
--- 		elemSelect = #()
--- 			
--- 		noeudSelect = undefined
--- 		noeudVueSelect  = undefined
-
 		local result = #()
 		if sel.count != 0 then
 		(
@@ -953,152 +930,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 								else 	e.Effect.None
 	)
 	
-/* )	
-	on listviewElements click arg do		--	<----	FAIRE UN MOUSE UP EVENT ?!?!
-	(
-		fnGestionCheck ()
-		fnAfficheApercu ()
-	)
-	on listviewElements enter arg do
-	(
-		--	print"enter"
-		--		showproperties arg
-			)
-	on listviewElements SelectedIndexChanged do
-	(
-			fnAfficheApercu()
-		)
-	on listviewElements DoubleClick do
-	(
-			fnAfficheApercu()
-			Roll_Bibliotheque.fnImporterDanslaScene()
-		)
-	on listviewElements mouseUp arg do
-	(
-		--SelectionListView()
-	
-	--	print "click"
-	--	print arg.Button.value__ 
-		if not (arg.Button.value__ == 1048576) then ( print "MouseButtons.Lefet"
-			menuSys=menus()
-			popUpMenu menuSys --rollout:presets_R
-		)
-		fnAfficheApercu()
-	)
-	on listviewElements mouseDown sender do
-	(
-	--	print"-listviewElements items-------"
-	--	print listviewElements.items
-		
-		
-		
-		local sel = listviewElements.selectedItems
-		--local selIndex = listviewElements.SelectedIndex
-	
-		local result = #()
-	--	print"-sel.count-------"
-	--	print sel.count
-		if sel.count != 0 then
-		(
-			local nCount = sel.count - 1 --.NET arrays are zero based
-			resultNom = for i = 0 to nCount collect( ( sel.item[i] ).text)
-			resultItem = for i = 0 to nCount collect( ( sel.item[i] ))
-			--resultIndex = for i = 0 to nCount collect( ( selIndex.item[i] ))
-		)
-		else
-		(
-			result = #()
-		)
-	--	print"--result---------"
-	--	print (result as string)
-		ListElementsSelectionItem = resultItem
-		ListElementsSelectionNom = resultNom
-		
-		fnAfficheApercu()
-		
-		
-		
-	)
-	on listviewElements ItemDrag arg do
-	(
-		"ItemDrag"
-		--	print ("DEBUT drag : " + arg.item as string)
-			
-			local sel = listviewElements.selectedItems
-			--local selIndex = listviewElements.SelectedIndex
-	
-			local result = #()
-		--	print"-sel.count-------"
-		--	print sel.count
-			if sel.count != 0 then
-			(
-				local nCount = sel.count - 1 --.NET arrays are zero based
-				resultNom = for i = 0 to nCount collect( ( sel.item[i] ).text)
-				resultItem = for i = 0 to nCount collect( ( sel.item[i] ))
-				--resultIndex = for i = 0 to nCount collect( ( selIndex.item[i] ))
-			)
-			else
-			(
-				result = #()
-			)
-		--	print"--result---------"
-		--	print (result as string)
-			ListElementsSelectionItem = resultItem
-			ListElementsSelectionNom = resultNom
-			
-			
-			
-			
-			--showproperties arg.item 
-			--clickedItem=arg.item 
-			listviewElements.doDragDrop arg.item dragDropEffect.Copy 
-		)
-	on listviewElements keyPress arg do
-	(
-		print"KeyPress"
-	--	clearlistener()
-		print arg.Handled
-		showevents listviewElements
-	--	print "DragOver"
-		--e.Effect = if e.data.ContainsFileDropList() then e.Effect.Move else e.Effect.None
-	)
-	on listviewElements DragOver s e do
-	(
-	--	print "DragOver"
-		e.Effect = if e.data.ContainsFileDropList() then e.Effect.Move else e.Effect.None
-	)
-	on listviewElements DragDrop s e do
-	(
-		if e.data.ContainsFileDropList() do
-			(
-				print "drag"
-				data = e.data.GetFileDropList()
-				files = for k=0 to data.count-1 collect data.item[k]
-				format "files: %\n" files
-				print files
-				ListeGlisserColler = #()
-				for i in files do (
-					
-					if (findstring i ".max")!=undefined do (
-						append ListeGlisserColler i
-					)
-				)
-				
-				
-				
-				
-				TypeDimportBiblio = 4
-				--ListeGlisserColler = files
-				fnImporterDanslaBibliotheque ()
-				
-				AfficherElements ()
-				
-			--	s.text = getfilenamefile files[1]
-			)
-	)
-			
-	
-	 */
 	
 
 ---- Edition/Infos  elements ----
@@ -1108,7 +939,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	)
 	
 	
-	on ui_editNom 	changed  txt 	do (
+	on ui_editNom 	entered  txt 	do (
 		if elemSelect.count == 1 do (
 			elemSelect[1].nom = txt
 			biblio.arbo.ecrireFichier()
@@ -1119,30 +950,30 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		)
 	)
 	
-	on ui_editFichier 	changed  txt 	do (
+	on ui_editFichier 	entered  txt 	do (
 		if elemSelect.count == 1 do 
 			elemSelect[1].fichier = txt
 		biblio.arbo.ecrireFichier()
 	)
 
-	on ui_lblAppercu 	changed  txt 	do (
+	on ui_lblAppercu 	entered  txt 	do (
 		if elemSelect.count == 1 do 
 			elemSelect[1].appercu = txt
 		biblio.arbo.ecrireFichier()
 	)
-	on ui_editDetail 	changed  txt 	do (
+	on ui_editDetail 	entered  txt 	do (
 		for elem in  elemSelect do 
 			elem.detail = txt
 		biblio.arbo.ecrireFichier()
 		afficherInfos()
 	)
-	on ui_editTags 	changed  txt 	do (
+	on ui_editTags 	entered  txt 	do (
 		for elem in  elemSelect do 
 			elem.tags = txt
 		biblio.arbo.ecrireFichier()
 		maj_UI()
 	)
-	on ui_editNotes 	changed  txt 	do (
+	on ui_editNotes 	entered  txt 	do (
 		for elem in  elemSelect do 
 			elem.notes = txt
 		biblio.arbo.ecrireFichier()
@@ -1150,9 +981,20 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	
 	
-	on ui_editRecherche 	changed  txt 	do (
+	on ui_editRecherche 	entered  txt 	do (
 		
-		biblio.arbo.chercherTags 	txt
+		rechercheNoeud = biblio.arbo.getParNomUnique "RECHERCHE" 
+		rechercheNoeud.enfants = #()
+-- 		tagsRecherche = filterString	txt 	m_separateur
+-- 		elementsTotal = getElements()
+-- 		debug ( "	elementsTotal : " + elementsTotal as string)
+			
+			
+				
+		
+-- 		
+			rechercheNoeud.enfants = biblio.arbo.chercherTags 	txt
+		biblio.arbo.ecrireFichier ()
 		
 		noeudSelect = biblio.arbo.getParNomUnique "RECHERCHE" 
 		
@@ -1222,6 +1064,25 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 	)		
 		
+	--- les tags ----
+	on ui_lstBoxTags selected val do  (
+		
+		format "selected: % - %\n" val 	ui_lstBoxTags.selection[val]
+		format "ui_lstBoxTags.selection: % \n" 	ui_lstBoxTags.selection
+		listElems = #()
+		for tag in ui_lstBoxTags.selection as array  do ( 
+			format "tag: % \n" 	ui_lstBoxTags.items[tag]
+			join  listElems	( biblio.arbo.chercherTags 	ui_lstBoxTags.items[tag] )
+		)
+		
+		noeudSelect = biblio.arbo.getParNomUnique "RECHERCHE" 
+		noeudSelect.enfants = listElems
+		noeudVueSelect = noeudParNom "RECHERCHE"  
+		
+		maj_UI ()
+		AfficherElements  noeudSelect
+	)
+	
 ----- events rollout ------
 	on m_rollPrincipal open do (
 		initialiser_interface()

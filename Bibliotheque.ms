@@ -1,16 +1,20 @@
 
 
+
 global debug, b_DEBUG = true
 fn debug _txt = 	if b_DEBUG do format "debug:	%\n" _txt
 
-try (	DestroyDialog bib.m_rollPrincipal ) catch ( format  ("rien à destroy\n") )
+try (	DestroyDialog bibliotheque.m_rollPrincipal ) catch ( format  ("rien à destroy\n") )
 
 
+
+global bibliotheque
 
 ------------------------------------------------------------------------------
 ------ include des sous structures ----------------------------------------
 -- les sous structures composent la structure parincipale 			--
 ------------------------------------------------------------------------------
+fileIn "$userScripts\bibliotheque\Bibliotheque_menus.ms"
 fileIn "$userScripts\bibliotheque\Bibliotheque_arbo.ms"
 fileIn "$userScripts\bibliotheque\Bibliotheque_appercus.ms"
 fileIn "$userScripts\bibliotheque\Bibliotheque_conversions.ms"
@@ -20,7 +24,7 @@ fileIn "$userScripts\bibliotheque\Bibliotheque_conversions.ms"
 ------ La structure principale ---------------------------------------------
 -- composée des sous structures spécialisées							--
 ------------------------------------------------------------------------------
-struct Bibliotheque (
+struct BibliothequeAsset (
 	
 	--- quelques variables privées  de fonctionnement ---
 	private
@@ -61,7 +65,7 @@ struct Bibliotheque (
 		arbo			= Arborescence (),
 		appercu 	= Appercus (),
 		conversion 	= Conversions (),
-		
+		menu 		= Menus(), 
 		
 		
 	-- les methodes  publics ------------------------------------------------
@@ -94,6 +98,64 @@ struct Bibliotheque (
 		
 		
 		-- ajout asset dans la biblio --
+		fn ajouterAssetDossier _dossier = (
+			
+			local nomAppercu
+			local sceneCourante = ""
+			
+			
+		
+			selectionTV = m_rollPrincipal.getListeSelection()
+			
+			debug (" _dossier ::::::::::::::::::: " + _dossier as string )
+			debug (" selectionTV ::::::::::::::::::: " + selectionTV as string )
+			if selectionTV !=undefined do (
+				
+				holdMaxFile() 
+			
+				debug "ajouterAssetFichier"
+				fichiersDossier = getFiles ( _dossier+  "\\*.max") 
+			debug (" fichiersDossier ::::::::::::::::::: " + fichiersDossier as string )
+				fichiersAImporter = 	for fichier in fichiersDossier /*where getFilenameType fichier =="max" */	collect fichier
+				
+				for fichierAImporter in fichiersDossier do
+				(
+					debug ( "-----------------Importer " + fichierAImporter + "   --------------------------" )
+					
+					resetMaxFile #noPrompt
+					
+					
+					-- noeud dans lequel l'integrer --
+					noeudParent = arbo.getParNom 	selectionTV.text
+					if classOf noeudParent == Element do
+						noeudParent = noeudParent.parent
+					
+					-- le nom --
+					_nom = getFilenameFile  fichierAImporter
+					
+					-- appercu --
+					_appercu = appercu.creer 	fichierAImporter
+					
+					-- creation de l'element dans l'arbo ---
+					nouvelAsset = arbo.creerElement 	nom:_nom  type:#model	fichier:fichierAImporter  appercu:_appercu	parent:noeudParent
+					arbo.ecrireFichier()
+					
+					
+					
+				)
+			
+				-- actualiser le treeview ---
+				m_rollPrincipal.remplirTreeView 	arbo.root
+				
+				fetchMaxFile quiet:true
+			)
+		
+			
+		),
+		
+		
+		
+		-- ajout asset dans la biblio --
 		fn ajouterAssetFichier = (
 			
 			debug "ajouterAssetFichier"
@@ -102,6 +164,11 @@ struct Bibliotheque (
 											types:"model (*.max)|*.max|All Files (*.*)|*.*|"	
 			
 			if 	fichierAImporter != undefined  do ( 
+				
+					holdMaxFile() 
+					
+					resetMaxFile #noPrompt
+				
 					debug ( "Importer " + fichierAImporter )
 					selectionTV = m_rollPrincipal.getListeSelection()
 					if selectionTV !=undefined do (
@@ -127,6 +194,9 @@ struct Bibliotheque (
 						
 					)
 -- 					show 	( selectionTV )
+					
+					fetchMaxFile quiet:true
+					
 				)
 			
 		),
@@ -141,13 +211,19 @@ struct Bibliotheque (
 			-- inclusion des rollouts --
 			include  "$userScripts\bibliotheque\Bibliotheque_rollouts.ms" 
 			
+			debug "	BIBLIO INITIALISATION : 1  "
+			
 			--- initialiser les structs ---
 			appercu.arbo = arbo
+			debug "	BIBLIO INITIALISATION : 2"
 			appercu.biblio = this
+			menu.biblio = this
 			
+			debug "	BIBLIO INITIALISATION : 3"
 			--- nettoyer le dossier des appercus (supprime les appercus non utilisé par l'arbo ) ---
-			appercu.nettoyerAppercusOrphelins()
+			--appercu.nettoyerAppercusOrphelins()
 			
+			debug "	BIBLIO INITIALISATION : 4"
 		),
 		
 		
@@ -155,7 +231,7 @@ struct Bibliotheque (
 	-- les events -------------------------------------------------------
 	private
 		on create do initialiser()
-		
+	
 		
 	
 ) -- fin struct Bibliotheque --
@@ -170,10 +246,10 @@ struct Bibliotheque (
  
 -- clearListener()
 
-bib = Bibliotheque()
+bibliotheque = BibliothequeAsset()
 
-bib.ouvrirFenetre()
-roll = bib.m_rollPrincipal
+bibliotheque.ouvrirFenetre()
+roll = bibliotheque.m_rollPrincipal
 
 -- bib.arbo.afficher()
 
@@ -206,11 +282,11 @@ roll.ui_arborescence.SelectedNode = roll.getTreeViewNodeByNomUnique	"N1"
 
 GetItemAt
 
-show	 roll.ui_arborescence.nodes.item
+show	 roll.ui_arborescence.nodes.item[0]
 
 show	 roll.ui_arborescence.SelectedNode.nodes.count
 showproperties roll.ui_listeVue
-showmethods roll.ui_listeVue
+showmethods roll.ui_arborescence
 show roll.ui_listeVue.items.item[0]
 show roll.ui_listeVue
 .Nodes.item[0]
