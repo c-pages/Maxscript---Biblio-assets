@@ -52,7 +52,7 @@ rollout m_rollEditerTags "Bibliothèque" width:411 height:355
 	label lbl7 "Fichier: " pos:[17,50] width:44 height:19
 	edittext edt7 "" pos:[59,50] width:303 height:22
 	button btnOuvrirFichierMax "..." pos:[366,51] width:25 height:22
-	label lbl12 "Apperçu:" pos:[17,78] width:44 height:19
+	label lbl12 "Aperçu:" pos:[17,78] width:44 height:19
 	edittext edt12 "" pos:[59,78] width:303 height:22
 	button btn10 "..." pos:[366,79] width:25 height:22
 	
@@ -109,7 +109,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	
 	local biblio ---- le struct principal de la bibliotheque ----
-	local appercuVide = "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2014 - 64bit\\ENU\\scripts\\Bibliotheque\\appercus\\app_vide.jpg"
+	local apercuVide = "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2014 - 64bit\\ENU\\scripts\\Bibliotheque\\apercus\\app_vide.jpg"
 	local	EcouteurChangeSelection 	--- ecouteur de changement de selection de la scene ---
 	
 	-- dimensionnement --
@@ -128,6 +128,8 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	local ico_BtnAjouterDossier				= "$userScripts\\bibliotheque\\ico\\NouvelAssetsDossier.bmp"
 	local ico_BtnAjouterAssetFromScene	= "$userScripts\\bibliotheque\\ico\\NouvelAssetFromScene.bmp"
 	local ico_BtnImporter						= "$userScripts\\bibliotheque\\ico\\importerDansScene.bmp"
+	local ico_BtnImporterProxy				= "$userScripts\\bibliotheque\\ico\\importerDansSceneProxy.bmp"
+	local ico_BtnImporterCorona				= "$userScripts\\bibliotheque\\ico\\importerDansSceneCorona.bmp"
 	
 	
 	-- Element selectionné ---
@@ -136,12 +138,13 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	local elemNodesVueSelect = #()
 	local noeudSelect
 	local noeudVueSelect 
--- 	local noeudVueSelectBack
+	local noeudDrag
 	
 	-- drag end drop du dotNet ---
 	local dragDropEffect = dotNetClass "System.Windows.Forms.DragDropEffects"
 	
 	local ui_listBtns_infos=#()
+	local b_dragDossier = false
 	
 --------------------------------------
 ---------- L'INTERFACE ----------
@@ -150,31 +153,42 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 
 	---- Edition de la biblio ----
 	button 				ui_btnCreerAssetFichier		"" pos:UIpos_barreEdition 		width:UItaille_btns.x 		height:UItaille_btns.y \
-															toolTip:"Nouvel asset depuis un fichier"		border:false \
+															toolTip:"Nouvel asset depuis un fichier."		border:false \
 															images:#( ico_BtnAjouterAsset , undefined, 1, 1,1,1,1)
 															
 	button 				ui_btnCreerAssetDossier		"" pos:[ui_btnCreerAssetFichier.pos.x + UItaille_btns.x +UItaille_ecart.x,  UIpos_barreEdition.y ] \
 															width:UItaille_btns.x 		height:UItaille_btns.y \
-															toolTip:"Nouveaux assets depuis un dossier"		border:false \
+															toolTip:"Nouveaux assets depuis un dossier."		border:false \
 															images:#( ico_BtnAjouterDossier , undefined, 1, 1,1,1,1)
 
 	button 				ui_btnCreerAssetSelection		"" pos:[ui_btnCreerAssetDossier.pos.x + UItaille_btns.x +UItaille_ecart.x,  UIpos_barreEdition.y ] \
 															width:UItaille_btns.x 		height:UItaille_btns.y \
-															toolTip:"Nouvel asset depuis la selection"		border:false \
+															toolTip:"Nouvel asset depuis la selection."		border:false \
 															images:#( ico_BtnAjouterAssetFromScene , undefined, 2, 	1,1,2,2)
+															
+															
+															
 															
 	button 				ui_btnImporterAssetDansScene			"" pos:[ui_btnCreerAssetSelection.pos.x + 2* UItaille_btns.x + 2*UItaille_ecart.x,  UIpos_barreEdition.y ] \
 															width:UItaille_btns.x 		height:UItaille_btns.y \
-															toolTip:"Ajouter l'asset sélectionné à la scène"			border:false	\
+															toolTip:"Importe le ou les assets sélectionnés."			border:false	\
 															images:#( ico_BtnImporter , undefined, 2, 	1,1,2,2)
 	
+	button 				ui_btnImporterAssetDansSceneCorona			"" pos:[ui_btnImporterAssetDansScene.pos.x  + UItaille_btns.x +UItaille_ecart.x,  UIpos_barreEdition.y ] \
+															width:UItaille_btns.x 		height:UItaille_btns.y \
+															toolTip:"Importe le ou les assets sélectionnés en les convertissant en Corona."			border:false	\
+															images:#( ico_BtnImporterCorona , undefined, 2, 	1,1,2,2)
 	
+	button 				ui_btnImporterAssetDansSceneProxy			"" pos:[ui_btnImporterAssetDansSceneCorona.pos.x  + UItaille_btns.x +UItaille_ecart.x,  UIpos_barreEdition.y ] \
+															width:UItaille_btns.x 		height:UItaille_btns.y \
+															toolTip:"Importe le ou les assets sélectionnés à la scène en proxy Corona."			border:false	\
+															images:#( ico_BtnImporterProxy , undefined, 2, 	1,1,2,2)
 	
 	---- Navigation  ----
-	dotNetControl 	ui_arborescence 		"TreeView" pos:UIpos_exploration width:200 height:150 	enabled:true																		---------- l'arborescence 
-	MultiListBox 		ui_lstBoxTags			"Mots clés:" 		pos:( UIpos_exploration + [0,150 + UItaille_ecart.x]) width:200 height:( 50 )
+	dotNetControl 	ui_arborescence 			"TreeView" pos:UIpos_exploration width:200 height:150 	enabled:true																		---------- l'arborescence 
+	MultiListBox 		ui_lstBoxTags				"Mots clés:" 		pos:( UIpos_exploration + [0,150 + UItaille_ecart.x]) width:200 height:( 50 )
 	edittext 				ui_editRecherche 	"" 		pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x ,  UIpos_exploration.y ] width:200 height:17		
-	dotNetControl 	ui_listeVue 			"system.windows.forms.listView" pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x , UIpos_exploration.y + ui_editRecherche.height + UItaille_ecart.y ] width:200 height:200 border:false											---------- le contenu du dossier 	
+	dotNetControl 	ui_listeVue 					"system.windows.forms.listView" pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x , UIpos_exploration.y + ui_editRecherche.height + UItaille_ecart.y ] width:200 height:200 border:false											---------- le contenu du dossier 	
 		
 		
 	--- infos ---
@@ -191,17 +205,17 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 	label 		ui_lblFichier				"Fichier: " pos:[17,50] width:44 height:19
 	edittext 	ui_editFichier 				"" pos:[59,50] width:175 height:17
-	button 		ui_btnOuvrirFichierMax "..." pos:[366,51] width:25 height:17
+	button 		ui_btnOuvrirFichierMax "..." pos:[366,51] width:25 height:17 toolTip:"Choisir le fichier .max de référence de cet asset."
 		
-	label 		ui_lblAppercu				"Apperçu:" pos:[17,78] width:44 height:19
-	edittext	 	ui_editAppercu 			"" pos:[59,78] width:135 height:17
-	button 		ui_btnOurvirAppercu	"..." pos:[366,79] width:25 height:17
-	button 		ui_btnCreerAppercu	"Créer" pos:[366,79] width:35 height:17
+	label 		ui_lblApercu				"Aperçu:" pos:[17,78] width:44 height:19
+	edittext	 	ui_editApercu 			"" pos:[59,78] width:135 height:17
+	button 		ui_btnOurvirApercu	"..." pos:[366,79] width:25 height:17 toolTip:"Choisir l'image servant d'aperçu à cet asset (200px X 200px)."
+	button 		ui_btnCreerApercu	"Créer" pos:[366,79] width:35 height:17	toolTip:"Création automatique de l'aperçu de cet asset."
 		
 	label 		ui_lblDetail				"Détail:" pos:[17,78] width:44 height:19
 	edittext	 	ui_editDetail			"" pos:[59,78] width:135 height:17
-	button 		ui_btnOurvirDetail		"..." pos:[366,79] width:25 height:17
-	button 		ui_btnCreerDetail		"Créer" pos:[366,79] width:35 height:17
+	button 		ui_btnOurvirDetail		"..." pos:[366,79] width:25 height:17	toolTip:"Choisir l'image servant d'aperçu détail à cet asset (200px X 200px)."
+	button 		ui_btnCreerDetail		"Créer" pos:[366,79] width:35 height:17 toolTip:"Création automatique de l'aperçu détail de cet asset."
 	
 	label 		ui_lblTags					"Mots clés:" pos:[16,118] width:217 height:19
 	edittext		ui_editTags 				"" pos:[16,136] width:(ui_grpInfos.width - 3* UItaille_ecart.x )  height:17
@@ -218,12 +232,14 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 ----------------------------------------
 	--- les Mise a jour UI ------
 	fn maj_UI	= (
-		ui_listBtns_infos = #( ui_lblNom, ui_editNom, ui_lblFichier,	ui_editFichier ,	ui_btnOuvrirFichierMax ,	ui_lblAppercu	,	\
-										ui_editAppercu 		,	ui_btnOurvirAppercu	,	ui_btnCreerAppercu	,	ui_lblDetail			,	ui_editDetail		, \	
+		ui_listBtns_infos = #( ui_lblNom, ui_editNom, ui_lblFichier,	ui_editFichier ,	ui_btnOuvrirFichierMax ,	ui_lblApercu	,	\
+										ui_editApercu 		,	ui_btnOurvirApercu	,	ui_btnCreerApercu	,	ui_lblDetail			,	ui_editDetail		, \	
 										ui_btnOurvirDetail	,	ui_btnCreerDetail	,	ui_lblTags	,	ui_editTags 		,	ui_lblNotes 	,	ui_editNotes 	,		ui_bmpDetail  )
 		--- les ENABLED  ---
 		ui_btnCreerAssetSelection.enabled  			= (selection as array ).count > 0 
 		ui_btnImporterAssetDansScene.enabled 	=  ui_listeVue.SelectedItems.count > 0 
+		ui_btnImporterAssetDansSceneCorona.enabled 	=  ui_listeVue.SelectedItems.count > 0 
+		ui_btnImporterAssetDansSceneProxy.enabled 	=  ui_listeVue.SelectedItems.count > 0 
 -- 		ui_arborescence.SelectedNode
 -- 		
 -- 		-- les selections --
@@ -274,10 +290,10 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		ui_lblFichier.visible  				= b_afficheInfos
 		ui_editFichier.visible  				= b_afficheInfos
 		ui_btnOuvrirFichierMax.visible  	= b_afficheInfos
-		ui_lblAppercu.visible  				= b_afficheInfos
-		ui_editAppercu.visible  			= b_afficheInfos
-		ui_btnOurvirAppercu.visible  		= b_afficheInfos
-		ui_btnCreerAppercu.visible  		= b_afficheInfos
+		ui_lblApercu.visible  				= b_afficheInfos
+		ui_editApercu.visible  			= b_afficheInfos
+		ui_btnOurvirApercu.visible  		= b_afficheInfos
+		ui_btnCreerApercu.visible  		= b_afficheInfos
 		
 		ui_lblDetail.visible  		= b_afficheInfos
 		ui_editDetail.visible  		= b_afficheInfos
@@ -312,10 +328,10 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			ui_editFichier.pos				= repere + hauteur + largeurTitre
 			ui_btnOuvrirFichierMax.pos	= repere + hauteur + largeurTitre + [ui_editFichier.width,0] + [UItaille_ecart.x, 0]
 			
-			ui_lblAppercu.pos				= repere + 2 * hauteur
-			ui_editAppercu.pos				= repere + 2 * hauteur + largeurTitre
-			ui_btnCreerAppercu.pos		= repere + 2 * hauteur + largeurTitre +  [ui_editFichier.width - 38 ,0]+ [UItaille_ecart.x, 0] 
-			ui_btnOurvirAppercu.pos		= repere + 2 * hauteur + largeurTitre +  [ui_editFichier.width,0]+ [UItaille_ecart.x, 0]
+			ui_lblApercu.pos				= repere + 2 * hauteur
+			ui_editApercu.pos				= repere + 2 * hauteur + largeurTitre
+			ui_btnCreerApercu.pos		= repere + 2 * hauteur + largeurTitre +  [ui_editFichier.width - 38 ,0]+ [UItaille_ecart.x, 0] 
+			ui_btnOurvirApercu.pos		= repere + 2 * hauteur + largeurTitre +  [ui_editFichier.width,0]+ [UItaille_ecart.x, 0]
 			
 			
 			
@@ -458,8 +474,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		noeudTVRech = ui_arborescence.Nodes.add 		nmRech
 		noeudTVRech.name = nmRech
 		nouedRecherche = biblio.arbo.getParNomUnique 	nmRech
-		for enfant in nouedRecherche.enfants where classof enfant == Noeud do
-			ajouterEnfantTreeView 	enfant  	noeudTVRech
+		if nouedRecherche != undefined do 
+			for enfant in nouedRecherche.enfants where classof enfant == Noeud do
+				ajouterEnfantTreeView 	enfant  	noeudTVRech
 		
 	)
 	
@@ -473,10 +490,10 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		noeudSelect = _noeud
 		
 		ui_listeVue.items.Clear()
-		tailleImage = biblio.appercu.tailleAppercu
-		appercusImages = dotNetObject "System.Windows.Forms.ImageList"
-		appercusImages.imageSize = dotNetObject "System.Drawing.Size" 	tailleImage.x 	tailleImage.y
-		appercusImages.ColorDepth = appercusImages.ColorDepth.Depth24Bit
+		tailleImage = biblio.apercu.tailleApercu
+		apercusImages = dotNetObject "System.Windows.Forms.ImageList"
+		apercusImages.imageSize = dotNetObject "System.Drawing.Size" 	tailleImage.x 	tailleImage.y
+		apercusImages.ColorDepth = apercusImages.ColorDepth.Depth24Bit
 		
 		
 		
@@ -492,15 +509,15 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			append listeElementAAfficher li	
 			
 			img = dotNetClass "System.Drawing.Image" --create an image
-			if doesfileexist enfant.appercu then (
+			if doesfileexist enfant.apercu then (
 -- 				debug "	APPERCU" 
-				appercusImages.images.add ( img.fromFile enfant.appercu )
+				apercusImages.images.add ( img.fromFile enfant.apercu )
 			) else (
-				appercusImages.images.add ( img.fromFile appercuVide )
+				apercusImages.images.add ( img.fromFile apercuVide )
 			)
 			i += 1
 		)
-		ui_listeVue.LargeImageList = appercusImages
+		ui_listeVue.LargeImageList = apercusImages
 		ui_listeVue.items.addRange listeElementAAfficher	
 		
 	)
@@ -509,7 +526,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		debug "afficher infos !!<<<<<<<<<<<<<<<"
 		affNom 		=""
 		affFichier 	=""
-		affAppercu 	=""
+		affApercu 	=""
 		affDetail		=""
 		affTags 		=""
 		affNotes 	=""
@@ -530,7 +547,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			affTags 		=	elem.tags as string
 			affNom 		=	elem.nom
 			affFichier 		=	elem.fichier
-			affAppercu 	=	elem.appercu
+			affApercu 	=	elem.apercu
 			affTags 		=	elem.tags as string
 			affNotes 	=	elem.notes
 			affDetail 	=	elem.detail
@@ -572,11 +589,11 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 				
 -- 				affNom 		=	elem.nom
 -- 				affFichier 		=	elem.fichier
--- 				affAppercu 	=	elem.appercu
+-- 				affApercu 	=	elem.apercu
 		)
 		ui_editNom.text			=	affNom
 		ui_editFichier.text		=	affFichier
-		ui_editAppercu.text		=	affAppercu
+		ui_editApercu.text		=	affApercu
 		ui_editTags.text			=	affTags
 		ui_editNotes.text		=	affNotes
 		ui_editDetail.text		=	affDetail
@@ -621,11 +638,11 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 	
 	fn chercheTVNodeByNomUnique 	_node		_nomUnique  = (
-		debug (" cherche node TV : " + _nomUnique )
-		debug (" 	_node.name : " + _node.name )
+-- 		debug (" cherche node TV : " + _nomUnique )
+-- 		debug (" 	_node.name : " + _node.name )
 		result = undefined
 		if _node.name == _nomUnique then (
-			debug (" 	TROUV2   : " + _node.name )
+-- 			debug (" 	TROUV2   : " + _node.name )
 			result =  _node
 		)
 		else (
@@ -695,7 +712,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		--else (
 -- 			debug "->>>>>>>>>>>>>------------->>>>>>>>>>>>----------->GAUCHE"
 			noeudClique = ui_arborescence.GetNodeAt (dotNetObject "System.Drawing.Point" arg.x arg.y)
-			if noeudClique != undefined do (
+			if noeudClique != undefined then (
 				
 				-- on se deplace dans l'arborescence ---
 				_noeudArbo = biblio.arbo.getParNomUnique 	noeudClique.name 
@@ -707,7 +724,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 						---- click droit ----
 						if not (arg.Button.value__ == 1048576) then ( 
 							debug "DROITE"
-							biblio.menu.creerMenuTest()
+							biblio.menu.creerMenuArbo()
 							
 							
 						---- click gauche ----
@@ -721,20 +738,20 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 					elemNodesVueSelect  = #()
 					--else noeudSelect = noeudVueSelect = undefined
 					
-				)	else noeudSelect = noeudVueSelect = undefined
+				)
 				
 			--)
 			
 			--- maj interface ---
 			maj_UI ()
 			afficherInfos()
-		)
+		)	else noeudSelect = noeudVueSelect = undefined
 		
 	)
 	on ui_arborescence 	ItemDrag 	arg do
 	(
 		debug " ------------- ItemDrag ARBO --------------"
-		
+		b_dragDossier = true
 -- 		noeudVueSelectBack = noeudVueSelect
 		
 		local sel = ui_listeVue.selectedItems
@@ -749,7 +766,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		(
 			result = #()
 		)
-		
+		noeudDrag = noeudSelect
 		ui_listeVue.doDragDrop 		arg.item 		dragDropEffect.Copy 
 		
 	)
@@ -765,6 +782,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	on ui_arborescence DragDrop arg do (
 	
+		
 		debug (" --------- fin drag : " + arg as string  + " --------- " )
 		debug (" 	arg.Empty : " +arg.Empty as string   )
 		debug (" 	arg.Data : " +arg.Data as string   )
@@ -777,48 +795,56 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		hitNodeDrop = ui_arborescence.GetNodeAt (dotNetObject "System.Drawing.Point" arg.x arg.y)	
 -- 		
 -- 		if noeudSelect.nomUnique !="RECHERCHE" then (
-				
-					
-			selectionElems_NomsUniques = for elemNodes in elemNodesVueSelect collect elemNodes.name
-			noeudSelecBack = noeudSelect
-			elemNodesSelecBack = elemNodesVueSelect
+		
+		selectionElems_NomsUniques = for elemNodes in elemNodesVueSelect collect elemNodes.name
+		noeudSelecBack = noeudSelect
+		elemNodesSelecBack = elemNodesVueSelect
+			
+		if b_dragDossier then (
+			
+			debug "DRAG DE DOSSIER"
+			
+			biblio.arbo.bouger  #( noeudDrag	)	noeudSelect  
+			
+		) else (
+			
+			debug "DRAG DE ELEMENTS"
+			
 			biblio.arbo.bouger  elemSelect  noeudSelect
 		
 		
-			debug ("	selectionElems_NomsUniques : " + selectionElems_NomsUniques as string )
-			--- maj interface ---
-			remplirTreeView 	biblio.arbo.root
-			
-			AfficherElements 	noeudSelect
-			noeudSelecNomUnique = noeudSelect.nomUnique
-			
-			
-			for nomUnique in selectionElems_NomsUniques do (
-				i = 0
-				for enfant in noeudSelect.enfants where classOf enfant == Element do (
-					if enfant.nomUnique == nomUnique do (
-						debug "PRESENT"
-						ui_listeVue.items.item[i].selected = true
-					)
-					i += 1
+		)
+		debug ("	selectionElems_NomsUniques : " + selectionElems_NomsUniques as string )
+		--- maj interface ---
+		remplirTreeView 	biblio.arbo.root
+		
+		AfficherElements 	noeudSelect
+		noeudSelecNomUnique = noeudSelect.nomUnique
+		
+		
+		for nomUnique in selectionElems_NomsUniques do (
+			i = 0
+			for enfant in noeudSelect.enfants where classOf enfant == Element do (
+				if enfant.nomUnique == nomUnique do (
+					debug "PRESENT"
+					ui_listeVue.items.item[i].selected = true
 				)
+				i += 1
 			)
+		)
+		
+		
+		noeudSelectmp = getTreeViewNodeByNomUnique  	noeudSelecNomUnique
+		debug ("	noeudSelectmp : " + noeudVueSelect.text as string )
+		if noeudSelectmp != undefined do 
+			ui_arborescence.SelectedNode  = noeudSelectmp
+		
+		maj_UI ()
+		afficherInfos()
 			
-			
-			noeudSelectmp = getTreeViewNodeByNomUnique  	noeudSelecNomUnique
-			debug ("	noeudSelectmp : " + noeudVueSelect.text as string )
-			if noeudSelectmp != undefined do 
-				ui_arborescence.SelectedNode  = noeudSelectmp
-			
-			maj_UI ()
-			afficherInfos()
--- 		) else (
--- 			
--- 			noeudVueSelect = noeudVueSelectBack
--- 			maj_UI ()
--- 			afficherInfos()
--- 			
--- 		)
+		
+		b_dragDossier = false
+		noeudDrag 	=undefined
 	)
 
 		
@@ -830,9 +856,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		---- click droit ----
 		if not (arg.Button.value__ == 1048576) then ( 
 			debug "  ui_listeVue  DROITE"
-		
+			biblio.menu.creerMenuElements()
 		---- click gauche ----
-		) else (
+		) --else (
 			debug "   ui_listeVue     GAUCHE"
 			
 			
@@ -853,7 +879,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			afficherInfos()
 			
 			maj_UI ()
-		)
+		--)
 	)
 	
 	on ui_listeVue		 mouseDown arg do  (
@@ -956,9 +982,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		biblio.arbo.ecrireFichier()
 	)
 
-	on ui_lblAppercu 	entered  txt 	do (
+	on ui_lblApercu 	entered  txt 	do (
 		if elemSelect.count == 1 do 
-			elemSelect[1].appercu = txt
+			elemSelect[1].apercu = txt
 		biblio.arbo.ecrireFichier()
 	)
 	on ui_editDetail 	entered  txt 	do (
@@ -1027,13 +1053,13 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 	
 	
-	on ui_btnCreerAppercu pressed do (
+	on ui_btnCreerApercu pressed do (
 		if querybox "voulez vous créer l'aperçu ?" do
 			if elemSelect.count > 0 do ( 
-				-- appercu --
+				-- apercu --
 				for elem in elemSelect do (
 					if doesfileexist elem.fichier then
-						elem.appercu = biblio.appercu.creer 	elem.fichier
+						elem.apercu = biblio.apercu.creer 	elem.fichier
 					else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
 				)
 				
@@ -1049,10 +1075,10 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	on ui_btnCreerDetail pressed do (
 		if querybox "voulez vous créer un rendu détail ?" do
 			if elemSelect.count > 0 do ( 
-				-- appercu --
+				-- apercu --
 				for elem in elemSelect do (
 					if doesfileexist elem.fichier then
-						elem.detail = biblio.appercu.creer 	elem.fichier detail:true
+						elem.detail = biblio.apercu.creer 	elem.fichier detail:true
 					else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
 				)
 				

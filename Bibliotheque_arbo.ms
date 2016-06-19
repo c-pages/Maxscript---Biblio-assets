@@ -15,7 +15,7 @@ struct Element (
 		nom 			= "nom",	------ le nom affiché de l'élément ---
 		type			= #vide,
 		fichier		= "",
-		appercu		= "",
+		apercu		= "",
 		detail			= "",
 		tags			="",
 		notes 		= "",
@@ -158,7 +158,7 @@ struct Arborescence (
 			
 			return _nouveauNoeud
 		),
-		fn creerElement nom:  parent:  type:		fichier:	appercu:  	nomUnique:		= ( 
+		fn creerElement nom:  parent:  type:		fichier:	apercu:  	nomUnique:		= ( 
 			_nouvelElement = Element()
 			
 			indexUnique += 1
@@ -168,7 +168,7 @@ struct Arborescence (
 													do parent.ajouterEnfant 			_nouvelElement
 			if type != unsupplied 			do  	_nouvelElement.type 			= type
 			if fichier != unsupplied 		do  	_nouvelElement.fichier			= fichier
-			if appercu != unsupplied 		do  	_nouvelElement.appercu		= appercu
+			if apercu != unsupplied 		do  	_nouvelElement.apercu		= apercu
 			if nomUnique != unsupplied 	then _nouvelElement.nomUnique		= nomUnique
 			
 			return _nouvelElement
@@ -210,7 +210,7 @@ struct Arborescence (
 					
 					setINISetting   fichierArbo	_noeud.nomUnique   "type"  		_noeud.type
 					setINISetting   fichierArbo	_noeud.nomUnique   "fichier"  	_noeud.fichier
-					setINISetting   fichierArbo	_noeud.nomUnique   "appercu"  	_noeud.appercu
+					setINISetting   fichierArbo	_noeud.nomUnique   "apercu"  	_noeud.apercu
 					setINISetting   fichierArbo	_noeud.nomUnique   "detail"  	_noeud.detail
 					setINISetting   fichierArbo	_noeud.nomUnique   "notes"  	_noeud.notes
 					setINISetting   fichierArbo	_noeud.nomUnique   "tags"  	_noeud.tags
@@ -236,9 +236,9 @@ struct Arborescence (
 						_type 			= getINISetting   fichierArbo	_nomUnique   "type"  
 						_nom 			= getINISetting   fichierArbo	_nomUnique   "nom"  
 						_fichier 			= getINISetting   fichierArbo	_nomUnique   "fichier"  
-						_appercu 		= getINISetting   fichierArbo	_nomUnique   "appercu"				
+						_apercu 		= getINISetting   fichierArbo	_nomUnique   "apercu"				
 						
-						_nouveauNoeud = creerElement 	nom:_nom  type:_type	fichier:_fichier  appercu:_appercu	nomUnique:_nomUnique parent:_parent
+						_nouveauNoeud = creerElement 	nom:_nom  type:_type	fichier:_fichier  apercu:_apercu	nomUnique:_nomUnique parent:_parent
 							
 						_nouveauNoeud.notes = getINISetting   fichierArbo	_nomUnique   "notes"
 						_nouveauNoeud.tags = getINISetting   fichierArbo	_nomUnique   "tags"
@@ -267,7 +267,12 @@ struct Arborescence (
 		fn lireFichier = (
 			
 			vider()			
-			root = lireNoeud   "ROOT" 	undefined 			
+			
+			-- on verifie qu'il existe sinon on creer un vierge ------
+			if not doesfileexist fichierArbo then
+				ecrireFichier()
+			else
+				root = lireNoeud   "ROOT" 	undefined 			
 			
 -- 			creerNoeud   nom:"Recherche" 	parent:root 	nomUnique:"Recherche"	
 			

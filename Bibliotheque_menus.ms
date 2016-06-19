@@ -15,19 +15,43 @@
 struct Menus (
 	public 
 		biblio,
-		fn creerMenuTest = (
+		fn creerMenuElements = (
+			debug "creerMenuTest"
+			-------------------------------------------------------------
+			------- le menu ------------------------------------------
+			-------------------------------------------------------------
+			rcMenu rcMenuElements
+			(
+				menuItem importer 			"Importer dans la scène" 
+				menuItem importerProxy 	"Importer dans la scène en tant que proxy" 
+				
+				seperator sep01
+				
+				menuItem supprimer 		"Supprimer de la bibliothèque" 
+				
+				seperator sep02
+				
+				menuItem ouvirFichier 		"Ouvir le fichier" 
+				
+			)
+			
+			
+			
+			
+			popUpMenu 	rcMenuElements
+		),
+		
+		
+		fn creerMenuArbo = (
 			debug "creerMenuTest"
 			-------------------------------------------------------------
 			------- le menu ------------------------------------------
 			-------------------------------------------------------------
 			rcMenu rcMenuDossiers
 			(
--- 				menuItem renommer 			"Renommer" 
 				menuItem nouveauDossier 	"Nouveau dossier" 
 				menuItem supprimer 			"Supprimer" 
 				
-				on renommer picked do
-				(	debug "renommer" )
 				on nouveauDossier picked do
 				(	
 					debug "nouveauDossier" 

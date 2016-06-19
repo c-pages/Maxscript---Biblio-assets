@@ -16,7 +16,7 @@ global bibliotheque
 ------------------------------------------------------------------------------
 fileIn "$userScripts\bibliotheque\Bibliotheque_menus.ms"
 fileIn "$userScripts\bibliotheque\Bibliotheque_arbo.ms"
-fileIn "$userScripts\bibliotheque\Bibliotheque_appercus.ms"
+fileIn "$userScripts\bibliotheque\Bibliotheque_apercus.ms"
 fileIn "$userScripts\bibliotheque\Bibliotheque_conversions.ms"
 
 
@@ -63,7 +63,7 @@ struct BibliothequeAsset (
 -- 	private
 	public
 		arbo			= Arborescence (),
-		appercu 	= Appercus (),
+		apercu 	= Apercus (),
 		conversion 	= Conversions (),
 		menu 		= Menus(), 
 		
@@ -100,7 +100,7 @@ struct BibliothequeAsset (
 		-- ajout asset dans la biblio --
 		fn ajouterAssetDossier _dossier = (
 			
-			local nomAppercu
+			local nomApercu
 			local sceneCourante = ""
 			
 			
@@ -133,11 +133,11 @@ struct BibliothequeAsset (
 					-- le nom --
 					_nom = getFilenameFile  fichierAImporter
 					
-					-- appercu --
-					_appercu = appercu.creer 	fichierAImporter
+					-- apercu --
+					_apercu = apercu.creer 	fichierAImporter
 					
 					-- creation de l'element dans l'arbo ---
-					nouvelAsset = arbo.creerElement 	nom:_nom  type:#model	fichier:fichierAImporter  appercu:_appercu	parent:noeudParent
+					nouvelAsset = arbo.creerElement 	nom:_nom  type:#model	fichier:fichierAImporter  apercu:_apercu	parent:noeudParent
 					arbo.ecrireFichier()
 					
 					
@@ -181,11 +181,11 @@ struct BibliothequeAsset (
 						-- le nom --
 						_nom = getFilenameFile  fichierAImporter
 						
-						-- appercu --
-						_appercu = appercu.creer 	fichierAImporter
+						-- apercu --
+						_apercu = apercu.creer 	fichierAImporter
 						
 						-- creation de l'element dans l'arbo ---
-						nouvelAsset = arbo.creerElement 	nom:_nom  type:#model	fichier:fichierAImporter  appercu:_appercu	parent:noeudParent
+						nouvelAsset = arbo.creerElement 	nom:_nom  type:#model	fichier:fichierAImporter  apercu:_apercu	parent:noeudParent
 						arbo.ecrireFichier()
 						
 						-- actualiser le treeview ---
@@ -214,14 +214,14 @@ struct BibliothequeAsset (
 			debug "	BIBLIO INITIALISATION : 1  "
 			
 			--- initialiser les structs ---
-			appercu.arbo = arbo
+			apercu.arbo = arbo
 			debug "	BIBLIO INITIALISATION : 2"
-			appercu.biblio = this
+			apercu.biblio = this
 			menu.biblio = this
 			
 			debug "	BIBLIO INITIALISATION : 3"
-			--- nettoyer le dossier des appercus (supprime les appercus non utilisé par l'arbo ) ---
-			--appercu.nettoyerAppercusOrphelins()
+			--- nettoyer le dossier des apercus (supprime les apercus non utilisé par l'arbo ) ---
+			apercu.supprimerOrphelins()
 			
 			debug "	BIBLIO INITIALISATION : 4"
 		),
@@ -333,12 +333,12 @@ show roll.ui_arborescence
 */
 
 -- bib.arbo.root.enfants.count
--- bib.appercu.creerNomAppercu()
--- bib.appercu.creer "F:\\Bibeul 3D\\00 - MA BIBLIO MAX\\Biblio\\Batiments\\immeuble - 17 etages (Maromme).max"
--- bib.appercu.creer "F:\\Bibeul 3D\\ARCHMODELS\\Archmodels Vol 52 - Realistic plants\\Archmodels Vol 52 - Realistic plants\\Vray\\006.max"
--- bib.appercu.creer "F:\\Bibeul 3D\\ARCHMODELS\\Archmodels Vol 52 - Realistic plants\\Archmodels Vol 52 - Realistic plants\\Vray\\007.max"
--- bib.appercu.creer "F:\\Bibeul 3D\\ARCHMODELS\\Archmodels Vol 52 - Realistic plants\\Archmodels Vol 52 - Realistic plants\\Vray\\008.max"
+-- bib.apercu.creerNomApercu()
+-- bib.apercu.creer "F:\\Bibeul 3D\\00 - MA BIBLIO MAX\\Biblio\\Batiments\\immeuble - 17 etages (Maromme).max"
+-- bib.apercu.creer "F:\\Bibeul 3D\\ARCHMODELS\\Archmodels Vol 52 - Realistic plants\\Archmodels Vol 52 - Realistic plants\\Vray\\006.max"
+-- bib.apercu.creer "F:\\Bibeul 3D\\ARCHMODELS\\Archmodels Vol 52 - Realistic plants\\Archmodels Vol 52 - Realistic plants\\Vray\\007.max"
+-- bib.apercu.creer "F:\\Bibeul 3D\\ARCHMODELS\\Archmodels Vol 52 - Realistic plants\\Archmodels Vol 52 - Realistic plants\\Vray\\008.max"
 
--- bib.appercu.remettreRenduInitial()
+-- bib.apercu.remettreRenduInitial()
 
 
