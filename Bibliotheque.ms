@@ -1,14 +1,13 @@
 
 
 
-global debug, b_DEBUG = true
+global debug, b_DEBUG = false
 fn debug _txt = 	if b_DEBUG do format "debug:	%\n" _txt
 
 try (	DestroyDialog bibliotheque.m_rollPrincipal ) catch ( format  ("rien à destroy\n") )
 
 
 
-global bibliotheque
 
 ------------------------------------------------------------------------------
 ------ include des sous structures ----------------------------------------
@@ -18,6 +17,7 @@ fileIn "$userScripts\bibliotheque\Bibliotheque_menus.ms"
 fileIn "$userScripts\bibliotheque\Bibliotheque_arbo.ms"
 fileIn "$userScripts\bibliotheque\Bibliotheque_apercus.ms"
 fileIn "$userScripts\bibliotheque\Bibliotheque_conversions.ms"
+fileIn "$userScripts\bibliotheque\Bibliotheque_ajout&import.ms"
 
 
 ------------------------------------------------------------------------------
@@ -37,8 +37,14 @@ struct BibliothequeAsset (
 		
 		b_infosOuvert					=	true,
 		
-		
+	
 	public 
+	
+		isOpen = false,
+		m_couleurFond = (color 56 56 56),
+	
+	
+	
 	-- quelques fonctions pour y acceder --------------
 		fn setTailleRolloutPrincipal 		tailleRollOut  		= ( m_tailleRolloutPrincipal 	= tailleRollOut 	),
 		fn setPosRolloutPrincipal 			posRollOut  	= ( m_posRolloutPrincipal 	= posRollOut 		),
@@ -49,7 +55,6 @@ struct BibliothequeAsset (
 		fn getPosRolloutEdition 							  		= ( return	m_posRolloutEdition 					),
 		fn setInfosOuvert 					bool				= ( b_infosOuvert 				= bool 				),
 		fn getInfosOuvert 										= ( return b_infosOuvert 							),
-		
 		
 	-- les rollouts de la bibliotheque	----------------------------------
 -- 	private
@@ -63,10 +68,82 @@ struct BibliothequeAsset (
 -- 	private
 	public
 		arbo			= Arborescence (),
-		apercu 	= Apercus (),
+		apercu 		= Apercus (),
 		conversion 	= Conversions (),
 		menu 		= Menus(), 
+		importer		= Import(),
+		ajouter		= Ajout(),
 		
+		fn  suprimerElems = (
+			if querybox "Etes-vous sûr de vouloir supprimer le ou les élément de la bibliothèque?" do (
+			
+				debug "supprimer" 
+				elemSelect = m_rollPrincipal.elemSelect
+				if elemSelect.count>0 do
+					for elem in elemSelect do 
+						elem.retirer()
+					
+				arbo.ecrireFichier()
+								--- maj interface ---
+				m_rollPrincipal.remplirTreeView 	arbo.root
+				m_rollPrincipal.majTotal ()
+			)
+		),
+		
+		fn  suprimerNoeud = (
+			if querybox "Etes-vous sûr de vouloir supprimer ce dossier et son contenu de la bibliothèque?" do (
+				debug "supprimer" 
+				noeudSelect = m_rollPrincipal.noeudSelect
+				if noeudSelect.nomUnique != "ROOT" do (
+					debug ("supprimer : noeudSelect : " + noeudSelect.nom )
+					noeudSelect.retirer()
+					arbo.ecrireFichier()
+									--- maj interface ---
+					m_rollPrincipal.remplirTreeView 	arbo.root
+					m_rollPrincipal.majTotal ()
+				)
+			)
+		),
+		fn nouveauNoeud = (
+			
+			debug "nouveauDossier" 
+			noeudSelect = m_rollPrincipal.noeudSelect
+			if noeudSelect != undefined do (
+				arbo.creerNoeud  nom:"NouveauDossier" 	parent:noeudSelect 
+			
+				arbo.ecrireFichier()
+-- 						bibliotheque.m_rollPrincipal.
+							--- maj interface ---
+				
+				m_rollPrincipal.remplirTreeView 	arbo.root
+				m_rollPrincipal.majTotal ()
+			)
+		),
+		
+		fn   importerDansScene 	elemSelect = (
+		
+			for elem in elemSelect do (
+				if doesfileexist elem.fichier then
+					importer.fichier  elem.fichier	
+				else format "ERREUR : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
+			)
+		),
+		
+		fn   importerDansSceneCorona 	elemSelect = (
+		
+			for elem in elemSelect do (
+				if doesfileexist elem.fichier then
+					importer.corona  elem.fichier	
+				else format "ERREUR : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
+			)
+		),
+		
+		fn   importerDansSceneProxy 	elemSelect = (
+			for elem in elemSelect do 
+				if doesfileexist elem.fichier then
+					importer.proxy  elem.fichier	elem
+				else format "ERREUR : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
+		),
 		
 	-- les methodes  publics ------------------------------------------------
 	public
@@ -80,7 +157,9 @@ struct BibliothequeAsset (
 			debug "ouvrir fenetre ..."
 			
 			try (	DestroyDialog m_rollPrincipal ) catch ( format  ("rien à destroy\n") )
-			createDialog m_rollPrincipal pos:m_posRolloutPrincipal  width:m_tailleRolloutPrincipal.x  height:m_tailleRolloutPrincipal.y   lockHeight:false  style:#(#style_resizing,#style_toolwindow, #style_sysmenu )
+			createDialog m_rollPrincipal pos:m_posRolloutPrincipal  width:m_tailleRolloutPrincipal.x  height:m_tailleRolloutPrincipal.y  \
+						lockHeight:false  style:#(#style_resizing,#style_titlebar , /*#style_toolwindow, */#style_sysmenu, #style_minimizebox, #style_maximizebox/* , #style_sunkenedge */ )	\
+						-- bgcolor:m_couleurFond
 			
 			debug " ... ouvrir fenetre 1 ..."
 			m_rollPrincipal.biblio = this
@@ -95,118 +174,19 @@ struct BibliothequeAsset (
 			
 			debug "...fenetre ouverte."
 		),
-		
-		
-		-- ajout asset dans la biblio --
-		fn ajouterAssetDossier _dossier = (
-			
-			local nomApercu
-			local sceneCourante = ""
-			
-			
-		
-			selectionTV = m_rollPrincipal.getListeSelection()
-			
-			debug (" _dossier ::::::::::::::::::: " + _dossier as string )
-			debug (" selectionTV ::::::::::::::::::: " + selectionTV as string )
-			if selectionTV !=undefined do (
-				
-				holdMaxFile() 
-			
-				debug "ajouterAssetFichier"
-				fichiersDossier = getFiles ( _dossier+  "\\*.max") 
-			debug (" fichiersDossier ::::::::::::::::::: " + fichiersDossier as string )
-				fichiersAImporter = 	for fichier in fichiersDossier /*where getFilenameType fichier =="max" */	collect fichier
-				
-				for fichierAImporter in fichiersDossier do
-				(
-					debug ( "-----------------Importer " + fichierAImporter + "   --------------------------" )
-					
-					resetMaxFile #noPrompt
-					
-					
-					-- noeud dans lequel l'integrer --
-					noeudParent = arbo.getParNom 	selectionTV.text
-					if classOf noeudParent == Element do
-						noeudParent = noeudParent.parent
-					
-					-- le nom --
-					_nom = getFilenameFile  fichierAImporter
-					
-					-- apercu --
-					_apercu = apercu.creer 	fichierAImporter
-					
-					-- creation de l'element dans l'arbo ---
-					nouvelAsset = arbo.creerElement 	nom:_nom  type:#model	fichier:fichierAImporter  apercu:_apercu	parent:noeudParent
-					arbo.ecrireFichier()
-					
-					
-					
-				)
-			
-				-- actualiser le treeview ---
-				m_rollPrincipal.remplirTreeView 	arbo.root
-				
-				fetchMaxFile quiet:true
-			)
-		
-			
+		fn fermerFenetre = (
+			try (	DestroyDialog m_rollPrincipal ) catch ( format  ("rien à destroy\n") )
 		),
 		
+	--  creation ASSETS  ------------------------------------------------
+private
+	
 		
 		
-		-- ajout asset dans la biblio --
-		fn ajouterAssetFichier = (
-			
-			debug "ajouterAssetFichier"
-			
-			fichierAImporter = getOpenFileName  caption:"Fichier à integrer dans la bibliotheque" \
-											types:"model (*.max)|*.max|All Files (*.*)|*.*|"	
-			
-			if 	fichierAImporter != undefined  do ( 
-				
-					holdMaxFile() 
-					
-					resetMaxFile #noPrompt
-				
-					debug ( "Importer " + fichierAImporter )
-					selectionTV = m_rollPrincipal.getListeSelection()
-					if selectionTV !=undefined do (
-						
-						-- noeud dans lequel l'integrer --
-						noeudParent = arbo.getParNom 	selectionTV.text
-						if classOf noeudParent == Element do
-							noeudParent = noeudParent.parent
-						
-						-- le nom --
-						_nom = getFilenameFile  fichierAImporter
-						
-						-- apercu --
-						_apercu = apercu.creer 	fichierAImporter
-						
-						-- creation de l'element dans l'arbo ---
-						nouvelAsset = arbo.creerElement 	nom:_nom  type:#model	fichier:fichierAImporter  apercu:_apercu	parent:noeudParent
-						arbo.ecrireFichier()
-						
-						-- actualiser le treeview ---
-						m_rollPrincipal.remplirTreeView 	arbo.root
-						
-						
-					)
--- 					show 	( selectionTV )
-					
-					fetchMaxFile quiet:true
-					
-				)
-			
-		),
-		
-		
-	-- les methodes  privées -----------------------------------------------
-	private
 		
 		-- l'initialisation globale --
 		fn initialiser = (
+			
 			debug "#### BIBLIO INITIALISATION  ####"
 			-- inclusion des rollouts --
 			include  "$userScripts\bibliotheque\Bibliotheque_rollouts.ms" 
@@ -217,11 +197,18 @@ struct BibliothequeAsset (
 			apercu.arbo = arbo
 			debug "	BIBLIO INITIALISATION : 2"
 			apercu.biblio = this
-			menu.biblio = this
+			arbo.biblio = this
+			ajouter.biblio = this
+			importer.biblio = this
+			conversion.biblio = this
 			
 			debug "	BIBLIO INITIALISATION : 3"
-			--- nettoyer le dossier des apercus (supprime les apercus non utilisé par l'arbo ) ---
-			apercu.supprimerOrphelins()
+			
+			--- nettoyer le dossier des apercus (supprime les apercus non utilisé par l'arbo )  peut etre long ---
+-- 			
+			arbo.nettoyer()
+			
+			
 			
 			debug "	BIBLIO INITIALISATION : 4"
 		),
@@ -248,13 +235,15 @@ struct BibliothequeAsset (
 
 bibliotheque = BibliothequeAsset()
 
-bibliotheque.ouvrirFenetre()
+-- bibliotheque.ouvrirFenetre()
 roll = bibliotheque.m_rollPrincipal
-
 -- bib.arbo.afficher()
 
 
 /*
+
+bibliotheque.arbo.nettoyer()
+
 
 fn chercherNoeud  _noeud _nomAChercher = (
 	format " ? chercheDsNoeud : % ?\n"  _noeud.name

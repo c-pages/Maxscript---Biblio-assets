@@ -3901,8 +3901,468 @@ struct CoronaConverterStr (
 
 
 CoronaConverter = CoronaConverterStr()
-CoronaProxyConverter = CoronaProxyConverterStr()
+-- CoronaProxyConverter = CoronaProxyConverterStr()
+
+-- CoronaProxyConverter.openGui()
 
 
 
 
+(
+	/* #####################################################################################################
+	
+	Copyright (C) 2015 Martin Geupel (http://www.racoon-artworks.de) , All Rights Reserved
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this software (the "Software"), to use, 
+	copy, and/or distribute the software, subject to the following conditions:
+
+	- The above copyright notice and this permission notice shall be included in all copies of the Software.
+	- You may not misrepresent the name of the Original Author or the name of the Software.
+	- You can distribute the Software only free of charge, you may not sell and/or rent the Software.
+	- You may add functionality and/or modify existent functionaly if it is then clearly marked and noted in this Header.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE 
+	WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
+	COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+	
+	
+	changelog:
+	*v0.04 - [2015/11/02] -----------------------------------------------------------------------------
+	- fix: proxies are always exported as animation
+	- undo can be disabled for exporting hundreds of objects => tremendous speedup 
+	- some other minor speed improvements 
+	- changed .cproxy to .cgeo
+	*v0.03 - [2015/09/10] -----------------------------------------------------------------------------
+	- animated proxy support (requires build of 2015/09/10 yyyy/mm/dd or later)
+	*v0.02 - [2015/07/22] -----------------------------------------------------------------------------
+	- code documentation
+	- fixed: output path cancel crashes the script
+	- changed default path
+	*v0.01 - [2015/06/28] -----------------------------------------------------------------------------
+	- initial beta release of the rewritten exporter
+	
+	##################################################################################################### */
+	
+	global CoronaProxyExporter
+	
+	struct CoronaProxyExporterStruct (
+		version = "0.04",
+		
+		settings =(
+			struct settings (
+				iniPath = "$plugcfg\\CoronaProxyExporter.ini",
+				outputPath = (getDir #export),
+				exportToSingle = false,
+				exportToSingleName = "combinedObjectName",
+				
+				exportAnimated = false,
+				animUseActiveTime = true,
+				animStartFrame = 0,
+				animEndFrame = 100,
+				
+				cacheInRam = false,
+				replaceSourceObjects = true,
+				promptWhenOverwrite = true,
+				proxyObjPrefix = "crp_",
+				visualizationMethod = 3,
+				pointCloundPercentage = 9.0,
+				dialogPosX = 0.0,
+				dialogPosY = 0.0
+			)
+			settings()
+		),
+		
+		tempConvData =(
+			struct tempConvData (
+				instanceGroups = #(),
+				instanceProxies = #()
+			)
+			tempConvData()
+		),
+		
+		fn splitInstanceGroups objArray =(
+			local groupArr = #()
+			local workingCopy = objArray
+			local instances = #()
+			
+			for i = 1 to workingCopy.count do(
+				if workingCopy[i] != undefined do(
+					local grp
+					local crnt = workingCopy[i]
+					
+					InstanceMgr.GetInstances crnt &rptInstances  -- get all instances of the current object
+					instances = for n in rptInstances where (areNodesInstances crnt n) AND (findItem workingCopy n != 0) collect n -- make sure they are instances, not references and check if these are selected
+					
+					for r in instances do(  -- for each found instance set the working arrays item to undefined (so we skip it if we already got the instance before)
+						workingCopy[finditem workingCopy r] = undefined
+					)
+					append groupArr instances -- append the current instance group to the overall collection
+				)
+			)
+			tempConvData.instanceGroups = groupArr
+		),
+		
+		fn validateOutputPath outPath =(  
+			local newPath = outPath
+			if (doesFileExist outpath) and settings.promptWhenOverwrite do ( -- checks if the path already exists and pops up a notification
+				if not (queryBox (outPath + "\n already exists, do you want to overwrite?") title:"Name conflict") then(
+					newPath = undefined
+				)
+			)
+			newPath
+		),
+		
+		fn createProxyFiles =(
+			local ig = tempConvData.instanceGroups
+			local proxyArr = #()
+			
+			for subGrp in ig do ( -- for each group of instances do...
+				local crntObj = subGrp[1] -- take the first object in the group
+				if settings.exportToSingle then(  -- if export to single proxy mode..
+					local outname = settings.exportToSingleName
+					local outpath = (settings.outputPath + "\\" + outname + ".cgeo") -- we already validated singleProxy export path before
+				)else(
+					local outname = crntObj.name -- proxy will have the name of the first object in the group
+					local outpath = validateOutputPath (settings.outputPath + "\\" + outname + ".cgeo") -- check if the file already exists 
+				)
+				
+				
+				if outpath == undefined then( -- skip if path is invalid
+					append proxyArr undefined
+				)else(
+					local newProxy = CProxy name:(settings.proxyObjPrefix + outname) -- create a new proxy instance
+					newProxy.cacheInRam = settings.cacheInRam
+					newProxy.previzType = settings.visualizationMethod - 1
+					newProxy.pointcloudDensity = settings.pointCloundPercentage
+					
+					append proxyArr newProxy  -- collect all created proxies
+					
+					if settings.exportAnimated then(
+						local startFr = if settings.animUseActiveTime then (animationRange.start as integer / ticksperframe) else settings.animStartFrame
+						local endFr =  if settings.animUseActiveTime then (animationRange.end as integer / ticksperframe) else settings.animEndFrame
+						newProxy.animationOffset = startFr
+						CProxy.ProxyFp.fromSceneAnimated newProxy crntObj outpath startFr endFr 10000 1 
+					)else(
+						CProxy.ProxyFp.fromScene newProxy crntObj outpath -- export the proxy to disk
+					)
+				)
+			)
+			tempConvData.instanceProxies = proxyArr 
+		),
+		
+		fn distributeProxies =(
+			local iGrp = tempConvData.instanceGroups -- all instance groups
+			local iPrx = tempConvData.instanceProxies -- associated proxies (indices match)
+			
+			for iGrpIndex = 1 to iGrp.count do(
+				local crntGroup = iGrp[iGrpIndex]
+				local crntPrx = iPrx[iGrpIndex]
+				if crntPrx != undefined do( -- if the proxy exists...
+					if settings.replaceSourceObjects then( -- replaces all original objects
+						InstanceMgr.MakeObjectsUnique crntGroup #Group -- make the group of instances unique! important, we would modify all non-selected instances too
+						maxOps.CollapseNodeTo crntGroup[1] 1 off -- collapse the stack
+						for i in crntGroup do(
+							i.baseobject = crntPrx -- replace the baseobject with the cproxy instance 
+							i.name = settings.proxyObjPrefix + i.name -- append the prexfix to the name
+						)
+						delete crntPrx -- delete the original proxy object, we don't need it anymore
+					)
+					else( -- if we don't replace the original objects
+						for i = 1 to crntGroup.count do( 
+							local origObj = crntGroup[i]
+							local prxClone
+							if i == 1 then prxClone = crntPrx else prxClone = instance crntPrx -- for each but the first item of the group make an instance of the proxy (we already have the first)
+							
+							prxClone.transform = origObj.transform  -- assign object properties
+							prxClone.material = origObj.material 
+							prxClone.wirecolor = origObj.wirecolor
+							prxClone.renderable = origObj.renderable
+							prxClone.primaryVisibility = origObj.primaryVisibility
+							if settings.exportToSingle then (delete crntGroup)  -- if we are ONLY exporting 1 collapsed proxy, then we do not need the collapsed mesh (used for generating the proxy) anymore
+						)
+					)
+				)
+			)
+		),
+		
+		fn cleanUpConversionData =(
+			tempConvData.instanceGroups = #()
+			tempConvData.instanceProxies = #()
+		),
+		
+		fn returnValidNodes input =(
+			for obj in input where (canConvertTo obj Editable_mesh) and classof obj != CProxy collect obj
+		),
+		
+		fn collapseNodesToSingle objList workWithCopy:false =(
+			-- http://forums.cgsociety.org/showthread.php?f=98&t=922140&page=1&pp=15
+			if workWithCopy then (
+				local objArr
+				maxOps.CloneNodes objList cloneType:#instance newNodes:&objArr
+			)else(
+				local objArr = objList
+			)
+			
+			local j = 1
+			local count = objArr.count
+			
+			while objArr.count > 1 do
+			(
+				if classof objArr[j] != Editable_Poly then convertToPoly objArr[j]
+				
+				polyop.attach objArr[j] objArr[j+1]
+				deleteItem objArr (j+1)
+				j += 1
+				if (j + 1) > objArr.count then j = 1
+			)
+			objArr[1].name = settings.exportToSingleName  
+			objArr[1]
+		),
+		
+		fn runExport silent:false enabledUndo:on =(
+			if getCommandPanelTaskMode() != #create then setCommandPanelTaskMode #create 
+			if (doesFileExist settings.outputPath) then(
+				undo "Proxy Export" enabledUndo ( 
+					local validNodes = returnValidNodes (selection as array)  -- filter for geometry, exclude cproxy
+					if validNodes.count != 0 then(
+						if settings.exportToSingle == true then(  -- if only outputting 1 combined proxy..
+							local result = validateOutputPath (settings.outputPath + "\\" + settings.exportToSingleName + ".cgeo")  -- check the path
+							if result != undefined do(
+								
+								if settings.replaceSourceObjects then(
+									validNodes = #(collapseNodesToSingle validNodes workWithCopy:false)  -- combine all original objects to 1 editable poly (replacing)
+								)else(
+									validNodes = #(collapseNodesToSingle validNodes workWithCopy:true)  -- make a copy of the selected objects and collapse the copies (not replacing)
+								)
+								splitInstanceGroups validNodes
+								createProxyFiles()
+								distributeProxies()
+								cleanUpConversionData()
+							)
+						)else(  -- when exporting with multiple
+							splitInstanceGroups validNodes  -- split selection into instanced groups
+							createProxyFiles()  -- create proxy objects, save to disk
+							distributeProxies() -- distribute the proxies on all instances (-> instanced groups)
+							cleanUpConversionData()  -- reset the conversionData arrays (when someone presses the button twice)
+						)
+						
+					)
+				)
+				true
+			)
+			else(
+				if not silent do messagebox "Output path is invalid" title:"Error"
+				false
+			)
+		),
+		
+		
+		
+		
+		
+		
+		
+		-- rollout related
+		proxyExporterRoll = (
+			rollout proxyExporterRoll ("Corona Proxy Exporter v" + version) width:350 (
+				local owner = if owner != undefined do owner
+				group "Output options" (
+					button btnSelectOutFolder owner.settings.outputPath width:330
+					radiobuttons rdoSingle labels:#("Collapse and export to single proxy file", "Export each node to seperate proxy file") align:#left default:(if owner.settings.exportToSingle == true then 1 else 2) 
+					label lblSinglePrx "Combined Proxy name: " width:112 across:2 align:#left offset:[0,3]  enabled:false
+					edittext edxSingleName "" text:"" pos:(lblSinglePrx.pos + [113, -1]) width:200 enabled:false
+					checkbox chkAnimated "Animated" 
+					radiobuttons rdoAnimInterval labels:#("Active time segment", "From frame / To frame") align:#left default:1 columns:1
+					spinner spnAnimFrom "" type:#integer range:[-999999, 999999, 0] width:60 pos:(rdoAnimInterval.pos + [130, 15])
+					spinner spnAnimTo "" type:#integer range:[-999999, 999999, 100] width:60 pos:(spnAnimFrom.pos + [20, 0])
+					label lblWarn1 "WARNING: Single Proxy export may take several seconds to" offset:[0,6]
+					label lblWarn2 "complete. Can also be very memory intensive when used on"
+					label lblWarn3 "many objects or objects with a high face count."
+				)
+				
+				group "Proxy properties" (
+					checkbox chkCacheInRam "Cache in RAM" checked: owner.settings.cacheInRam
+					checkbox chkReplaceSource "Replace source objects" checked:owner.settings.replaceSourceObjects 
+					checkbox chkPromptWhenOverwrite "Warn for existing .cgeo files" checked:owner.settings.promptWhenOverwrite
+					edittext edtProxyPrefix "Proxy name prefix: " text:owner.settings.proxyObjPrefix width:200
+					dropdownlist drpVizMethod "Viewport visualization method: " items:#("Solid bounding box", "Wire bounding box", "Point cloud", "Full mesh") selection:owner.settings.visualizationMethod
+					spinner spnPCloudPerc "Point cloud displayed [%]: " align:#left width:100 type:#float range:[0.0, 100.0, owner.settings.pointCloundPercentage]
+				)
+				
+				group "Export" (
+					button btnExport "Export selected objects" width:180 height:30
+				)
+				
+				fn animControlsEnabled state =(
+					rdoAnimInterval.enabled = state 
+					spnAnimFrom.enabled = state 
+					spnAnimTo.enabled = state 
+					owner.settings.exportAnimated = false
+				)
+				
+				on btnSelectOutFolder pressed do(
+					local svpath = getSavePath()
+					if svpath != undefined then(
+						owner.settings.outputPath = svpath
+						btnSelectOutFolder.tooltip = btnSelectOutFolder.text = owner.settings.outputPath 
+					)
+				)
+				
+				on rdoSingle changed state do(
+					if state == 1 then(
+						owner.settings.exportToSingle = true
+						lblSinglePrx.enabled = edxSingleName.enabled = true
+						chkAnimated.enabled = false
+						chkAnimated.checked = false
+						animControlsEnabled false
+						
+					)else(
+						owner.settings.exportToSingle = false
+						lblSinglePrx.enabled = edxSingleName.enabled = false
+						chkAnimated.enabled = true
+						animControlsEnabled true
+					) 
+				)
+				
+				on edxSingleName changed textstr do(
+					owner.settings.exportToSingleName = textstr
+				)
+				
+				on chkAnimated changed state do(
+					animControlsEnabled state
+					
+					owner.settings.exportAnimated = state
+				)
+				
+				on rdoAnimInterval changed state do(
+					owner.settings.animUseActiveTime = if state == 1 then true else false
+				)
+				
+				on spnAnimFrom changed val do(
+					owner.settings.animStartFrame = val
+					if spnAnimFrom.value > spnAnimTo.value then(
+						spnAnimTo.value = spnAnimFrom.value + 1
+						owner.settings.animEndFrame = spnAnimTo.value
+					)
+				)
+				
+				on spnAnimTo changed val do(
+					owner.settings.animEndFrame = val
+					if spnAnimTo.value < spnAnimFrom.value then(
+						spnAnimFrom.value = spnAnimTo.value - 1
+						owner.settings.animStartFrame = spnAnimFrom.value
+					)
+				)
+				
+				on chkCacheInRam changed state do(
+					owner.settings.cacheInRam = state
+				)
+				
+				on chkReplaceSource changed state do(
+					owner.settings.replaceSourceObjects = state
+				)
+				
+				on chkPromptWhenOverwrite changed state do(
+					owner.settings.promptWhenOverwrite = state
+				)
+				
+				on edtProxyPrefix changed textstr do(
+					owner.settings.proxyObjPrefix = textstr
+				)
+				
+				on drpVizMethod selected state do( 
+					owner.settings.visualizationMethod = state
+				)
+				
+				on spnPCloudPerc changed state do(
+					owner.settings.pointCloundPercentage = state
+				)
+				
+				on btnExport pressed do(
+					with redraw off(
+						local useUndo = on
+						if selection.count > 100 then(
+							result = querybox "You are trying to export a big number of objects (100+). This can lead to a HUGE slowdown if undo is enabled during this process. Do you want to temporarily disable undo until export is finshed?" title:"Warning"
+							if result then useUndo = off
+						)
+						owner.runExport enabledUndo:useUndo
+					)
+				)
+				
+				
+				on proxyExporterRoll open do(
+					fn getIniSet sectionStr keyStr default =(
+						out = (getinisetting owner.settings.iniPath sectionStr keyStr) as string
+						if out == "" then out = default as string
+						out
+					)
+					
+					pxs = owner.settings
+					
+					btnSelectOutFolder.text = btnSelectOutFolder.tooltip = pxs.outputPath = (getIniSet "Options" "outputPath" pxs.outputPath)
+					rdoSingle.state = if (getIniSet "Options" "exportToSingle_Value" pxs.exportToSingle) == "true" then 1 else 2
+					owner.settings.exportToSingle = true
+					lblSinglePrx.enabled = edxSingleName.enabled = pxs.exportToSingle = if rdoSingle.state == 1 then true else false
+					edxSingleName.text = pxs.exportToSingleName = (getIniSet "Options" "exportToSingleName_Text" pxs.exportToSingleName)
+					chkCacheInRam.checked = pxs.cacheInRam = if (getIniSet "Options" "cacheInRam_Checked" pxs.cacheInRam) == "true" then true else false
+					chkReplaceSource.checked = pxs.replaceSourceObjects = if (getIniSet "Options" "replaceSource_Checked" pxs.replaceSourceObjects) == "true" then true else false
+					chkPromptWhenOverwrite.checked = pxs.promptWhenOverwrite = if (getIniSet "Options" "promptWhenOverwrite_Checked" pxs.promptWhenOverwrite) == "true" then true else false
+					edtProxyPrefix.text = pxs.proxyObjPrefix = (getIniSet "Options" "proxyObjPrefix_Text" pxs.proxyObjPrefix)
+					drpVizMethod.selection = pxs.visualizationMethod = (getIniSet "Options" "visualizationMethod_Value" pxs.visualizationMethod) as integer
+					spnPCloudPerc.value = pxs.pointCloundPercentage = (getIniSet "Options" "pointCloundPercentage_Value" pxs.pointCloundPercentage) as float
+					
+					if rdoSingle.state == 1 then (
+						chkAnimated.enabled = false
+						animControlsEnabled false
+						
+					)else(
+						chkAnimated.enabled = true
+						animControlsEnabled false
+					)
+					
+					pxs.dialogPosX = (getIniSet "DialogPos" "pos_x" pxs.dialogPosX) as float 
+					pxs.dialogPosY = (getIniSet "DialogPos" "pos_y" pxs.dialogPosY) as float 
+					if pxs.dialogPosX != 0.0 and pxs.dialogPosY != 0.0 then (
+						if (pxs.dialogPosX > 0 and pxs.dialogPosX < sysInfo.desktopSize.x - 200) do(
+							if (pxs.dialogPosY > 0 and pxs.dialogPosY < sysInfo.desktopSize.y - 100) do(
+								SetDialogPos proxyExporterRoll [pxs.dialogPosX, pxs.dialogPosY]
+							)
+						)
+					)
+				)
+				
+				on proxyExporterRoll close do(
+					ini = owner.settings.iniPath
+					
+					setINISetting ini "options" "outputPath" (btnSelectOutFolder.text as string)
+					setINISetting ini "options" "exportToSingle_Value" (if rdoSingle.state == 1 then "true" else "false")
+					setINISetting ini "options" "exportToSingleName_Text" (edxSingleName.text as string)
+					setINISetting ini "options" "cacheInRam_Checked" (chkCacheInRam.checked as string)
+					setINISetting ini "options" "replaceSource_Checked" (chkReplaceSource.checked as string)
+					setINISetting ini "options" "promptWhenOverwrite_Checked" (chkPromptWhenOverwrite.checked as string)
+					setINISetting ini "options" "proxyObjPrefix_Text" (edtProxyPrefix.text as string)
+					setINISetting ini "options" "visualizationMethod_Value" (drpVizMethod.selection as string)
+					setINISetting ini "options" "pointCloundPercentage_Value" (spnPCloudPerc.value as string)
+					
+					try(setINISetting ini "DialogPos" "pos_x" ((GetDialogPos owner.proxyExporterRoll).x as string) )catch()
+					try(setINISetting ini "DialogPos" "pos_y" ((GetDialogPos owner.proxyExporterRoll).y as string) )catch()
+				)
+				
+			)
+		),
+		
+		fn openGui =(
+			try(destroyDialog CoronaProxyExporter.proxyExporterRoll)catch()
+			createDialog proxyExporterRoll
+		), 
+		
+		fn closeGui = (
+			try(destroyDialog proxyExporterRoll)catch()
+		),
+		
+		on create do(
+			proxyExporterRoll.owner = this
+		)
+	)
+	CoronaProxyExporter = CoronaProxyExporterStruct()
+)

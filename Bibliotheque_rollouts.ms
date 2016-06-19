@@ -106,10 +106,12 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 --- declarations locales -----
 --------------------------------
 	local m_rollEditerTags
-	
+	local colorFondVue = color 96 96 96
+	local colorTextes = color 220 220 220
+	local colorImage = color 36 36 36
 	
 	local biblio ---- le struct principal de la bibliotheque ----
-	local apercuVide = "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2014 - 64bit\\ENU\\scripts\\Bibliotheque\\apercus\\app_vide.jpg"
+	local apercuVide = "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2014 - 64bit\\ENU\\scripts\\Bibliotheque\\apercus\\apVide.jpg"
 	local	EcouteurChangeSelection 	--- ecouteur de changement de selection de la scene ---
 	
 	-- dimensionnement --
@@ -140,11 +142,14 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	local noeudVueSelect 
 	local noeudDrag
 	
+	local noeudRecherche
+	
 	-- drag end drop du dotNet ---
 	local dragDropEffect = dotNetClass "System.Windows.Forms.DragDropEffects"
 	
 	local ui_listBtns_infos=#()
 	local b_dragDossier = false
+	local b_autoExpendArbo = true
 	
 --------------------------------------
 ---------- L'INTERFACE ----------
@@ -192,7 +197,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		
 	--- infos ---
-	groupBox			ui_grpInfos				"Infos "	pos:[ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x , ui_editRecherche.pos.y] width:(256 + 2*UItaille_marge.x)  height:200 
+	groupBox			ui_grpInfos				""	pos:[ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x , ui_editRecherche.pos.y] width:(256 + 2*UItaille_marge.x)  height:200 	
 		
 	---- Edition des infos----	
 	checkbutton 		ui_btnAfficherInfo		"I" pos:[ui_grpInfos.pos.x ,   ui_grpInfos.pos.y  + ui_grpInfos.height + UItaille_ecart.y ] \
@@ -210,6 +215,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	label 		ui_lblApercu				"Aperçu:" pos:[17,78] width:44 height:19
 	edittext	 	ui_editApercu 			"" pos:[59,78] width:135 height:17
 	button 		ui_btnOurvirApercu	"..." pos:[366,79] width:25 height:17 toolTip:"Choisir l'image servant d'aperçu à cet asset (200px X 200px)."
+-- 	button 		ui_btnOurvirSceneApercu	"..." pos:[366,79] width:25 height:17 toolTip:"Choisir l'image servant d'aperçu à cet asset (200px X 200px)."
 	button 		ui_btnCreerApercu	"Créer" pos:[366,79] width:35 height:17	toolTip:"Création automatique de l'aperçu de cet asset."
 		
 	label 		ui_lblDetail				"Détail:" pos:[17,78] width:44 height:19
@@ -230,43 +236,25 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 ----------------------------------------
 ---------- les Methodes  -------------
 ----------------------------------------
-	--- les Mise a jour UI ------
-	fn maj_UI	= (
-		ui_listBtns_infos = #( ui_lblNom, ui_editNom, ui_lblFichier,	ui_editFichier ,	ui_btnOuvrirFichierMax ,	ui_lblApercu	,	\
-										ui_editApercu 		,	ui_btnOurvirApercu	,	ui_btnCreerApercu	,	ui_lblDetail			,	ui_editDetail		, \	
-										ui_btnOurvirDetail	,	ui_btnCreerDetail	,	ui_lblTags	,	ui_editTags 		,	ui_lblNotes 	,	ui_editNotes 	,		ui_bmpDetail  )
-		--- les ENABLED  ---
-		ui_btnCreerAssetSelection.enabled  			= (selection as array ).count > 0 
-		ui_btnImporterAssetDansScene.enabled 	=  ui_listeVue.SelectedItems.count > 0 
-		ui_btnImporterAssetDansSceneCorona.enabled 	=  ui_listeVue.SelectedItems.count > 0 
-		ui_btnImporterAssetDansSceneProxy.enabled 	=  ui_listeVue.SelectedItems.count > 0 
--- 		ui_arborescence.SelectedNode
--- 		
--- 		-- les selections --
--- 		for id in elemIDVueSelect do 
--- 			ui_listeVue.Items.item[id].selected = true
-		if noeudVueSelect != undefined do 
-			ui_arborescence.SelectedNode = noeudVueSelect
+	
+	fn selectElems 	_elems 	= (
 		
--- 		ui_arborescence.ExpandAll()
-		
--- 		ui_arborescence. noeudSelect
-		--- les tags ---
-		try (
-			ui_lstBoxTags.items = #()
-			listTagsTmp = #()
-			tags = biblio.arbo.getToutTags 	node:noeudSelect
-			debug (" TOUT LES TAGS : " + tags as string )
-			for  tag in tags do(
-				
-				append listTagsTmp		tag
+		for elem in _elems do (
+			nomUnique = elem.nomUnique
+			i = 0
+			for enfant in noeudSelect.enfants where classOf enfant == Element do (
+				if enfant.nomUnique == nomUnique do (
+					debug "PRESENT"
+					ui_listeVue.items.item[i].selected = true
+				)
+				i += 1
 			)
-			sort  listTagsTmp
-			ui_lstBoxTags.items = listTagsTmp
-		) catch ()
+		)
+		
+		
 	)
 	
-	
+
 	fn repositionnerElementsUI 	tailleRollOut	= (
 		
 		-- on redim et repositionne les elements ---
@@ -376,45 +364,8 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		
 	)
-	
-	
-	---- 	initialisation de l'interface  ----
-	fn initialiser_interface  = (
-		
--- 		-- la taille minimum de la fenetre ----
--- 		UItaille_fenetreMin.y =  UIpos_exploration.y
-		
-		---- la vue liste----
-		ui_listeVue.borderstyle = (dotnetclass "System.Windows.Forms.BorderStyle").fixedsingle
-		ui_listeVue.showitemtooltips = true
-		ui_listeVue.gridlines = false
-		ui_listeVue.checkboxes = false
-		ui_listeVue.labeledit = false
-		ui_listeVue.MultiSelect=true
-		ui_listeVue.HideSelection = false
-		ui_listeVue.Columns.add "Nom" 180
-		ui_listeVue.allowdrop = true
-		ui_listeVue.BackColor = (dotNetClass "System.Drawing.Color").fromARGB 86 86 86
-		ui_listeVue.ForeColor = (dotNetClass "System.Drawing.Color").fromARGB 180 180 180
-		
-		---- l'arborescence----
-		ui_arborescence.borderstyle = (dotnetclass "System.Windows.Forms.BorderStyle").fixedsingle
-		ui_arborescence.LabelEdit = true --false--#tvwAutomatic
-		ui_arborescence.allowdrop = true
-		ui_arborescence.HideSelection = false
-		ui_arborescence.BackColor = (dotNetClass "System.Drawing.Color").fromARGB 86 86 86
-		ui_arborescence.ForeColor = (dotNetClass "System.Drawing.Color").fromARGB 180 180 180
-		
-		--- les ecouteurs ---
-		fn ecouterChangeSelection		ev nd = 	maj_UI ()		
-		EcouteurChangeSelection = NodeEventCallback mouseUp:true delay:1000 selectionChanged:ecouterChangeSelection 
-		
-		--- maj interface ---
-		
-		maj_UI ()
-		
-	)
-	
+
+
 	fn fermer_interface = (
 		
 		--- vider ecouteur ---
@@ -425,8 +376,8 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		try (	DestroyDialog biblio.m_rollEditerTags ) catch ( format  ("rien à destroy\n") )
 		
 	)
-	
-	
+
+
 	fn chercherNoeud  _noeud _nomAChercher = (
 -- 		format " ? chercheDsNoeud : % ?\n"  _noeud.name
 		result = undefined
@@ -446,6 +397,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		return result 
 	)
 	
+	
 	fn noeudParNom   _nomAChercher = (
 		return chercherNoeud  ui_arborescence	 _nomAChercher
 	)
@@ -453,15 +405,16 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 
 	---- remplir le tree view avec l'arbo de la biblio ----
 	fn ajouterEnfantTreeView		_noeudArbo	 _noeudTV 	     =	(
-		if _noeudArbo.nomUnique !="RECHERCHE" do (
+		--if _noeudArbo.nomUnique !="RECHERCHE" do (
 			
-			nouveauNoeudTV = _noeudTV.Nodes.add 		(_noeudArbo.nom + " (" + _noeudArbo.getNbrEnfants() as string + ")")
+			nouveauNoeudTV = _noeudTV.Nodes.add 		( _noeudArbo.nom + " (" + _noeudArbo.getNbrEnfants() as string + ")")
 			nouveauNoeudTV.name = _noeudArbo.nomUnique
 			for enfant in _noeudArbo.enfants where classof enfant == Noeud do
 				ajouterEnfantTreeView 	enfant  	nouveauNoeudTV
-		)
+		--)
 	)
-	
+
+
 	fn remplirTreeView	 _arbo	=	(		
 		-- on vide la liste --
 		ui_arborescence.Nodes.Clear()
@@ -473,52 +426,60 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		nmRech = "RECHERCHE"
 		noeudTVRech = ui_arborescence.Nodes.add 		nmRech
 		noeudTVRech.name = nmRech
-		nouedRecherche = biblio.arbo.getParNomUnique 	nmRech
+		noeudRecherche = biblio.arbo.getNoeudRecherche ()
+		
 		if nouedRecherche != undefined do 
 			for enfant in nouedRecherche.enfants where classof enfant == Noeud do
 				ajouterEnfantTreeView 	enfant  	noeudTVRech
 		
 	)
-	
+
+
 	fn getListeSelection = (
 		ui_arborescence.SelectedNode
 	)
-	
+
+
 	-- afficher les elements --
 	fn AfficherElements 	_noeud = (
-		debug ("AfficherElements : " + _noeud.nom )
-		noeudSelect = _noeud
-		
-		ui_listeVue.items.Clear()
-		tailleImage = biblio.apercu.tailleApercu
-		apercusImages = dotNetObject "System.Windows.Forms.ImageList"
-		apercusImages.imageSize = dotNetObject "System.Drawing.Size" 	tailleImage.x 	tailleImage.y
-		apercusImages.ColorDepth = apercusImages.ColorDepth.Depth24Bit
-		
-		
-		
-		listeElementAAfficher =#()
-		elemIDVueSelect=#()
-		elemNodesVueSelect=#()
-		i = 0
-		for enfant in _noeud.enfants where classOf enfant == Element do (
-			li=dotNetObject "System.Windows.Forms.ListViewItem" enfant.nomUnique
-			li.imageIndex = i
-			li.text = enfant.nom	--extrairenomDeAdresse (substitutestring ListeFichierMax[i] ".max"  "" )
-			li.name = enfant.nomUnique
-			append listeElementAAfficher li	
+		if _noeud != undefined do (
 			
-			img = dotNetClass "System.Drawing.Image" --create an image
-			if doesfileexist enfant.apercu then (
--- 				debug "	APPERCU" 
-				apercusImages.images.add ( img.fromFile enfant.apercu )
-			) else (
-				apercusImages.images.add ( img.fromFile apercuVide )
+			debug ("AfficherElements : " + _noeud.nom )
+			noeudSelect = _noeud
+			
+			ui_listeVue.items.Clear()
+			tailleImage = biblio.apercu.tailleApercu
+			apercusImages = dotNetObject "System.Windows.Forms.ImageList"
+			apercusImages.imageSize = dotNetObject "System.Drawing.Size" 	tailleImage.x 	tailleImage.y
+			apercusImages.ColorDepth = apercusImages.ColorDepth.Depth24Bit
+			
+			
+			
+			listeElementAAfficher =#()
+			elemIDVueSelect=#()
+			elemNodesVueSelect=#()
+			i = 0
+			for enfant in _noeud.enfants where classOf enfant == Element do (
+				li=dotNetObject "System.Windows.Forms.ListViewItem" enfant.nomUnique
+				li.imageIndex = i
+				li.text = enfant.nom	--extrairenomDeAdresse (substitutestring ListeFichierMax[i] ".max"  "" )
+				li.name = enfant.nomUnique
+				append listeElementAAfficher li	
+				
+				img = dotNetClass "System.Drawing.Image" --create an image
+				if doesfileexist enfant.apercu then (
+	-- 				debug "	APPERCU" 
+					apercusImages.images.add ( img.fromFile enfant.apercu )
+				) else (
+					apercusImages.images.add ( img.fromFile apercuVide )
+				)
+				i += 1
 			)
-			i += 1
+			ui_listeVue.LargeImageList = apercusImages
+			ui_listeVue.items.addRange listeElementAAfficher	
 		)
-		ui_listeVue.LargeImageList = apercusImages
-		ui_listeVue.items.addRange listeElementAAfficher	
+		
+		selectElems elemSelect
 		
 	)
 	
@@ -530,7 +491,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		affDetail		=""
 		affTags 		=""
 		affNotes 	=""
-		ui_bmpDetail.bitmap  = (bitmap 255 255 color:gray)
+		ui_bmpDetail.bitmap  = (bitmap 255 255 color:(colorImage) )
 		
 		b_solo = elemSelect.count == 1
 		for btn in ui_listBtns_infos do
@@ -540,9 +501,13 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			ui_lblTags.enabled =true
 			ui_editNotes.enabled =true
 			ui_lblNotes.enabled =true
+					
+			ui_btnCreerApercu.enabled =true
+			ui_btnCreerDetail.enabled =true
 		)
 		
 		if b_solo then (
+			
 			elem = elemSelect[1]
 			affTags 		=	elem.tags as string
 			affNom 		=	elem.nom
@@ -552,6 +517,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			affNotes 	=	elem.notes
 			affDetail 	=	elem.detail
 			ui_bmpDetail.fileName = elem.detail
+			
 		) else (
 			listTags = #()
 			b_notesPresente = true
@@ -601,8 +567,97 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	
 	
+		--- les Mise a jour UI ------
+	fn maj_UI	= (
+	
+		--- les ENABLED  ---
+		ui_btnCreerAssetSelection.enabled  			= (selection as array ).count > 0 
+		ui_btnImporterAssetDansScene.enabled 	=  ui_listeVue.SelectedItems.count > 0 
+		ui_btnImporterAssetDansSceneCorona.enabled 	=  ui_listeVue.SelectedItems.count > 0 
+		ui_btnImporterAssetDansSceneProxy.enabled 	=  ui_listeVue.SelectedItems.count > 0 
+-- 		ui_arborescence.SelectedNode
+-- 		
+-- 		-- les selections --
+-- 		for id in elemIDVueSelect do 
+-- 			ui_listeVue.Items.item[id].selected = true
+		if noeudVueSelect != undefined do 
+			ui_arborescence.SelectedNode = noeudVueSelect
+		
+		if b_autoExpendArbo do 
+			ui_arborescence.ExpandAll()
+		
+-- 		ui_arborescence. noeudSelect
+		--- les tags ---
+		try (
+			ui_lstBoxTags.items = #()
+			listTagsTmp = #()
+			tags = biblio.arbo.getToutTags 	node:noeudSelect
+			debug (" TOUT LES TAGS : " + tags as string )
+			for  tag in tags do(
+				
+				append listTagsTmp		tag
+			)
+			sort  listTagsTmp
+			ui_lstBoxTags.items = listTagsTmp
+		) catch ()
+		
+		
+		
+		
+		afficherInfos()
+	)
 	
 	
+	
+	fn majTotal = (
+		maj_UI ()
+		AfficherElements noeudSelect
+		
+	)
+	
+	
+	---- 	initialisation de l'interface  ----
+	fn initialiser_interface  = (
+		
+			ui_listBtns_infos = #( ui_lblNom, ui_editNom, ui_lblFichier,	ui_editFichier ,	ui_btnOuvrirFichierMax ,	ui_lblApercu	,	\
+										ui_editApercu 		,	ui_btnOurvirApercu	,	ui_btnCreerApercu	,	ui_lblDetail			,	ui_editDetail		, \	
+										ui_btnOurvirDetail	,	ui_btnCreerDetail	,	ui_lblTags	,	ui_editTags 		,	ui_lblNotes 	,	ui_editNotes 	,		ui_bmpDetail  )
+										
+-- 		-- la taille minimum de la fenetre ----
+-- 		UItaille_fenetreMin.y =  UIpos_exploration.y
+		
+		---- la vue liste----
+		ui_listeVue.borderstyle = (dotnetclass "System.Windows.Forms.BorderStyle").fixedsingle
+		ui_listeVue.showitemtooltips = true
+		ui_listeVue.gridlines = false
+		ui_listeVue.checkboxes = false
+		ui_listeVue.labeledit = false
+		ui_listeVue.MultiSelect=true
+		ui_listeVue.HideSelection = false
+		ui_listeVue.Columns.add "Nom" 180
+		ui_listeVue.allowdrop = true
+		ui_listeVue.BackColor = (dotNetClass "System.Drawing.Color").fromARGB colorFondVue.r colorFondVue.g colorFondVue .b
+-- 		ui_listeVue.BackColor = (dotNetClass "System.Drawing.Color").fromARGB 86 86 86
+		ui_listeVue.ForeColor = (dotNetClass "System.Drawing.Color").fromARGB colorTextes.r colorTextes.g colorTextes.b
+		
+		---- l'arborescence----
+		ui_arborescence.borderstyle = (dotnetclass "System.Windows.Forms.BorderStyle").fixedsingle
+		ui_arborescence.LabelEdit = true --false--#tvwAutomatic
+		ui_arborescence.allowdrop = true
+		ui_arborescence.HideSelection = false
+-- 		ui_arborescence.BackColor = (dotNetClass "System.Drawing.Color").fromARGB 86 86 86
+		ui_arborescence.BackColor = (dotNetClass "System.Drawing.Color").fromARGB  colorFondVue.r colorFondVue.g colorFondVue .b
+		ui_arborescence.ForeColor = (dotNetClass "System.Drawing.Color").fromARGB  colorTextes.r colorTextes.g colorTextes.b
+		
+		--- les ecouteurs ---
+		fn ecouterChangeSelection		ev nd = 	maj_UI ()		
+		EcouteurChangeSelection = NodeEventCallback mouseUp:true delay:1000 selectionChanged:ecouterChangeSelection 
+		
+		--- maj interface ---
+		
+		maj_UI ()
+		
+	)
 	
 	
 	
@@ -611,9 +666,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		local testItem= ui_arborescence.GetNodeAt (dotNetObject "System.Drawing.Point" mousePos.x mousePos.y)
 		if testItem != undefined then (
 			
-			noeudTest = biblio.arbo.getParNomUnique 	testItem.name
+-- 			noeudTest = biblio.arbo.getParNomUnique 	testItem.name
 				
-			if noeudTest.nomUnique != "RECHERCHE" then (
+			if testItem.name != "RECHERCHE" then (
 				arg.Effect=arg.AllowedEffect
 				noeudSelect = biblio.arbo.getParNomUnique 	testItem.name
 				noeudVueSelect  = testItem
@@ -664,14 +719,14 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	on ui_btnImporter pressed do
 		( debug "Importer dans la scene." )
 	
-	on ui_btnCreerAssetFichier pressed do biblio.ajouterAssetFichier() 
+	on ui_btnCreerAssetFichier pressed do biblio.ajouter.fichier() 
 	
 	
 	on ui_btnCreerAssetDossier pressed do (
 		dossier = getSavePath "" initialDir:"F:\Bibeul 3D\ARCHMODELS"
 		if dossier!=undefined do ( 
 			debug "Nouvel asset dossier"
-			biblio.ajouterAssetDossier 	dossier 
+			biblio.ajouter.dossier 	dossier 
 		)
 	)
 	
@@ -731,8 +786,8 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 						) 
 					)	
 					AfficherElements 		_noeudArbo
-					noeudSelect  = _noeudArbo
-					noeudVueSelect = noeudClique
+					noeudSelect  = 		_noeudArbo
+					noeudVueSelect = 	noeudClique
 					elemSelect = #()
 					elemIDVueSelect  = #()
 					elemNodesVueSelect  = #()
@@ -779,6 +834,8 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 	)
 	
+
+	
 	
 	on ui_arborescence DragDrop arg do (
 	
@@ -821,17 +878,12 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		AfficherElements 	noeudSelect
 		noeudSelecNomUnique = noeudSelect.nomUnique
 		
+		noeudSelect.enfants
+		 
+		elemeAReselect = for nomUnique in selectionElems_NomsUniques collect biblio.arbo.getParNomUnique nomUnique
+			
+		selectElems elemeAReselect
 		
-		for nomUnique in selectionElems_NomsUniques do (
-			i = 0
-			for enfant in noeudSelect.enfants where classOf enfant == Element do (
-				if enfant.nomUnique == nomUnique do (
-					debug "PRESENT"
-					ui_listeVue.items.item[i].selected = true
-				)
-				i += 1
-			)
-		)
 		
 		
 		noeudSelectmp = getTreeViewNodeByNomUnique  	noeudSelecNomUnique
@@ -892,7 +944,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		) else (
 			debug "////////////// mouseDown : GAUCHE //////"
 			
-			show arg 
+-- 			show arg 
 				debug ("	arg : " + arg as string )
 
 						
@@ -1010,6 +1062,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	on ui_editRecherche 	entered  txt 	do (
 		
 		rechercheNoeud = biblio.arbo.getParNomUnique "RECHERCHE" 
+-- 		debug ( "RECHERCHE rechercheNoeud: " + rechercheNoeud )
 		rechercheNoeud.enfants = #()
 -- 		tagsRecherche = filterString	txt 	m_separateur
 -- 		elementsTotal = getElements()
@@ -1019,7 +1072,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 				
 		
 -- 		
-			rechercheNoeud.enfants = biblio.arbo.chercherTags 	txt
+		rechercheNoeud.enfants = biblio.arbo.chercherTags 	txt
 		biblio.arbo.ecrireFichier ()
 		
 		noeudSelect = biblio.arbo.getParNomUnique "RECHERCHE" 
@@ -1055,49 +1108,58 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	on ui_btnCreerApercu pressed do (
 		if querybox "voulez vous créer l'aperçu ?" do
-			if elemSelect.count > 0 do ( 
-				-- apercu --
+			if elemSelect.count > 0 do (
+				holdMaxFile() 
 				for elem in elemSelect do (
-					if doesfileexist elem.fichier then
+					if doesfileexist elem.fichier then( 
+						biblio.apercu.viderScene()
 						elem.apercu = biblio.apercu.creer 	elem.fichier
-					else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
+					)	else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
 				)
-				
-				AfficherElements noeudSelect
+				fetchMaxFile quiet:true
 				
 				biblio.arbo.ecrireFichier()
+				AfficherElements noeudSelect
+				
 				afficherInfos()
+			
 			)
-		
 	)
 	
 	
 	on ui_btnCreerDetail pressed do (
-		if querybox "voulez vous créer un rendu détail ?" do
-			if elemSelect.count > 0 do ( 
-				-- apercu --
+		
+		if querybox "voulez vous créer l'aperçu détail ?" do
+			if elemSelect.count > 0 do (
+				holdMaxFile() 
 				for elem in elemSelect do (
-					if doesfileexist elem.fichier then
+					if doesfileexist elem.fichier then( 
+						biblio.apercu.viderScene()
 						elem.detail = biblio.apercu.creer 	elem.fichier detail:true
-					else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
+					)	else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
 				)
-				
-				AfficherElements noeudSelect
+				fetchMaxFile quiet:true
 				
 				biblio.arbo.ecrireFichier()
+				AfficherElements noeudSelect
+				
 				afficherInfos()
+			
 			)
-		
+	
 	)		
 		
+	
+	
+	
+	
+	
+	
 	--- les tags ----
 	on ui_lstBoxTags selected val do  (
 		
-		format "selected: % - %\n" val 	ui_lstBoxTags.selection[val]
-		format "ui_lstBoxTags.selection: % \n" 	ui_lstBoxTags.selection
 		listElems = #()
 		for tag in ui_lstBoxTags.selection as array  do ( 
-			format "tag: % \n" 	ui_lstBoxTags.items[tag]
 			join  listElems	( biblio.arbo.chercherTags 	ui_lstBoxTags.items[tag] )
 		)
 		
@@ -1109,6 +1171,24 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		AfficherElements  noeudSelect
 	)
 	
+	----- import dans scene ---------
+	on ui_btnImporterAssetDansScene  pressed do (
+		biblio.importerDansScene elemSelect
+		
+	)
+	----- import dans scene ---------
+	on ui_btnImporterAssetDansSceneCorona  pressed do (
+		biblio.importerDansSceneCorona elemSelect
+		
+	)
+	
+	
+	----- import dans scene ---------
+	on ui_btnImporterAssetDansSceneProxy  pressed do (
+		biblio.importerDansSceneProxy elemSelect
+		
+	)
+	
 ----- events rollout ------
 	on m_rollPrincipal open do (
 		initialiser_interface()
@@ -1116,6 +1196,8 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 
 	on m_rollPrincipal close do (
 		fermer_interface()
+		biblio.isOpen = false
+		updateToolbarButtons()
 	)
 	
 	

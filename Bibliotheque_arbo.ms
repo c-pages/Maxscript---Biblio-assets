@@ -16,6 +16,7 @@ struct Element (
 		type			= #vide,
 		fichier		= "",
 		apercu		= "",
+		proxy			= "",
 		detail			= "",
 		tags			="",
 		notes 		= "",
@@ -35,14 +36,22 @@ struct Element (
 		fn definirParent 	_parent 	= ( parent = _parent ),
 		fn retirer  			 = (
 			if parent != undefined then (
+				
+				deleteFile apercu
+				deleteFile detail
+				deleteFile proxy
+				deleteFile ( getFilenamePath  proxy + getFilenameFile  proxy + ".cgeo" )
+				
 				_index  = findItem parent.enfants this
 				if _index != 0 do deleteItem   parent.enfants 	_index
 				parent = undefined
+				
+				
 				return this
 			) else return undefined
 		),
-		fn getNbrEnfants = ( return 0)
-	
+		fn getNbrEnfants = ( return 0),
+		fn getIndexUnique = ( substring nomUnique 2 -1 as integer ) 
 )	-- fin Struct Element
 
 
@@ -64,33 +73,37 @@ struct Noeud (
 	public
 		parent  			= undefined ,
 		enfants 			= #(),
-	
-	
-	
+		
 		fn compteElements = (
 			i=0
 			for enfant in enfants do 
 					i+=enfant.compteElements ()
-			
 			return i
 		),
-			
+		
 	public
 		fn ajouterEnfant 		_enfant 	= (
 			append enfants 	_enfant 
 			_enfant.retirer()
 			_enfant.definirParent ( this )
 		),
+		
 		fn definirParent 	_parent 	= ( parent = _parent ),
+		
 		fn retirer  			 = (
 			if parent != undefined then (
+				for enfant in enfants do 
+					enfant.retirer()
+				
 				_index  = findItem parent.enfants this
 				if _index != 0 do deleteItem   parent.enfants 	_index
 				parent = undefined
 				return this
 			) else return undefined
 		),
-		fn getNbrEnfants = ( return compteElements () )
+		
+		fn getNbrEnfants = ( return compteElements () ),
+		fn getIndexUnique = ( substring nomUnique 2 -1 as integer ) 
 	
 )	-- fin Struct noeud
 
@@ -104,11 +117,14 @@ struct Noeud (
 --------------------------------------------------------------
 struct Arborescence (
 	
+	biblio,
+	
 	---- les parametres ----
 	public
 		root,
 		fichierArbo = "$userScripts\bibliotheque\Bibliotheque_arbo.ini",
-		
+		noeudRecherche,
+	
 	private
 		indexUnique 	= 0,
 		m_separateur = ", -/.;",
@@ -181,6 +197,11 @@ struct Arborescence (
 			root 					= Noeud()
 			root.nom 			= "ROOT"
 			root.nomUnique 	= "ROOT"
+			
+			noeudRecherche					= Noeud()
+			noeudRecherche.nom 			= "RECHERCHE"
+			noeudRecherche.nomUnique 	= "RECHERCHE"
+			
 			nbrElements 		= 0
 			nbrNoeuds 			= 0
 			indexUnique 		= 0
@@ -214,6 +235,7 @@ struct Arborescence (
 					setINISetting   fichierArbo	_noeud.nomUnique   "detail"  	_noeud.detail
 					setINISetting   fichierArbo	_noeud.nomUnique   "notes"  	_noeud.notes
 					setINISetting   fichierArbo	_noeud.nomUnique   "tags"  	_noeud.tags
+					setINISetting   fichierArbo	_noeud.nomUnique   "proxy"  	_noeud.proxy
 				)
 			)
 			
@@ -243,6 +265,7 @@ struct Arborescence (
 						_nouveauNoeud.notes = getINISetting   fichierArbo	_nomUnique   "notes"
 						_nouveauNoeud.tags = getINISetting   fichierArbo	_nomUnique   "tags"
 						_nouveauNoeud.detail = getINISetting   fichierArbo	_nomUnique   "detail"
+						_nouveauNoeud.proxy = getINISetting   fichierArbo	_nomUnique   "proxy"
 					)
 					"branche":(
 						
@@ -265,18 +288,10 @@ struct Arborescence (
 		),
 		
 		fn lireFichier = (
-			
 			vider()			
+			root = lireNoeud   "ROOT" 	undefined 		
 			
-			-- on verifie qu'il existe sinon on creer un vierge ------
-			if not doesfileexist fichierArbo then
-				ecrireFichier()
-			else
-				root = lireNoeud   "ROOT" 	undefined 			
-			
--- 			creerNoeud   nom:"Recherche" 	parent:root 	nomUnique:"Recherche"	
-			
-			return  _root
+			return _root
 		),
 		
 		
@@ -299,16 +314,19 @@ struct Arborescence (
 		
 	public
 		fn getParNomUnique _nom = (
+			if _nom == "RECHERCHE" do return noeudRecherche
 			result = undefined
 			chercheParNomUnique 	_nom		root 
 			return result
 		),
 		fn getParNom _nom = (
+			if _nom == "RECHERCHE" do return noeudRecherche
 			result = undefined
 			chercheParNom 	_nom		root 
 			return result
 		),
 		
+		fn getNoeudRecherche = return noeudRecherche ,
 		
 		
 		
@@ -350,20 +368,7 @@ struct Arborescence (
 			if ( findString _noeud.nom  _tag ) != undefined then (
 				result = _noeud 
 			)
-				
-				
-			/* 
--- 			debug ("tag a chercher (  _tag : " + _tag  +" )") 
-			
-			for tagDuNoeud in tagsDuNoeud do (
--- 				debug ("tag a chercher ( tagDuNoeud : " + tagDuNoeud + " _tag : " + _tag  +" )") 
-				if ( findString tagDuNoeud  _tag	 ) != undefined do (
-					result = _noeud 
--- 					debug ("tag TROUVE :"  )
-				)
-			)
-			 */
-			
+							
 			return result
 			
 		),
@@ -371,14 +376,9 @@ struct Arborescence (
 		
 	public
 		fn chercherTags 	txt  =	(
--- 			debug ( "recherche de tag : " + txt )
-			
--- 			rechercheNoeud = getParNomUnique "RECHERCHE" 
 			elemsResult = #()
--- 			rechercheNoeud.enfants = #()
 			tagsRecherche = filterString	txt 	m_separateur
 			elementsTotal = getElements()
--- 			debug ( "	elementsTotal : " + elementsTotal as string)
 			
 			for tagRecherche in tagsRecherche do
 				for elem in elementsTotal do (
@@ -386,8 +386,6 @@ struct Arborescence (
 					if result!= undefined do appendifunique elemsResult	 result
 				)
 			return elemsResult
--- 			rechercheNoeud.enfants = elemsResult
--- 			ecrireFichier ()
 		),
 			
 	private
@@ -413,7 +411,49 @@ struct Arborescence (
 			return m_tags
 		),
 		
+		fn nettoyer  = (
+			
+			debug "supprimerOrphelins"
+			listeFichiers = getFiles ( biblio.apercu.dossierApercus + "\\*.jpg" )
+			debug ("listeFichiers : " + listeFichiers.count as string ) 
+			listeElements = getElements()
+			for fichier in listeFichiers do ( 	
+				debug ("fichier : " + fichier as string ) 
+				present = false
+				if getFilenameFile fichier != nomApercuVide do (
+					for elem in listeElements do (
+						if getFilenameFile fichier == getFilenameFile elem.apercu  do 
+							present = true
+						if getFilenameFile fichier == getFilenameFile elem.detail  do 
+							present = true
+					)
+					if not present do (
+						format " DELETE :%\n"  fichier
+						deleteFile fichier
+					)
+				)
+			)
+			
+			listeFichiers = getFiles ( biblio.conversion.dossierProxy + "\\*.max" )
+			debug ("listeFichiers : " + listeFichiers.count as string ) 
+
+			for fichier in listeFichiers do ( 	
+				debug ("fichier : " + fichier as string ) 
+				present = false
+				for elem in listeElements do (
+					if getFilenameFile fichier == getFilenameFile elem.proxy  do 
+						present = true
+					if getFilenameFile fichier == ( "_" + getFilenameFile elem.detail ) do 
+						present = true
+				)
+				if not present do (
+					format " DELETE :%\n"  fichier
+					deleteFile fichier
+				)
+			)
+			
 		
+		),
 		
 	---- manipulations ----	
 	public
@@ -428,6 +468,14 @@ struct Arborescence (
 	private
 		on create do (
 			vider ()
+			
+			-- on verifie qu'il existe sinon on creer un vierge ------
+			if not doesfileexist fichierArbo then (
+				debug "INI EXISTE PAS ON CREER NOUVEAU"
+				vider()			
+				ecrireFichier()
+			) 		
+			
 			lireFichier()
 		)
 )	-- fin Struct Arborescence

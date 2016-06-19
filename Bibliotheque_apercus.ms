@@ -16,31 +16,42 @@ struct Apercus (
 		tailleApercu 			= [256,256],
 		
 	private
+		------ RENDU ----
 		moteurDeRendu 		= Corona_1_4(),
+	
+		-- noise --
 		noiseLevel 				= 7,
 		noiseLevelDetail		= 11,
 		denoiseAmount 		= .4,
+		
+		-- post --
 		exposition 				= -5,
+		highlightCompress	= 1.4,
+		temperatureRendu 	= 5000,
+		contraste 				= 3,
+		
+		-- noms FICHIERS ET ADRESSES  ---
 -- 		fichierRendu 			= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2014 - 64bit\\ENU\\scripts\\Bibliotheque\\apercus\\apercu.jpg",
 		nomApercu 			= "apercu_",
 		nomDetail 				= "apDetail_",
 		nomApercuVide 		= "apVide" ,
+	public
 		dossierApercus 		= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2014 - 64bit\\ENU\\scripts\\Bibliotheque\\apercus",
-		cameraAngleVue 		= 40,
+	private
 		cameraAngleVueDetail 		= 9,
-		temperatureRendu 	= 5000,
 		
-		-- la camera --
+		-- la CAMERA --
 		cameraApercu,
+		cameraAngleVue 		= 40,
 		
-		-- gestion calques pour isolation --
+		-- gestion CALQUES pour isolation --
 		nomCalqueImport 		= "ImportTemp",
 		a_calquesScene 			=#(),
 		a_calquesScene_etats 	=#(),
 		calqueActif,
 		calqueImport,
 		
-		-- pour import dans scene --
+		-- pour IMPORT dans scene --
 		a_objetsScene 	= #(),
 		a_objetsImport 	= #(),
 		a_calquesImport = #(),
@@ -55,7 +66,7 @@ struct Apercus (
 -- 	private
 	public
 		
-		fn creerNomRendu	_prefix= (
+		fn creerNomRendu	_prefix	= (
 			
 			debug ("______________creerNomRendu_______ "  + _prefix )
 			local nouveauNom =""
@@ -307,7 +318,7 @@ struct Apercus (
 -- 			creerCalqueImport()
 			
 			-- conversion des materiaux  --
-			biblio.conversion.toCorona  a_objetsImport
+			biblio.conversion.matsToCorona  a_objetsImport
 			
 			-- on s'occupe des lumieres -- 
 			preparerLumieres()
@@ -325,12 +336,16 @@ struct Apercus (
 				renderers.current = moteurDeRendu
 				renderers.current.adaptivity_targetError 		= if detail then noiseLevelDetail else noiseLevel
 				renderers.current.denoise_blendAmount		= denoiseAmount
-				renderers.current.colorMap_simpleExposure 	= exposition
+				renderers.current.denoise_filterType			= 2
+				
+				renderers.current.colorMap_simpleExposure 			= exposition
+				renderers.current.colorMap_highlightCompression	= highlightCompress
+				renderers.current.colorMap_colorTemp					= temperatureRendu
+				renderers.current.colorMap_contrast					= contraste
+				
 				renderers.current.vfb_type						= 2	-- 0:pour cacher le VFB corona --
 				renderers.current.bg_texmap						= CoronaSky()
 				renderers.current.bg_source						= 1
-				renderers.current.denoise_filterType			= 2
-				renderers.current.colorMap_colorTemp			= temperatureRendu
 			)
 			
 		),
@@ -361,7 +376,7 @@ struct Apercus (
 		
 		
 		
-		fn supprimerOrphelins = (
+		/* fn supprimerOrphelins = (
 			debug "supprimerOrphelins"
 			listeFichiers = getFiles ( dossierApercus + "\\*.jpg" )
 			debug ("listeFichiers : " + listeFichiers.count as string ) 
@@ -383,18 +398,53 @@ struct Apercus (
 				)
 			)
 -- 			for element in arbo.root
-		),
+		), */
 		
+		
+		fn viderScene = (
+			
+			-- on se place sur le calque 0 ----
+			calque_0 =  LayerManager.getLayerFromName "0"
+			calque_0.current  = true
+			calque_0.on = true
+			
+			
+			---- o vide les calques de leurs objects ----
+			calquesASupprimer = #()
+			for i = 0 to LayerManager.count  - 1 do (				
+ 				calque =  LayerManager.getLayer i  
+				
+				clearSelection()
+				calque.select   true
+				selec = ( selection as array )
+				for nd in selec do
+					try delete nd catch ()
+				
+				if calque.name != "0" then
+					append calquesASupprimer 	calque
+				
+			)
+			
+			---- o supprimer les calques ----
+			while calquesASupprimer.count != 0 do (
+				calque = calquesASupprimer[calquesASupprimer.count]
+				LayerManager.deleteLayerByName calque.name
+				deleteItem calquesASupprimer ( calquesASupprimer.count )
+			)
+			
+			
+		),
 		
 	public
 		fn creer		_fichier 	detail:false	= (
 			
-				
+			viderScene ()
+			
 			creerCalqueImport()
 			Importer 	_fichier
 			preparerRendu 	detail:detail
 			nomRenduApercu = rendre  detail:detail
-			debug ( "--------------> NOM nomRenduApercu = " + nomRenduApercu )
+			debug ( "nomRenduApercu = " + nomRenduApercu )
 				
 -- 			)
 -- 			if sceneCourante != "" do		loadMaxFile  	sceneCourante 	quiet:true
