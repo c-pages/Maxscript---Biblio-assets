@@ -6,29 +6,25 @@ toolTip:""
 (
 	
 	global bibliotheque
-	local isOpen = false
 	
 	on execute do
 	(
 
 
-		if bibliotheque == undefined then ( 
-			
+		if bibliotheque == undefined then 
 			fileIn "$userScripts\bibliotheque\Bibliotheque.ms"
-			
-			-- on nettoie une fois par session au debut ----
-			bibliotheque.arbo.nettoyer()
+
+		if bibliotheque.isOpen then	(
+			bibliotheque.fermerFenetre()
+			bibliotheque.isOpen = false--and lower the flag
+		)
+		else 	(
+			bibliotheque.ouvrirFenetre()
+			bibliotheque.isOpen = true --and raise the flag
 		)
 		
-		
-		if isOpen then	
-			bibliotheque.fermerFenetre()
-		else 	
-			bibliotheque.ouvrirFenetre()
-		
-		isOpen = not isOpen
 	)
 	
-	on isChecked return isOpen
+	on isChecked return try ( bibliotheque.isOpen ) catch ()
 	
 )

@@ -22,36 +22,51 @@ struct Menus (
 			-------------------------------------------------------------
 			rcMenu rcMenuElements
 			(
-				menuItem importer 			"Importer" 
-				menuItem importerCorona 	"Importer avec convertion Corona (materials)" 
-				menuItem importerProxy 	"Importer en tant que proxy Corona" 
+				menuItem importer 				"Importer" 
+				menuItem importerCollapsed 	"Importer collapsed" 		
+				menuItem importerProxy 		"Importer Proxy Corona" 
 				
 				seperator sep01
 				
-				menuItem supprimer 		"Supprimer de la bibliothèque" 
+				subMenu  "Options d'import" (
+					menuItem matNeRienFaire 			"Matériaux bruts" 						checked:( not bibliotheque.m_convertToCoronaMats )
+					menuItem matconvertCorona 		"Convertir matériaux en Corona" 		checked:( bibliotheque.m_convertToCoronaMats )
+				)
 				
 				seperator sep02
 				
-				menuItem ouvirFichier 		"Ouvir le fichier" 
+				menuItem supprimer 			"Supprimer de la bibliothèque" 
 				
-				on importer picked do				(	
-					debug "importer" 
-					elemSelect = bibliotheque.m_rollPrincipal.elemSelect
-					if elemSelect.count>0 do 
-						bibliotheque.importerDansScene 	elemSelect
+				seperator sep03
+				
+				menuItem ouvirFichierMax 		"Ouvir le fichier max" 
+				menuItem ouvirFichierExplo 	"Ouvir dans l'explorateur" 
+				
+				on matNeRienFaire picked do	(	
+					bibliotheque.m_convertToCoronaMats = false
+				)
+				on matconvertCorona picked do	(	
+					bibliotheque.m_convertToCoronaMats = true
 				)
 				
-				on importerCorona picked do				(	
+				on importer picked do	(	
 					debug "importer" 
 					elemSelect = bibliotheque.m_rollPrincipal.elemSelect
 					if elemSelect.count>0 do 
-						bibliotheque.importerDansSceneCorona 	elemSelect
+						bibliotheque.importer.fichier 	elemSelect
 				)
-				on importerProxy picked do				(	
+				
+				on importerCollapsed picked do	(	
 					debug "importer" 
 					elemSelect = bibliotheque.m_rollPrincipal.elemSelect
 					if elemSelect.count>0 do 
-						bibliotheque.importerDansSceneProxy 	elemSelect
+						bibliotheque.importer.fichier 	elemSelect  applatir:true
+				)
+				on importerProxy picked do	(	
+					debug "importer" 
+					elemSelect = bibliotheque.m_rollPrincipal.elemSelect
+					if elemSelect.count>0 do 
+						bibliotheque.importer.proxy 	elemSelect
 				)
 				
 				on ouvirFichier picked do		
@@ -92,7 +107,30 @@ struct Menus (
 			
 			
 			popUpMenu 	rcMenuDossiers
-		)	
+		),
+		
+		fn getMenuRolloutPrincipal = (
 			
+			rcMenu rcRolloutPrincipal
+			(
+				subMenu "Edit"	(
+					menuItem m_nouveauDossier 	"Nouveau dossier" 
+					menuItem m_supprimer 			"Supprimer" 
+					
+				)
+				subMenu "Préferences"	(
+					menuItem m_options 	"options" 
+				)
+				on m_nouveauDossier picked do
+					bibliotheque.nouveauNoeud()
+				
+				on m_supprimer picked do 
+					bibliotheque.suprimerNoeud()
+			)
+			return rcRolloutPrincipal
+		)
+		
+		
+		
 )
 

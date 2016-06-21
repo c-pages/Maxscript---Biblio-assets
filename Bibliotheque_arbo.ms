@@ -11,15 +11,19 @@ struct Element (
 	
 	-- parametre de l'element --
 	public
-		nomUnique = "E",		------ NomUnique de l'élément, ne doit jamais y avoir 2 element avec le mm nomUnique !!! ---
-		nom 			= "nom",	------ le nom affiché de l'élément ---
-		type			= #vide,
-		fichier		= "",
-		apercu		= "",
-		proxy			= "",
-		detail			= "",
-		tags			="",
-		notes 		= "",
+		nomUnique 		= "E",		------ NomUnique de l'élément, ne doit jamais y avoir 2 element avec le mm nomUnique !!! ---
+		nom 				= "nom",	------ le nom affiché de l'élément ---
+		type				= #vide,
+		fichier			= "",
+		apercu			= "",
+		proxy				= "",
+		detail				= "",
+		tags				="",
+		notes 			= "",
+		dateCreation 			= getLocalTime(),
+		dateDernierImport 	= #(0, 0, 0, 0, 0, 0, 0, 0),
+		nbrImports				= 0,
+		nbrVertex				= 10101010,
 	
 	-- le composite --
 	public
@@ -123,6 +127,7 @@ struct Arborescence (
 	public
 		root,
 		fichierArbo = "$userScripts\bibliotheque\Bibliotheque_arbo.ini",
+		nomApercuVide 		= "apVide" ,
 		noeudRecherche,
 	
 	private
@@ -236,6 +241,13 @@ struct Arborescence (
 					setINISetting   fichierArbo	_noeud.nomUnique   "notes"  	_noeud.notes
 					setINISetting   fichierArbo	_noeud.nomUnique   "tags"  	_noeud.tags
 					setINISetting   fichierArbo	_noeud.nomUnique   "proxy"  	_noeud.proxy
+					
+					
+					setINISetting   fichierArbo	_noeud.nomUnique   "dateCreation"  		( _noeud.dateCreation as string )
+					setINISetting   fichierArbo	_noeud.nomUnique   "dateDernierImport"  ( _noeud.dateDernierImport as string )
+					setINISetting   fichierArbo	_noeud.nomUnique   "nbrImports"  			( _noeud.nbrImports as string )
+					setINISetting   fichierArbo	_noeud.nomUnique   "nbrVertex"  			( _noeud.nbrVertex as string )
+					
 				)
 			)
 			
@@ -261,11 +273,17 @@ struct Arborescence (
 						_apercu 		= getINISetting   fichierArbo	_nomUnique   "apercu"				
 						
 						_nouveauNoeud = creerElement 	nom:_nom  type:_type	fichier:_fichier  apercu:_apercu	nomUnique:_nomUnique parent:_parent
-							
-						_nouveauNoeud.notes = getINISetting   fichierArbo	_nomUnique   "notes"
-						_nouveauNoeud.tags = getINISetting   fichierArbo	_nomUnique   "tags"
-						_nouveauNoeud.detail = getINISetting   fichierArbo	_nomUnique   "detail"
-						_nouveauNoeud.proxy = getINISetting   fichierArbo	_nomUnique   "proxy"
+						
+						_nouveauNoeud.notes 		= getINISetting   fichierArbo	_nomUnique   "notes"
+						_nouveauNoeud.tags 		= getINISetting   fichierArbo	_nomUnique   "tags"
+						_nouveauNoeud.detail 		= getINISetting   fichierArbo	_nomUnique   "detail"
+						_nouveauNoeud.proxy 		= getINISetting   fichierArbo	_nomUnique   "proxy"
+						
+						_nouveauNoeud.dateCreation 		= execute ( getINISetting   fichierArbo	_nomUnique   "dateCreation" )
+						_nouveauNoeud.dateDernierImport 	= execute ( getINISetting   fichierArbo	_nomUnique   "dateDernierImport" )
+						_nouveauNoeud.nbrImports 			= ( getINISetting   fichierArbo	_nomUnique   "nbrImports" ) as integer
+						_nouveauNoeud.nbrVertex 			= ( getINISetting   fichierArbo	_nomUnique   "nbrVertex" ) as integer
+					
 					)
 					"branche":(
 						
@@ -413,12 +431,12 @@ struct Arborescence (
 		
 		fn nettoyer  = (
 			
-			debug "supprimerOrphelins"
+			debug "nettoyer arborescence (images et proxy inutilisés)"
 			listeFichiers = getFiles ( biblio.apercu.dossierApercus + "\\*.jpg" )
 			debug ("listeFichiers : " + listeFichiers.count as string ) 
 			listeElements = getElements()
 			for fichier in listeFichiers do ( 	
-				debug ("fichier : " + fichier as string ) 
+-- 				debug ("fichier : " + fichier as string ) 
 				present = false
 				if getFilenameFile fichier != nomApercuVide do (
 					for elem in listeElements do (
@@ -428,7 +446,7 @@ struct Arborescence (
 							present = true
 					)
 					if not present do (
-						format " DELETE :%\n"  fichier
+						debug ( " DELETE :%\n"  fichier )
 						deleteFile fichier
 					)
 				)

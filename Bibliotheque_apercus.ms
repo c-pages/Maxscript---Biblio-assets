@@ -56,12 +56,17 @@ struct Apercus (
 		a_objetsImport 	= #(),
 		a_calquesImport = #(),
 		a_lumieresEtats	= #(),
+		
+		-- stockage de l'ancien moteur de rendu et ses parametres -
+		moteurRenduPrecedant,
+		
+		sol,
+		
+	public
 		BB_import,
 		centre_import,
 		longueurMax_import,
 		
-		-- stockage de l'ancien moteur de rendu et ses parametres -
-		moteurRenduPrecedant,
 		
 -- 	private
 	public
@@ -221,10 +226,12 @@ struct Apercus (
 			
 			
 			-- debug --
-			pt = point name:"CENTRE" pos:centre_import size:longueurMax_import
+-- 			pt = point name:"CENTRE" pos:centre_import size:longueurMax_import
 			
 			return BB_result
 		),
+		
+		
 		
 		fn poserCamera 	detail:	 = (
 			local CameraPosX
@@ -376,95 +383,24 @@ struct Apercus (
 		
 		
 		
-		/* fn supprimerOrphelins = (
-			debug "supprimerOrphelins"
-			listeFichiers = getFiles ( dossierApercus + "\\*.jpg" )
-			debug ("listeFichiers : " + listeFichiers.count as string ) 
-			listeElements = arbo.getElements()
-			for fichier in listeFichiers do ( 	
-			debug ("fichier : " + fichier as string ) 
-				present = false
-				if getFilenameFile fichier != nomApercuVide do (
-					for elem in listeElements do (
-						if getFilenameFile fichier == getFilenameFile elem.apercu  do 
-							present = true
-						if getFilenameFile fichier == getFilenameFile elem.detail  do 
-							present = true
-					)
-					if not present do (
-						format " DELETE :%\n"  fichier
-						deleteFile fichier
-					)
-				)
-			)
--- 			for element in arbo.root
-		), */
 		
-		
-		fn viderScene = (
-			
-			-- on se place sur le calque 0 ----
-			calque_0 =  LayerManager.getLayerFromName "0"
-			calque_0.current  = true
-			calque_0.on = true
-			
-			
-			---- o vide les calques de leurs objects ----
-			calquesASupprimer = #()
-			for i = 0 to LayerManager.count  - 1 do (				
- 				calque =  LayerManager.getLayer i  
-				
-				clearSelection()
-				calque.select   true
-				selec = ( selection as array )
-				for nd in selec do
-					try delete nd catch ()
-				
-				if calque.name != "0" then
-					append calquesASupprimer 	calque
-				
-			)
-			
-			---- o supprimer les calques ----
-			while calquesASupprimer.count != 0 do (
-				calque = calquesASupprimer[calquesASupprimer.count]
-				LayerManager.deleteLayerByName calque.name
-				deleteItem calquesASupprimer ( calquesASupprimer.count )
-			)
-			
-			
-		),
 		
 	public
 		fn creer		_fichier 	detail:false	= (
 			
-			viderScene ()
+-- 			viderScene ()
 			
 			creerCalqueImport()
 			Importer 	_fichier
 			preparerRendu 	detail:detail
 			nomRenduApercu = rendre  detail:detail
-			debug ( "nomRenduApercu = " + nomRenduApercu )
-				
--- 			)
--- 			if sceneCourante != "" do		loadMaxFile  	sceneCourante 	quiet:true
+			delete sol
+			
+			debug ( "Apercu créé : " + nomRenduApercu )
 			nomRenduApercu
 			
 		)
 -- 		,
--- 		fn creer	_fichier = (
--- 			local sceneCourante = ""
--- 			if maxFileName != "" do
--- 				sceneCourante = maxFilePath + maxFileName
--- 			if checkForSave() do (
--- 				loadMaxFile  	_fichier 	quiet:true
--- 				a_objetsImport = objects as array
--- 				preparerRendu()
--- 				rendre()
--- 			)
--- 			if sceneCourante != "" do		loadMaxFile  	sceneCourante 	quiet:true
--- 			
--- 		)
 ) -- fin struct Apercu --
 
 

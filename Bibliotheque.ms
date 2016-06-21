@@ -1,13 +1,10 @@
 
 
 
-global debug, b_DEBUG = false
-fn debug _txt = 	if b_DEBUG do format "debug:	%\n" _txt
+global debug, b_DEBUG = true
+fn debug _txt = 	if b_DEBUG do format "debug:	%\n" ( _txt as string )
 
 try (	DestroyDialog bibliotheque.m_rollPrincipal ) catch ( format  ("rien à destroy\n") )
-
-
-
 
 ------------------------------------------------------------------------------
 ------ include des sous structures ----------------------------------------
@@ -18,6 +15,7 @@ fileIn "$userScripts\bibliotheque\Bibliotheque_arbo.ms"
 fileIn "$userScripts\bibliotheque\Bibliotheque_apercus.ms"
 fileIn "$userScripts\bibliotheque\Bibliotheque_conversions.ms"
 fileIn "$userScripts\bibliotheque\Bibliotheque_ajout&import.ms"
+fileIn "$userScripts\bibliotheque\Bibliotheque_outils.ms"
 
 
 ------------------------------------------------------------------------------
@@ -28,7 +26,7 @@ struct BibliothequeAsset (
 	
 	--- quelques variables privées  de fonctionnement ---
 	private
-		m_tailleRolloutPrincipal 		= [850,600],
+		m_tailleRolloutPrincipal 		= [1300,900],
 		m_posRolloutPrincipal 		= [50,50],
 		
 		b_rolloutEditionOuvert		=	false,
@@ -37,12 +35,11 @@ struct BibliothequeAsset (
 		
 		b_infosOuvert					=	true,
 		
-	
 	public 
-	
+		
 		isOpen = false,
 		m_couleurFond = (color 56 56 56),
-	
+		m_convertToCoronaMats = true,
 	
 	
 	-- quelques fonctions pour y acceder --------------
@@ -56,12 +53,14 @@ struct BibliothequeAsset (
 		fn setInfosOuvert 					bool				= ( b_infosOuvert 				= bool 				),
 		fn getInfosOuvert 										= ( return b_infosOuvert 							),
 		
+		
+		
 	-- les rollouts de la bibliotheque	----------------------------------
 -- 	private
 	public
 		m_rollPrincipal,				------- le roultout principale ---
-		m_rollEditerTags,			------- le roultout pour editer les tags des elements selectionnés ---
-		m_rollChoisirDossier,		------- Un explorateur pour choisir une destination dans la biblio ---
+-- 		m_rollEditerTags,			------- le roultout pour editer les tags des elements selectionnés ---
+-- 		m_rollChoisirDossier,		------- Un explorateur pour choisir une destination dans la biblio ---
 		
 		
 	-- les differentes structures de la bibliotheque ---------------------
@@ -70,26 +69,32 @@ struct BibliothequeAsset (
 		arbo			= Arborescence (),
 		apercu 		= Apercus (),
 		conversion 	= Conversions (),
-		menu 		= Menus(), 
-		importer		= Import(),
-		ajouter		= Ajout(),
+		menu 		= Menus (), 
+		importer		= Import (),
+		ajouter		= Ajout (),
+		outils         = boiteOutils (),
 		
+	-- les methodes  publics ------------------------------------------------
+	public
+	---- Suppression ----
 		fn  suprimerElems = (
 			if querybox "Etes-vous sûr de vouloir supprimer le ou les élément de la bibliothèque?" do (
 			
 				debug "supprimer" 
 				elemSelect = m_rollPrincipal.elemSelect
-				if elemSelect.count>0 do
+				nbreASuprimer = elemSelect.count
+				if elemSelect.count>0 do (
 					for elem in elemSelect do 
 						elem.retirer()
 					
-				arbo.ecrireFichier()
-								--- maj interface ---
-				m_rollPrincipal.remplirTreeView 	arbo.root
-				m_rollPrincipal.majTotal ()
+					arbo.ecrireFichier()
+									--- maj interface ---
+					m_rollPrincipal.remplirTreeView 	arbo.root
+					m_rollPrincipal.majTotal ()
+					m_rollPrincipal.setProgress ( nbreASuprimer as string  + " élément(s) suprimé(s)") 0
+				)
 			)
 		),
-		
 		fn  suprimerNoeud = (
 			if querybox "Etes-vous sûr de vouloir supprimer ce dossier et son contenu de la bibliothèque?" do (
 				debug "supprimer" 
@@ -98,52 +103,121 @@ struct BibliothequeAsset (
 					debug ("supprimer : noeudSelect : " + noeudSelect.nom )
 					noeudSelect.retirer()
 					arbo.ecrireFichier()
-									--- maj interface ---
+					
+					--- maj interface ---
 					m_rollPrincipal.remplirTreeView 	arbo.root
 					m_rollPrincipal.majTotal ()
 				)
+				m_rollPrincipal.setProgress "Dossier suprimé" 0
 			)
 		),
+		
+	----  Nouveau Dossier ----
 		fn nouveauNoeud = (
 			
 			debug "nouveauDossier" 
 			noeudSelect = m_rollPrincipal.noeudSelect
 			if noeudSelect != undefined do (
 				arbo.creerNoeud  nom:"NouveauDossier" 	parent:noeudSelect 
-			
-				arbo.ecrireFichier()
--- 						bibliotheque.m_rollPrincipal.
-							--- maj interface ---
 				
+				arbo.ecrireFichier()
+				--- maj interface ---				
 				m_rollPrincipal.remplirTreeView 	arbo.root
 				m_rollPrincipal.majTotal ()
+				m_rollPrincipal.setProgress "Nouveau dossier" 0
 			)
+			
 		),
 		
-		fn   importerDansScene 	elemSelect = (
+	
 		
-			for elem in elemSelect do (
-				if doesfileexist elem.fichier then
-					importer.fichier  elem.fichier	
-				else format "ERREUR : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
-			)
+		
+	--- apercus ----		
+		fn creerApercu = (
+			elemSelect = m_rollPrincipal.elemSelect
+			if elemSelect.count > 0 do 
+				if querybox "voulez vous créer l'aperçu ?" do (
+					m_rollPrincipal.setProgress "Rendu aperçu ..." 0	
+					m_rollPrincipal.cancelled = false
+					
+					holdMaxFile() 
+					
+					i = 1.
+					for elem in elemSelect do (
+						
+						if m_rollPrincipal.cancelled do continue
+						
+						pourcent = ( ( i - 1.) / elemSelect.count * 100. )
+						m_rollPrincipal.setProgress ("Rendu aperçu " + ( i as integer )  as string + "/" + elemSelect.count as string  ) 	pourcent
+						
+						if doesfileexist elem.fichier then( 
+							outils.viderScene()
+							elem.apercu = apercu.creer 	elem.fichier
+							arbo.ecrireFichier()
+							m_rollPrincipal.AfficherElements m_rollPrincipal.noeudSelect					
+							m_rollPrincipal.afficherInfos()
+						)	else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
+						i+=1
+					)
+					
+					
+					if m_rollPrincipal.cancelled then 
+						m_rollPrincipal.setProgress ("Rendu détail : " + ( i as integer )  as string + "/" + elemSelect.count as string  + " aperçus. *Annulé*") 100
+					else 
+						m_rollPrincipal.setProgress ("Rendu détail : " + ( i as integer )  as string + "/" + elemSelect.count as string  + " aperçus.") 100				
+					m_rollPrincipal.cancelled = false
+					
+					m_rollPrincipal.AfficherElements 	noeudSelect					
+					m_rollPrincipal.afficherInfos()
+
+					fetchMaxFile quiet:true
+					
+				
+				)
 		),
+	
+		fn creerDetail  = (
 		
-		fn   importerDansSceneCorona 	elemSelect = (
+			elemSelect = m_rollPrincipal.elemSelect
+			if elemSelect.count > 0 do 
+				if querybox "voulez vous créer l'aperçu Détail?" do (
+					m_rollPrincipal.setProgress "Rendu détail ..." 0	
+					m_rollPrincipal.cancelled = false
+					
+					holdMaxFile() 
+					i=1.
+					for elem in elemSelect do (
+						
+						if m_rollPrincipal.cancelled do continue
+						
+						pourcent = ( ( i - 1.) / elemSelect.count * 100. )
+						m_rollPrincipal.setProgress ("Rendu détail " + ( i as integer )  as string + "/" + elemSelect.count as string  ) 	pourcent
+						if doesfileexist elem.fichier then( 
+							outils.viderScene()
+							elem.detail = apercu.creer 	elem.fichier detail:true
+							arbo.ecrireFichier()
+							m_rollPrincipal.AfficherElements m_rollPrincipal.noeudSelect					
+							m_rollPrincipal.afficherInfos()
+						)	else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
+						i+=1
+					)
+					
+					if m_rollPrincipal.cancelled then 
+						m_rollPrincipal.setProgress ("Rendu détail : " + elemSelect.count   as string + " aperçus. *Annulé*") 100
+					else 
+						m_rollPrincipal.setProgress ("Rendu détail : " + elemSelect.count   as string + " aperçus.") 100				
+					m_rollPrincipal.cancelled = false
+			
+					m_rollPrincipal.AfficherElements 	m_rollPrincipal.noeudSelect					
+					m_rollPrincipal.afficherInfos()
+					fetchMaxFile quiet:true
+					
+				
+				)
 		
-			for elem in elemSelect do (
-				if doesfileexist elem.fichier then
-					importer.corona  elem.fichier	
-				else format "ERREUR : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
-			)
-		),
+		)	,
 		
-		fn   importerDansSceneProxy 	elemSelect = (
-			for elem in elemSelect do 
-				if doesfileexist elem.fichier then
-					importer.proxy  elem.fichier	elem
-				else format "ERREUR : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
-		),
+		
 		
 	-- les methodes  publics ------------------------------------------------
 	public
@@ -158,8 +232,8 @@ struct BibliothequeAsset (
 			
 			try (	DestroyDialog m_rollPrincipal ) catch ( format  ("rien à destroy\n") )
 			createDialog m_rollPrincipal pos:m_posRolloutPrincipal  width:m_tailleRolloutPrincipal.x  height:m_tailleRolloutPrincipal.y  \
-						lockHeight:false  style:#(#style_resizing,#style_titlebar , /*#style_toolwindow, */#style_sysmenu, #style_minimizebox, #style_maximizebox/* , #style_sunkenedge */ )	\
-						-- bgcolor:m_couleurFond
+						lockHeight:false  style:#(#style_resizing,#style_titlebar , /*#style_toolwindow, */#style_sysmenu, #style_minimizebox, #style_maximizebox/* , #style_sunkenedge */, #style_sysmenu )	\
+						menu:(menu.getMenuRolloutPrincipal()	 )	-- bgcolor:m_couleurFond
 			
 			debug " ... ouvrir fenetre 1 ..."
 			m_rollPrincipal.biblio = this
@@ -172,6 +246,7 @@ struct BibliothequeAsset (
 			m_rollPrincipal.AfficherElements 	arbo.root 	--.enfants[1]
 			m_rollPrincipal.maj_UI()
 			
+
 			debug "...fenetre ouverte."
 		),
 		fn fermerFenetre = (
@@ -200,14 +275,14 @@ private
 			arbo.biblio = this
 			ajouter.biblio = this
 			importer.biblio = this
+			importer.m_rollout = m_rollPrincipal
 			conversion.biblio = this
 			
 			debug "	BIBLIO INITIALISATION : 3"
 			
 			--- nettoyer le dossier des apercus (supprime les apercus non utilisé par l'arbo )  peut etre long ---
 -- 			
-			arbo.nettoyer()
-			
+-- 			arbo.nettoyer()			
 			
 			
 			debug "	BIBLIO INITIALISATION : 4"
@@ -239,11 +314,15 @@ bibliotheque = BibliothequeAsset()
 roll = bibliotheque.m_rollPrincipal
 -- bib.arbo.afficher()
 
-
 /*
 
-bibliotheque.arbo.nettoyer()
+showmethods roll.ui_listeVue
 
+
+roll.ui_progressBar.value = 50
+roll.ui_progressBar.color = color 50 150 246
+bibliotheque.arbo.nettoyer()
+bibliotheque.apercu.viderScene()
 
 fn chercherNoeud  _noeud _nomAChercher = (
 	format " ? chercheDsNoeud : % ?\n"  _noeud.name
@@ -267,7 +346,7 @@ chercherNoeud roll.ui_arborescence "RECHERCHE"
 nd = roll.getTreeViewNodeByNomUnique	"N1"
 roll.ui_arborescence.SelectedNode = roll.getTreeViewNodeByNomUnique	"N1"
 
-
+roll.setProgress "Rendu aperçu 1/50"  30
 
 GetItemAt
 

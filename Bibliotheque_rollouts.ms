@@ -28,7 +28,7 @@ rollout m_rollChoisirDossier "Dossiers de la bibliothèque" width:500 height:500
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------	Le rollout d'edition des tags  ---------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
-rollout m_rollEditerTags "Bibliothèque" width:411 height:355
+rollout m_rollEditerTags "Bibliothèque" width:411 height:454
 (
 	local biblio
 	
@@ -39,6 +39,7 @@ rollout m_rollEditerTags "Bibliothèque" width:411 height:355
 	edittext ui_editTags "" pos:[16,136] width:375 height:22
 	
 	label lbl3 "Notes :" pos:[16,167] width:217 height:19	
+	
 	
 	
 	edittext ui_editNotes "" pos:[16,185] width:375 height:122
@@ -59,42 +60,43 @@ rollout m_rollEditerTags "Bibliothèque" width:411 height:355
 	
 	
 	-- eveneemnts ------
+	
+	
+	on m_rollEditerTags moved posRollOut	 do
+	(
+			
+			biblio.setPosRolloutEdition 	posRollOut
+			
+			dist 						= 10
+			posRollPrincipal 		= GetDialogPos 	biblio.m_rollPrincipal
+			bordureDialogBox 	= [22,5]
+			coinAccroche 		= [ posRollPrincipal.x + biblio.m_rollPrincipal.width , posRollPrincipal.y ]
+			coinAccroche 		+= bordureDialogBox
+			
+			format "----------------------\n" posRollOut
+			format "posRollOut : %\n" posRollOut
+			format "posRollPrincipal : %\n" posRollPrincipal
+			format "coinAccroche : %\n" coinAccroche
+			
+			if  ( 	  	posRollOut.x > coinAccroche.x - dist 		\
+				and 	posRollOut.x < coinAccroche.x + dist 	\
+				and 	posRollOut.y > coinAccroche.y - dist 		\
+				and 	posRollOut.y < coinAccroche.y + dist  ) 
+			then (
+				format "ACCROCHE\n"
+				SetDialogPos 	biblio.m_rollEditerTags 	coinAccroche
+				biblio.setEditionAccroche true
+			)
+			else 	(
+				format "ACCROCHE pas ...\n"
+				biblio.setEditionAccroche false
+			)
+				
+		)
 	on ui_btnValider pressed do
 		try (	DestroyDialog m_rollEditerTags ) catch ( format  ("rien à destroy\n") )
 	on ui_btnAnnuler pressed do
 		try (	DestroyDialog m_rollEditerTags ) catch ( format  ("rien à destroy\n") )
-	
-	on m_rollEditerTags	 moved 	posRollOut	 do (
-		
-		biblio.setPosRolloutEdition 	posRollOut
-		
-		dist 						= 10
-		posRollPrincipal 		= GetDialogPos 	biblio.m_rollPrincipal
-		bordureDialogBox 	= [22,5]
-		coinAccroche 		= [ posRollPrincipal.x + biblio.m_rollPrincipal.width , posRollPrincipal.y ]
-		coinAccroche 		+= bordureDialogBox
-		
-		format "----------------------\n" posRollOut
-		format "posRollOut : %\n" posRollOut
-		format "posRollPrincipal : %\n" posRollPrincipal
-		format "coinAccroche : %\n" coinAccroche
-		
-		if  ( 	  	posRollOut.x > coinAccroche.x - dist 		\
-			and 	posRollOut.x < coinAccroche.x + dist 	\
-			and 	posRollOut.y > coinAccroche.y - dist 		\
-			and 	posRollOut.y < coinAccroche.y + dist  ) 
-		then (
-			format "ACCROCHE\n"
-			SetDialogPos 	biblio.m_rollEditerTags 	coinAccroche
-			biblio.setEditionAccroche true
-		)
-		else 	(
-			format "ACCROCHE pas ...\n"
-			biblio.setEditionAccroche false
-		)
-			
-	)
-	
 )
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -105,8 +107,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 --------------------------------
 --- declarations locales -----
 --------------------------------
+	
 	local m_rollEditerTags
-	local colorFondVue = color 96 96 96
+	local colorFondVue = color 98 126 155  -- 96 96 96
 	local colorTextes = color 220 220 220
 	local colorImage = color 36 36 36
 	
@@ -143,7 +146,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	local noeudDrag
 	
 	local noeudRecherche
-	
 	-- drag end drop du dotNet ---
 	local dragDropEffect = dotNetClass "System.Windows.Forms.DragDropEffects"
 	
@@ -151,10 +153,13 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	local b_dragDossier = false
 	local b_autoExpendArbo = true
 	
+	local cancelled = false
+	local listeVueDisplay	= #images   	--  #images  ou #liste
+	
+	local caseVide = ""
 --------------------------------------
 ---------- L'INTERFACE ----------
 --------------------------------------	
-
 
 	---- Edition de la biblio ----
 	button 				ui_btnCreerAssetFichier		"" pos:UIpos_barreEdition 		width:UItaille_btns.x 		height:UItaille_btns.y \
@@ -179,12 +184,12 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 															toolTip:"Importe le ou les assets sélectionnés."			border:false	\
 															images:#( ico_BtnImporter , undefined, 2, 	1,1,2,2)
 	
-	button 				ui_btnImporterAssetDansSceneCorona			"" pos:[ui_btnImporterAssetDansScene.pos.x  + UItaille_btns.x +UItaille_ecart.x,  UIpos_barreEdition.y ] \
-															width:UItaille_btns.x 		height:UItaille_btns.y \
-															toolTip:"Importe le ou les assets sélectionnés en les convertissant en Corona."			border:false	\
-															images:#( ico_BtnImporterCorona , undefined, 2, 	1,1,2,2)
+-- 	button 				ui_btnImporterAssetDansSceneCorona			"" pos:[ui_btnImporterAssetDansScene.pos.x  + UItaille_btns.x +UItaille_ecart.x,  UIpos_barreEdition.y ] \
+-- 															width:UItaille_btns.x 		height:UItaille_btns.y \
+-- 															toolTip:"Importe le ou les assets sélectionnés en les convertissant en Corona."			border:false	\
+-- 															images:#( ico_BtnImporterCorona , undefined, 2, 	1,1,2,2)
 	
-	button 				ui_btnImporterAssetDansSceneProxy			"" pos:[ui_btnImporterAssetDansSceneCorona.pos.x  + UItaille_btns.x +UItaille_ecart.x,  UIpos_barreEdition.y ] \
+	button 				ui_btnImporterAssetDansSceneProxy			"" pos:[ui_btnImporterAssetDansScene.pos.x  + UItaille_btns.x +UItaille_ecart.x,  UIpos_barreEdition.y ] \
 															width:UItaille_btns.x 		height:UItaille_btns.y \
 															toolTip:"Importe le ou les assets sélectionnés à la scène en proxy Corona."			border:false	\
 															images:#( ico_BtnImporterProxy , undefined, 2, 	1,1,2,2)
@@ -192,10 +197,17 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	---- Navigation  ----
 	dotNetControl 	ui_arborescence 			"TreeView" pos:UIpos_exploration width:200 height:150 	enabled:true																		---------- l'arborescence 
 	MultiListBox 		ui_lstBoxTags				"Mots clés:" 		pos:( UIpos_exploration + [0,150 + UItaille_ecart.x]) width:200 height:( 50 )
-	edittext 				ui_editRecherche 	"" 		pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x ,  UIpos_exploration.y ] width:200 height:17		
+	edittext 			ui_editRecherche 		"" 		pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x ,  UIpos_exploration.y ] width:200 height:17		
+	
+	button				ui_btnToogleStyleVue	"Im" pos:(ui_editRecherche.pos + [ui_editRecherche.width + UItaille_ecart.x, 0 ]) width:UItaille_petitsBtns.x height:UItaille_petitsBtns.y \
+															tooltip:"Basculer affichage Images / Liste"
+	
 	dotNetControl 	ui_listeVue 					"system.windows.forms.listView" pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x , UIpos_exploration.y + ui_editRecherche.height + UItaille_ecart.y ] width:200 height:200 border:false											---------- le contenu du dossier 	
-		
-		
+	
+	label 				ui_LabelProgress			 "" pos:[16,118] width:200 height:16
+	progressBar 		ui_progressBar				"ProgressBar" pos:[25,351] width:175 height:19 color:(color 50 150 246) tooltip:"action: \ntempsRestant:\n"
+	
+	button				ui_progressCancel		"X"	pos:[16,118] width:UItaille_petitsBtns.x height:UItaille_petitsBtns.y
 	--- infos ---
 	groupBox			ui_grpInfos				""	pos:[ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x , ui_editRecherche.pos.y] width:(256 + 2*UItaille_marge.x)  height:200 	
 		
@@ -237,6 +249,14 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 ---------- les Methodes  -------------
 ----------------------------------------
 	
+	fn setProgress _text  _val =(
+		debug ( " ##### setProgress : " + _text + " val: " + _val  as string + "  ####" )
+		ui_LabelProgress.text = _text
+		ui_progressBar.value = _val
+	)
+	
+	
+	
 	fn selectElems 	_elems 	= (
 		
 		for elem in _elems do (
@@ -257,17 +277,23 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 
 	fn repositionnerElementsUI 	tailleRollOut	= (
 		
+		b_afficheInfos 				= biblio.getInfosOuvert()
+		
 		-- on redim et repositionne les elements ---
 		hauteurExplorateur 			= tailleRollOut.y -  ( UIpos_exploration.y +  UItaille_marge.y )
 		
 		ui_lstBoxTags.height = 150
-		ui_arborescence.height 	= hauteurExplorateur - ( ui_lstBoxTags.height + 4* UItaille_ecart.y  )
-		ui_lstBoxTags.pos = ui_arborescence.pos + [0 , ui_arborescence.height  + 4*UItaille_ecart.y]
-		b_afficheInfos 				= biblio.getInfosOuvert()
+		ui_arborescence.height 	= hauteurExplorateur - ( ui_lstBoxTags.height + 6+ UItaille_ecart.y  + 3*UItaille_petitsBtns.y )
+		ui_lstBoxTags.pos 			= ui_arborescence.pos + [0 , ui_arborescence.height  + 4*UItaille_ecart.y]
+		
+		ui_LabelProgress.pos 		=  ui_lstBoxTags.pos + [ 0 , ui_lstBoxTags.height  + UItaille_ecart.y ]
+		ui_progressBar.pos 			=  ui_LabelProgress.pos + [ 0 , 3* UItaille_ecart.y ]
+		ui_progressCancel.pos		= ui_progressBar.pos + [175 + UItaille_ecart.y , 0]
 		
 		ui_btnAfficherInfo.checked 	= b_afficheInfos
 		
 		
+		b_afficheInfos 				= biblio.getInfosOuvert()
 		
 		
 		-- quleque reperes ---
@@ -297,10 +323,12 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		if b_afficheInfos then (
 			
 			ui_grpInfos.pos.x 			= tailleRollOut.x - ( UItaille_marge.x + ui_grpInfos.width )
-			ui_grpInfos.height			= hauteurExplorateur - ( UItaille_petitsBtns.y + UItaille_ecart.y ) 
+			ui_grpInfos.height			= hauteurExplorateur - ( UItaille_petitsBtns.y + 2* UItaille_ecart.y  ) 
 			ui_listeVue.width			= tailleRollOut.x  - ( ui_arborescence.width + ui_grpInfos.width + 4* UItaille_ecart.x + UItaille_marge.x ) 
 			ui_listeVue.height			= hauteurExplorateur - ( ui_editRecherche.height + UItaille_ecart.y )
 			ui_btnAfficherInfo.pos 		= [ui_grpInfos.pos.x + ui_grpInfos.width - UItaille_petitsBtns.x  ,  ui_grpInfos.pos.y  + ui_grpInfos.height + UItaille_ecart.y ]   
+
+-- 			ui_progressBar.width = ui_listeVue.width
 			
 			
 			repere 			= ui_grpInfos.pos + UItaille_marge + [0,5]
@@ -349,8 +377,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			
 		)
 		
-		ui_editRecherche.width  =  ui_listeVue.width - UItaille_ecart.x 
+		ui_editRecherche.width  =  ui_listeVue.width - ( 2*UItaille_ecart.x  + UItaille_petitsBtns.x )
 		
+		ui_btnToogleStyleVue.pos =ui_editRecherche.pos + [ui_editRecherche.width + UItaille_ecart.x, 0 ]
 		
 		
 		-- on limite la taille du rollout 
@@ -439,6 +468,14 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		ui_arborescence.SelectedNode
 	)
 
+	fn dateToString 	_date = (
+		local result
+		if _date[4] != 0 then 
+			result = _date[4] as string + "/"  + _date[2] as string+ "/"  + _date[1] as string + "  "  + _date[5] as string + ":"  + _date[6] as string + ":"  + _date[7] as string 
+		else 
+			result = caseVide
+		result
+	)
 
 	-- afficher les elements --
 	fn AfficherElements 	_noeud = (
@@ -464,6 +501,14 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 				li.imageIndex = i
 				li.text = enfant.nom	--extrairenomDeAdresse (substitutestring ListeFichierMax[i] ".max"  "" )
 				li.name = enfant.nomUnique
+				
+				li.subItems.add 	( enfant.nbrVertex  as string )
+				li.subItems.add 	( dateToString 	enfant.dateDernierImport   )
+				li.subItems.add 	( if ( enfant.nbrImports  >0) then  enfant.nbrImports as string else caseVide )
+				li.subItems.add 	( if ( doesfileExist enfant.proxy ) then "true" else caseVide  )
+				li.subItems.add 	( if ( doesfileExist enfant.detail )  then "true" else caseVide  )
+				li.subItems.add 	( dateToString 	enfant.dateCreation   )
+				
 				append listeElementAAfficher li	
 				
 				img = dotNetClass "System.Drawing.Image" --create an image
@@ -573,7 +618,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		--- les ENABLED  ---
 		ui_btnCreerAssetSelection.enabled  			= (selection as array ).count > 0 
 		ui_btnImporterAssetDansScene.enabled 	=  ui_listeVue.SelectedItems.count > 0 
-		ui_btnImporterAssetDansSceneCorona.enabled 	=  ui_listeVue.SelectedItems.count > 0 
+-- 		ui_btnImporterAssetDansSceneCorona.enabled 	=  ui_listeVue.SelectedItems.count > 0 
 		ui_btnImporterAssetDansSceneProxy.enabled 	=  ui_listeVue.SelectedItems.count > 0 
 -- 		ui_arborescence.SelectedNode
 -- 		
@@ -619,22 +664,42 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	---- 	initialisation de l'interface  ----
 	fn initialiser_interface  = (
 		
-			ui_listBtns_infos = #( ui_lblNom, ui_editNom, ui_lblFichier,	ui_editFichier ,	ui_btnOuvrirFichierMax ,	ui_lblApercu	,	\
-										ui_editApercu 		,	ui_btnOurvirApercu	,	ui_btnCreerApercu	,	ui_lblDetail			,	ui_editDetail		, \	
-										ui_btnOurvirDetail	,	ui_btnCreerDetail	,	ui_lblTags	,	ui_editTags 		,	ui_lblNotes 	,	ui_editNotes 	,		ui_bmpDetail  )
+		ui_listBtns_infos = #( ui_lblNom, ui_editNom, ui_lblFichier,	ui_editFichier ,	ui_btnOuvrirFichierMax ,	ui_lblApercu	,	\
+									ui_editApercu 		,	ui_btnOurvirApercu	,	ui_btnCreerApercu	,	ui_lblDetail			,	ui_editDetail		, \	
+									ui_btnOurvirDetail	,	ui_btnCreerDetail	,	ui_lblTags	,	ui_editTags 		,	ui_lblNotes 	,	ui_editNotes 	,		ui_bmpDetail  )
 										
 -- 		-- la taille minimum de la fenetre ----
--- 		UItaille_fenetreMin.y =  UIpos_exploration.y
+		ui_listeVue.Clear()
+		case listeVueDisplay of (
+			#images: (
+				ui_listeVue.view = (dotNetClass "system.windows.forms.view").LargeIcon
+				ui_listeVue.Columns.add "Nom" 180
+				ui_listeVue.FullRowSelect = false
+			)
+			#liste: (
+				ui_listeVue.view = (dotNetClass "system.windows.forms.view").details
+				ui_listeVue.columns.add "Nom" 375
+				ui_listeVue.columns.add "Verts" 70
+				ui_listeVue.columns.add "Dernier import" 70
+				ui_listeVue.columns.add "Nbre d'imports" 70
+				ui_listeVue.columns.add "Proxy" 70
+				ui_listeVue.columns.add "Détail" 70
+				ui_listeVue.columns.add "Création" 70
+				
+				ui_listeVue.FullRowSelect = true
+			)
+		)
 		
+										
+										
 		---- la vue liste----
 		ui_listeVue.borderstyle = (dotnetclass "System.Windows.Forms.BorderStyle").fixedsingle
 		ui_listeVue.showitemtooltips = true
-		ui_listeVue.gridlines = false
+		ui_listeVue.gridlines = true
 		ui_listeVue.checkboxes = false
 		ui_listeVue.labeledit = false
 		ui_listeVue.MultiSelect=true
 		ui_listeVue.HideSelection = false
-		ui_listeVue.Columns.add "Nom" 180
 		ui_listeVue.allowdrop = true
 		ui_listeVue.BackColor = (dotNetClass "System.Drawing.Color").fromARGB colorFondVue.r colorFondVue.g colorFondVue .b
 -- 		ui_listeVue.BackColor = (dotNetClass "System.Drawing.Color").fromARGB 86 86 86
@@ -713,9 +778,28 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	fn getTreeViewNodeByNomUnique 		_nomUnique  = (
 		return chercheTVNodeByNomUnique 		ui_arborescence   _nomUnique
 	)
-----------------------------------------
----------- les events      -------------
-----------------------------------------
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------- les events      -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	
 	on ui_btnImporter pressed do
 		( debug "Importer dans la scene." )
 	
@@ -724,10 +808,8 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	on ui_btnCreerAssetDossier pressed do (
 		dossier = getSavePath "" initialDir:"F:\Bibeul 3D\ARCHMODELS"
-		if dossier!=undefined do ( 
-			debug "Nouvel asset dossier"
+		if dossier!=undefined do 
 			biblio.ajouter.dossier 	dossier 
-		)
 	)
 	
 ----- L'arborescence ------------------
@@ -749,17 +831,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 				maj_UI ()
 				afficherInfos()
 				
-				
-			/* --	print adresseDossierCourantAbsolu
-			--	print arg.node.text
-			--	print ( fnFindDossierParent adresseDossierCourantAbsolu ) 
-				nouveauNom = ( fnFindDossierParent adresseDossierCourantAbsolu ) + arg.label
-			--	print (" nouveauNom : " + nouveauNom )
-				 ancienNom = (trimright adresseDossierCourantAbsolu "\\")
-			--	print ancienNom 
-				renameFile  ancienNom nouveauNom
-
- */			)
+			)
 
 		)
 	on ui_arborescence		 mouseUp arg do  (
@@ -931,7 +1003,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			afficherInfos()
 			
 			maj_UI ()
-		--)
+			
 	)
 	
 	on ui_listeVue		 mouseDown arg do  (
@@ -1000,9 +1072,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	on ui_listeVue DragOver s e do
 	(
--- 		debug " ------------- DragOver LISTEVUE  --------------"
--- 		debug ( "s : "  + s as string +  "e : "  + e as string ) 
--- 		debug ( "e.data.ContainsFileDropList()  : "  + e.data.ContainsFileDropList() as string  ) 
 		e.Effect = 	if e.data.ContainsFileDropList() 
 								then 	e.Effect.Move 
 								else 	e.Effect.None
@@ -1062,15 +1131,8 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	on ui_editRecherche 	entered  txt 	do (
 		
 		rechercheNoeud = biblio.arbo.getParNomUnique "RECHERCHE" 
--- 		debug ( "RECHERCHE rechercheNoeud: " + rechercheNoeud )
 		rechercheNoeud.enfants = #()
--- 		tagsRecherche = filterString	txt 	m_separateur
--- 		elementsTotal = getElements()
--- 		debug ( "	elementsTotal : " + elementsTotal as string)
-			
-			
-				
-		
+					
 -- 		
 		rechercheNoeud.enfants = biblio.arbo.chercherTags 	txt
 		biblio.arbo.ecrireFichier ()
@@ -1103,51 +1165,31 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		)
 		
 	)
+	
+	
+	
+	
+	
+	----- Creer apercus ---------
+	on ui_btnCreerApercu pressed do 
+		biblio.creerApercu ()
+	
+	----- Creer Détails ---------
+	on ui_btnCreerDetail pressed do 
+		biblio.creerDetail ()
 		
 	
-	
-	on ui_btnCreerApercu pressed do (
-		if querybox "voulez vous créer l'aperçu ?" do
-			if elemSelect.count > 0 do (
-				holdMaxFile() 
-				for elem in elemSelect do (
-					if doesfileexist elem.fichier then( 
-						biblio.apercu.viderScene()
-						elem.apercu = biblio.apercu.creer 	elem.fichier
-					)	else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
-				)
-				fetchMaxFile quiet:true
-				
-				biblio.arbo.ecrireFichier()
-				AfficherElements noeudSelect
-				
-				afficherInfos()
-			
-			)
-	)
-	
-	
-	on ui_btnCreerDetail pressed do (
+	----- import dans scene ---------
+	on ui_btnImporterAssetDansScene  pressed do 
+		biblio.importer.fichier elemSelect
+	----- import dans scene corona mats---------
 		
-		if querybox "voulez vous créer l'aperçu détail ?" do
-			if elemSelect.count > 0 do (
-				holdMaxFile() 
-				for elem in elemSelect do (
-					if doesfileexist elem.fichier then( 
-						biblio.apercu.viderScene()
-						elem.detail = biblio.apercu.creer 	elem.fichier detail:true
-					)	else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
-				)
-				fetchMaxFile quiet:true
-				
-				biblio.arbo.ecrireFichier()
-				AfficherElements noeudSelect
-				
-				afficherInfos()
-			
-			)
-	
-	)		
+	on ui_btnImporterAssetDansSceneCorona  pressed do 
+		biblio.importer.corona elemSelect
+		
+	----- import dans scene Proxy corona ---------
+	on ui_btnImporterAssetDansSceneProxy  pressed do 
+		biblio.importer.proxy elemSelect
 		
 	
 	
@@ -1171,23 +1213,38 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		AfficherElements  noeudSelect
 	)
 	
-	----- import dans scene ---------
-	on ui_btnImporterAssetDansScene  pressed do (
-		biblio.importerDansScene elemSelect
-		
+	
+	
+	
+	on ui_progressCancel pressed do (
+		cancelled = true
+		setProgress ("*Annulé*") 100
 	)
-	----- import dans scene ---------
-	on ui_btnImporterAssetDansSceneCorona  pressed do (
-		biblio.importerDansSceneCorona elemSelect
+	
+	
+	
+	
+	on ui_btnToogleStyleVue pressed do (
+		case listeVueDisplay of (
+			#images: (	listeVueDisplay = #liste
+							ui_btnToogleStyleVue.text = "Im"
+						)
+			#liste: 	(	listeVueDisplay = #images
+							ui_btnToogleStyleVue.text = "Li"
+						)
+		)
+		initialiser_interface ()
+		
+		AfficherElements noeudSelect
 		
 	)
 	
 	
-	----- import dans scene ---------
-	on ui_btnImporterAssetDansSceneProxy  pressed do (
-		biblio.importerDansSceneProxy elemSelect
-		
-	)
+	
+	
+	
+	
+	
 	
 ----- events rollout ------
 	on m_rollPrincipal open do (
@@ -1195,6 +1252,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	)
 
 	on m_rollPrincipal close do (
+		debug "Fermer Fenetre"
 		fermer_interface()
 		biblio.isOpen = false
 		updateToolbarButtons()

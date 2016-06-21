@@ -186,312 +186,311 @@ changelog:
 
 ######################################################################################################################## */ 
 
-global CoronaConverterSuppressGui
-global CoronaProxyConverter
-global CoronaConverter
+global CoronaMatConverterPerso
+
+/* 
+* struct CoronaProxyConverterStrPerso (
+* 	vrayMeshReader,
+* 	proxyInfoArray = #(),
+* 	proxyFileArray = #(),
+* 	
+* 	VrayProxyInfo =(
+* 		struct VrayProxyInfo (
+* 			maxobj,
+* 			proxyFile,
+* 			displayType,
+* 			playbackOffset,
+* 			playbackSpeed,
+* 			proxyScale
+* 		)
+* 	),
+* 	
+* 	VrayProxyFile =(
+* 		struct VrayProxyFile (
+* 			filename,
+* 			doesExist = true,
+* 			owner,
+* 			frameCount = 1,
+* 			coronaProxyFilename = undefined,
+* 			
+* 			on create do (
+* 				if (doesFileExist filename) then(
+* 					frameCount = owner.vrayMeshReader.GetNumberOfFrames filename
+* 				)else(
+* 					doesExist = false
+* 				)
+* 				append owner.proxyFileArray this
+* 			)
+* 		)
+* 	),
+* 	
+* 	fn combineToPath stringArray =(
+* 		local outPath = ""
+* 		for pth in stringArray do (
+* 			outPath = pathConfig.appendPath outPath pth
+* 		)
+* 		outPath
+* 	),
+* 	
+* 	fn maxAnimRange =(
+* 		local proxyLengthArray = for i in proxyFileArray collect i.frameCount
+* 		if proxyLengthArray.count != 0 then(
+* 			sort proxyLengthArray
+* 			proxyLengthArray[proxyLengthArray.count]
+* 		)else(
+* 			1
+* 		)
+* 	),
+* 	
+* 	fn isProxyFileDefined filename =(
+* 		local found = false
+* 		local out = undefined
+* 		
+* 		for prx in proxyFileArray while not found do(
+* 			if prx.filename == filename then(
+* 				out = prx
+* 				found = true
+* 			)
+* 		)
+* 		out
+* 	),
+* 	
+* 	fn VrayMeshReaderAssembly =(
+* 		-- file:///C:/Program%20Files/Chaos%20Group/V-Ray/3dsmax%202016%20for%20x64/docs/vrmesh_format.html
+* 		source = ""
+* 		source += "using System;\n"
+* 		source += "using System.IO;\n"
+* 		source += "\n"
+* 		source += "public class vrMeshReader\n"
+* 		source += "{\n"
+* 		source += "	public int GetNumberOfFrames(string filePath)\n"
+* 		source += "	{\n"
+* 		source += "		byte[] buffer = null;\n"
+* 		source += "		int FrameCount = 0;\n"
+* 		source += "		\n"
+* 		source += "		FileStream vrM = new FileStream(filePath, FileMode.Open);\n"
+* 		source += "		try\n"
+* 		source += "		{\n"
+* 		source += "	    	vrM.Seek(11, SeekOrigin.Begin); // skipping fileversion and description\n"
+* 		source += "			\n"
+* 		source += "	    	UInt64 lutOffset;\n"
+* 		source += "	    	buffer = new byte[8];\n"
+* 		source += "	    	vrM.Read(buffer, 0, buffer.Length);\n"
+* 		source += "	    	lutOffset = BitConverter.ToUInt64(buffer, 0);\n"
+* 		source += "			\n"
+* 		source += "	    	vrM.Seek((long)lutOffset, SeekOrigin.Begin);\n"
+* 		source += "			\n"
+* 		source += "	    	buffer = new byte[4];\n"
+* 		source += "	     	vrM.Read(buffer, 0, buffer.Length);\n"
+* 		source += "	    	UInt32 numVoxels = (BitConverter.ToUInt32(buffer, 0));\n"
+* 		source += "	     	vrM.Seek(36 * numVoxels, SeekOrigin.Current);\n"
+* 		source += "	    	FrameCount = 1;\n"
+* 		source += "			\n"
+* 		source += "	    	while (numVoxels != 0)\n"
+* 		source += "	    	{\n"
+* 		source += "	       		buffer = new byte[4];\n"
+* 		source += "	        	vrM.Read(buffer, 0, buffer.Length);\n"
+* 		source += "	       		numVoxels = (BitConverter.ToUInt32(buffer, 0));\n"
+* 		source += "	        	if (numVoxels == 0) { break; }\n"
+* 		source += "	        	FrameCount++;\n"
+* 		source += "	         	vrM.Seek(36 * numVoxels, SeekOrigin.Current);\n"
+* 		source += "	    	}\n"
+* 		source += "	    	vrM.Close();\n"
+* 		source += "		}\n"
+* 		source += "		catch (Exception)\n"
+* 		source += "		{\n"
+* 		source += "	    	vrM.Close();\n"
+* 		source += "	    	throw;\n"
+* 		source += "		}\n"
+* 		source += "		return FrameCount;\n"
+* 		source += "	}\n"
+* 		source += "}\n"
+* 		
+* 		csharpProvider = dotnetobject "Microsoft.CSharp.CSharpCodeProvider"
+* 		compilerParams = dotnetobject "System.CodeDom.Compiler.CompilerParameters"
+* 		
+* 		compilerParams.ReferencedAssemblies.Add "System.dll"
+* 		
+* 		compilerParams.GenerateInMemory = on
+* 		compilerResults = csharpProvider.CompileAssemblyFromSource compilerParams #(source)
+* 		
+* 		(compilerResults.CompiledAssembly).CreateInstance "vrMeshReader"
+* 	),
+* 	
+* 	fn collectSceneData =(
+* 		for prx in (getClassInstances VrayProxy) do(
+* 			local prxInfo = VrayProxyInfo()
+* 			prxInfo.maxobj = prx
+* 			
+* 			local proxyFile = isProxyFileDefined prx.fileName
+* 			prxInfo.proxyFile = if proxyFile != undefined then proxyFile else VrayProxyFile filename:prx.fileName owner:this
+* 			prxInfo.displayType = prx.display
+* 			prxInfo.playbackOffset = prx.anim_offset
+* 			prxInfo.playbackSpeed = prx.anim_speed
+* 			prxInfo.proxyScale = prx.proxy_scale
+* 			
+* 			append proxyInfoArray prxInfo
+* 		)
+* 	),
+* 	
+* 	fn generateCoronaProxies location: overwrite: =(
+* 		local askForOverwrite = true
+* 		local overwriteFiles = false
+* 		
+* 		if overwrite != unsupplied then(
+* 			askForOverwrite = false
+* 			overwriteFiles = overwrite
+* 		)
+* 		
+* 		for prx in proxyFileArray do(
+* 			
+* 			local vrProxy = vrayProxy fileName:prx.Filename display:4 proxy_scale:1.0 -- whole mesh display
+* 			local corProxy = CProxy()
+* 			local outpath
+* 			local skipFile = false
+* 			
+* 			if location == unsupplied then(
+* 				outpath = combineToPath #((getFilenamePath prx.Filename), (getFilenameFile prx.Filename) + ".cgeo")
+* 			)else(
+* 				outpath = combineToPath #(location, (getFilenameFile prx.Filename) + ".cgeo")
+* 			)
+* 			prx.coronaProxyFilename = outpath
+* 			
+* 			if doesFileExist outpath then (
+* 				if askForOverwrite then(
+* 					overwriteFiles = queryBox "One or more CoronaProxy files do already exist on Disk, do you want to overwrite them?\n\n(If you press \"No\", the existing files will be used for the generated Proxies)" title:"Corona Proxy Export"
+* 					askForOverwrite = false
+* 				)
+* 				
+* 				if not overwriteFiles then skipFile = true
+* 			)		
+* 			
+* 			if prx.doesExist then(
+* 				if ((getPolygonCount vrProxy)[1] == 0 )then(  -- if facecount is 0 max crashes => corona bug
+* 					skipFile = true 
+* 					prx.coronaProxyFilename = undefined
+* -- 					format ("Skipped [.vrmesh contains 0 faces]: " + prx.Filename + "\n")
+* 				)
+* 			)else(  -- if vrmesh file path is invalid
+* 				skipFile = true 
+* 				prx.coronaProxyFilename = undefined
+* -- 				format ("Skipped [invalid .vrmesh filepath]: " + prx.Filename + "\n")
+* 			)
+* 			
+* 			
+* 			
+* 			if not skipFile then(
+* 				with redraw off (
+* 					if prx.frameCount == 1 then(  -- singleFrame 
+* 						CProxy.ProxyFp.fromScene corProxy vrProxy outpath
+* 					)else(  -- animated
+* 						CProxy.ProxyFp.fromSceneAnimated corProxy vrProxy outpath 0 (prx.frameCount - 1) 10000 1 
+* 					)
+* 				)
+* -- 				format ("Generated CoronaProxy: " + outpath + "\n")
+* 			)
+* 			
+* 			delete vrProxy
+* 			delete corProxy
+* 			gc light:true
+* 		)
+* 	),
+* 	
+* 	fn replaceVrayProxies =(
+* 		for vrayPrx in proxyInfoArray where classof vrayPrx.maxobj == VRayProxy do(
+* 			cProxFilename = vrayPrx.proxyFile.coronaProxyFilename
+* 			if cProxFilename != undefined then(
+* 				crnProxy = CProxy filename:cProxFilename animationOffset:vrayPrx.playbackOffset animationSpeedMultiplier:vrayPrx.playbackSpeed previzType:2 
+* 				
+* 				replaceInstances vrayPrx.maxobj crnProxy
+* 				
+* 				if vrayPrx.proxyScale != 1.0 then (
+* 					local prxInstances
+* 					InstanceMgr.GetInstances crnProxy &prxInstances
+* 					for obj in prxInstances do obj.scale *= vrayPrx.proxyScale
+* 				)
+* 				delete crnProxy
+* 			)
+* 		)
+* 		
+* 		gc light:true
+* 	),
+* 	
+* 	fn convertProxies location: overwrite: =(
+* 		local saveStart = animationRange.start
+* 		local saveEnd = animationRange.end
+* 		
+* 		collectSceneData()
+* 		
+* 		animationRange = (interval 0 (maxAnimRange() ))
+* 		
+* 		generateCoronaProxies location:location overwrite:overwrite
+* 		replaceVrayProxies()
+* 		
+* 		proxyInfoArray = #()
+* 		proxyFileArray = #()
+* 		animationRange = (interval saveStart saveEnd)
+* 	),
+* 	
+* 	CoronaProxyConverterRoll = rollout CoronaProxyConverterRoll "Corona Proxy conversion" width:230 height:170(
+* 		local owner = if owner != undefined do owner
+* 		local savePath = undefined
+* 		
+* 		group "Options" (
+* 			label lbl "Location for created Corona Proxies" align:#left
+* 			radiobuttons rdoMode "" labels:#("Same file path as original", "Pick new path") columns:1 align:#left
+* 			button btnPick "Pick save path" width:200 enabled:false
+* 		)
+* 		group "Convert" (
+* 			button btnConvertProxies "Convert Proxies" width:200 height:32 
+* 		)
+* 		
+* 		on btnPick pressed do(
+* 			
+* 			savePath = getSavePath()
+* 			if savePath != undefined do(
+* 				btnPick.caption = savePath
+* 				btnPick.tooltip = savePath
+* 			)
+* 		)
+* 		
+* 		on rdoMode changed state do(
+* 			if state == 1 then btnPick.enabled = false else btnPick.enabled = true
+* 		)
+* 		
+* 		on btnConvertProxies pressed do (
+* 			if rdoMode.state == 1 then(
+* 				owner.convertProxies()
+* 			)
+* 			else(
+* 				if savePath != undefined then (
+* 					owner.convertProxies location:savePath
+* 				)else(
+* 					messagebox "Invalid save Path!" title:"Error"
+* 				)
+* 			)
+* 		)
+* 	),
+* 	
+* 	fn openGui=(
+* 		createDialog CoronaProxyConverterRoll style:#(#style_titlebar, #style_sysmenu, #style_minimizebox)
+* 	),
+* 	
+* 	fn destroyGui=(
+* 		try(destroyDialog CoronaProxyConverterRoll)catch()
+* 	),
+* 	
+* 	on create do(
+* 		CoronaProxyConverterRoll.owner = this
+* 		vrayMeshReader = VrayMeshReaderAssembly()
+* 	)
+* 	
+* )
+*/
 
 
-struct CoronaProxyConverterStr (
-	vrayMeshReader,
-	proxyInfoArray = #(),
-	proxyFileArray = #(),
-	
-	VrayProxyInfo =(
-		struct VrayProxyInfo (
-			maxobj,
-			proxyFile,
-			displayType,
-			playbackOffset,
-			playbackSpeed,
-			proxyScale
-		)
-	),
-	
-	VrayProxyFile =(
-		struct VrayProxyFile (
-			filename,
-			doesExist = true,
-			owner,
-			frameCount = 1,
-			coronaProxyFilename = undefined,
-			
-			on create do (
-				if (doesFileExist filename) then(
-					frameCount = owner.vrayMeshReader.GetNumberOfFrames filename
-				)else(
-					doesExist = false
-				)
-				append owner.proxyFileArray this
-			)
-		)
-	),
-	
-	fn combineToPath stringArray =(
-		local outPath = ""
-		for pth in stringArray do (
-			outPath = pathConfig.appendPath outPath pth
-		)
-		outPath
-	),
-	
-	fn maxAnimRange =(
-		local proxyLengthArray = for i in proxyFileArray collect i.frameCount
-		if proxyLengthArray.count != 0 then(
-			sort proxyLengthArray
-			proxyLengthArray[proxyLengthArray.count]
-		)else(
-			1
-		)
-	),
-	
-	fn isProxyFileDefined filename =(
-		local found = false
-		local out = undefined
-		
-		for prx in proxyFileArray while not found do(
-			if prx.filename == filename then(
-				out = prx
-				found = true
-			)
-		)
-		out
-	),
-	
-	fn VrayMeshReaderAssembly =(
-		-- file:///C:/Program%20Files/Chaos%20Group/V-Ray/3dsmax%202016%20for%20x64/docs/vrmesh_format.html
-		source = ""
-		source += "using System;\n"
-		source += "using System.IO;\n"
-		source += "\n"
-		source += "public class vrMeshReader\n"
-		source += "{\n"
-		source += "	public int GetNumberOfFrames(string filePath)\n"
-		source += "	{\n"
-		source += "		byte[] buffer = null;\n"
-		source += "		int FrameCount = 0;\n"
-		source += "		\n"
-		source += "		FileStream vrM = new FileStream(filePath, FileMode.Open);\n"
-		source += "		try\n"
-		source += "		{\n"
-		source += "	    	vrM.Seek(11, SeekOrigin.Begin); // skipping fileversion and description\n"
-		source += "			\n"
-		source += "	    	UInt64 lutOffset;\n"
-		source += "	    	buffer = new byte[8];\n"
-		source += "	    	vrM.Read(buffer, 0, buffer.Length);\n"
-		source += "	    	lutOffset = BitConverter.ToUInt64(buffer, 0);\n"
-		source += "			\n"
-		source += "	    	vrM.Seek((long)lutOffset, SeekOrigin.Begin);\n"
-		source += "			\n"
-		source += "	    	buffer = new byte[4];\n"
-		source += "	     	vrM.Read(buffer, 0, buffer.Length);\n"
-		source += "	    	UInt32 numVoxels = (BitConverter.ToUInt32(buffer, 0));\n"
-		source += "	     	vrM.Seek(36 * numVoxels, SeekOrigin.Current);\n"
-		source += "	    	FrameCount = 1;\n"
-		source += "			\n"
-		source += "	    	while (numVoxels != 0)\n"
-		source += "	    	{\n"
-		source += "	       		buffer = new byte[4];\n"
-		source += "	        	vrM.Read(buffer, 0, buffer.Length);\n"
-		source += "	       		numVoxels = (BitConverter.ToUInt32(buffer, 0));\n"
-		source += "	        	if (numVoxels == 0) { break; }\n"
-		source += "	        	FrameCount++;\n"
-		source += "	         	vrM.Seek(36 * numVoxels, SeekOrigin.Current);\n"
-		source += "	    	}\n"
-		source += "	    	vrM.Close();\n"
-		source += "		}\n"
-		source += "		catch (Exception)\n"
-		source += "		{\n"
-		source += "	    	vrM.Close();\n"
-		source += "	    	throw;\n"
-		source += "		}\n"
-		source += "		return FrameCount;\n"
-		source += "	}\n"
-		source += "}\n"
-		
-		csharpProvider = dotnetobject "Microsoft.CSharp.CSharpCodeProvider"
-		compilerParams = dotnetobject "System.CodeDom.Compiler.CompilerParameters"
-		
-		compilerParams.ReferencedAssemblies.Add "System.dll"
-		
-		compilerParams.GenerateInMemory = on
-		compilerResults = csharpProvider.CompileAssemblyFromSource compilerParams #(source)
-		
-		(compilerResults.CompiledAssembly).CreateInstance "vrMeshReader"
-	),
-	
-	fn collectSceneData =(
-		for prx in (getClassInstances VrayProxy) do(
-			local prxInfo = VrayProxyInfo()
-			prxInfo.maxobj = prx
-			
-			local proxyFile = isProxyFileDefined prx.fileName
-			prxInfo.proxyFile = if proxyFile != undefined then proxyFile else VrayProxyFile filename:prx.fileName owner:this
-			prxInfo.displayType = prx.display
-			prxInfo.playbackOffset = prx.anim_offset
-			prxInfo.playbackSpeed = prx.anim_speed
-			prxInfo.proxyScale = prx.proxy_scale
-			
-			append proxyInfoArray prxInfo
-		)
-	),
-	
-	fn generateCoronaProxies location: overwrite: =(
-		local askForOverwrite = true
-		local overwriteFiles = false
-		
-		if overwrite != unsupplied then(
-			askForOverwrite = false
-			overwriteFiles = overwrite
-		)
-		
-		for prx in proxyFileArray do(
-			
-			local vrProxy = vrayProxy fileName:prx.Filename display:4 proxy_scale:1.0 -- whole mesh display
-			local corProxy = CProxy()
-			local outpath
-			local skipFile = false
-			
-			if location == unsupplied then(
-				outpath = combineToPath #((getFilenamePath prx.Filename), (getFilenameFile prx.Filename) + ".cgeo")
-			)else(
-				outpath = combineToPath #(location, (getFilenameFile prx.Filename) + ".cgeo")
-			)
-			prx.coronaProxyFilename = outpath
-			
-			if doesFileExist outpath then (
-				if askForOverwrite then(
-					overwriteFiles = queryBox "One or more CoronaProxy files do already exist on Disk, do you want to overwrite them?\n\n(If you press \"No\", the existing files will be used for the generated Proxies)" title:"Corona Proxy Export"
-					askForOverwrite = false
-				)
-				
-				if not overwriteFiles then skipFile = true
-			)		
-			
-			if prx.doesExist then(
-				if ((getPolygonCount vrProxy)[1] == 0 )then(  -- if facecount is 0 max crashes => corona bug
-					skipFile = true 
-					prx.coronaProxyFilename = undefined
--- 					format ("Skipped [.vrmesh contains 0 faces]: " + prx.Filename + "\n")
-				)
-			)else(  -- if vrmesh file path is invalid
-				skipFile = true 
-				prx.coronaProxyFilename = undefined
--- 				format ("Skipped [invalid .vrmesh filepath]: " + prx.Filename + "\n")
-			)
-			
-			
-			
-			if not skipFile then(
-				with redraw off (
-					if prx.frameCount == 1 then(  -- singleFrame 
-						CProxy.ProxyFp.fromScene corProxy vrProxy outpath
-					)else(  -- animated
-						CProxy.ProxyFp.fromSceneAnimated corProxy vrProxy outpath 0 (prx.frameCount - 1) 10000 1 
-					)
-				)
--- 				format ("Generated CoronaProxy: " + outpath + "\n")
-			)
-			
-			delete vrProxy
-			delete corProxy
-			gc light:true
-		)
-	),
-	
-	fn replaceVrayProxies =(
-		for vrayPrx in proxyInfoArray where classof vrayPrx.maxobj == VRayProxy do(
-			cProxFilename = vrayPrx.proxyFile.coronaProxyFilename
-			if cProxFilename != undefined then(
-				crnProxy = CProxy filename:cProxFilename animationOffset:vrayPrx.playbackOffset animationSpeedMultiplier:vrayPrx.playbackSpeed previzType:2 
-				
-				replaceInstances vrayPrx.maxobj crnProxy
-				
-				if vrayPrx.proxyScale != 1.0 then (
-					local prxInstances
-					InstanceMgr.GetInstances crnProxy &prxInstances
-					for obj in prxInstances do obj.scale *= vrayPrx.proxyScale
-				)
-				delete crnProxy
-			)
-		)
-		
-		gc light:true
-	),
-	
-	fn convertProxies location: overwrite: =(
-		local saveStart = animationRange.start
-		local saveEnd = animationRange.end
-		
-		collectSceneData()
-		
-		animationRange = (interval 0 (maxAnimRange() ))
-		
-		generateCoronaProxies location:location overwrite:overwrite
-		replaceVrayProxies()
-		
-		proxyInfoArray = #()
-		proxyFileArray = #()
-		animationRange = (interval saveStart saveEnd)
-	),
-	
-	CoronaProxyConverterRoll = rollout CoronaProxyConverterRoll "Corona Proxy conversion" width:230 height:170(
-		local owner = if owner != undefined do owner
-		local savePath = undefined
-		
-		group "Options" (
-			label lbl "Location for created Corona Proxies" align:#left
-			radiobuttons rdoMode "" labels:#("Same file path as original", "Pick new path") columns:1 align:#left
-			button btnPick "Pick save path" width:200 enabled:false
-		)
-		group "Convert" (
-			button btnConvertProxies "Convert Proxies" width:200 height:32 
-		)
-		
-		on btnPick pressed do(
-			
-			savePath = getSavePath()
-			if savePath != undefined do(
-				btnPick.caption = savePath
-				btnPick.tooltip = savePath
-			)
-		)
-		
-		on rdoMode changed state do(
-			if state == 1 then btnPick.enabled = false else btnPick.enabled = true
-		)
-		
-		on btnConvertProxies pressed do (
-			if rdoMode.state == 1 then(
-				owner.convertProxies()
-			)
-			else(
-				if savePath != undefined then (
-					owner.convertProxies location:savePath
-				)else(
-					messagebox "Invalid save Path!" title:"Error"
-				)
-			)
-		)
-	),
-	
-	fn openGui=(
-		createDialog CoronaProxyConverterRoll style:#(#style_titlebar, #style_sysmenu, #style_minimizebox)
-	),
-	
-	fn destroyGui=(
-		try(destroyDialog CoronaProxyConverterRoll)catch()
-	),
-	
-	on create do(
-		CoronaProxyConverterRoll.owner = this
-		vrayMeshReader = VrayMeshReaderAssembly()
-	)
-	
-)
 
-
-
-struct CoronaConverterStr (
+struct CoronaConverterStrPerso (
 	CoronaConverterVersion = "1.25",
 	
 	-- miscellaneous functions
@@ -3796,7 +3795,7 @@ struct CoronaConverterStr (
 			
 			if chkConvertProxies.checked then(
 				if (getClassInstances VrayProxy).count != 0 then(
-					CoronaProxyConverter.openGui() 
+-- 					CoronaProxyConverter.openGui() 
 				)
 			)
 			format "Conversion done.\n"
@@ -3882,7 +3881,7 @@ struct CoronaConverterStr (
 	),
 	
 	fn openGui =(
-		createDialog CoronaConverterRoll style:#(#style_titlebar, #style_sysmenu, #style_minimizebox)
+-- 		createDialog CoronaConverterRoll style:#(#style_titlebar, #style_sysmenu, #style_minimizebox)
 	),
 	
 	fn destroyGui =(
@@ -3900,7 +3899,7 @@ struct CoronaConverterStr (
 
 
 
-CoronaConverter = CoronaConverterStr()
+CoronaMatConverterPerso = CoronaConverterStrPerso()
 -- CoronaProxyConverter = CoronaProxyConverterStr()
 
 -- CoronaProxyConverter.openGui()
@@ -3943,9 +3942,9 @@ CoronaConverter = CoronaConverterStr()
 	
 	##################################################################################################### */
 	
-	global CoronaProxyExporter
+	global CoronaProxyExporterPerso
 	
-	struct CoronaProxyExporterStruct (
+	struct CoronaProxyExporterStructPERSO (
 		version = "0.04",
 		
 		settings =(
@@ -4352,8 +4351,8 @@ CoronaConverter = CoronaConverterStr()
 		),
 		
 		fn openGui =(
-			try(destroyDialog CoronaProxyExporter.proxyExporterRoll)catch()
-			createDialog proxyExporterRoll
+-- 			try(destroyDialog CoronaProxyExporter.proxyExporterRoll)catch()
+-- 			createDialog proxyExporterRoll
 		), 
 		
 		fn closeGui = (
@@ -4364,5 +4363,5 @@ CoronaConverter = CoronaConverterStr()
 			proxyExporterRoll.owner = this
 		)
 	)
-	CoronaProxyExporter = CoronaProxyExporterStruct()
+	CoronaProxyExporterPerso = CoronaProxyExporterStructPERSO()
 )
