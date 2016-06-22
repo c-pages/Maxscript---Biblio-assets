@@ -282,7 +282,7 @@ private
 			
 			--- nettoyer le dossier des apercus (supprime les apercus non utilisé par l'arbo )  peut etre long ---
 -- 			
--- 			arbo.nettoyer()			
+			arbo.nettoyer()			
 			
 			
 			debug "	BIBLIO INITIALISATION : 4"

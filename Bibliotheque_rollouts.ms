@@ -156,7 +156,8 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	local cancelled = false
 	local listeVueDisplay	= #images   	--  #images  ou #liste
 	
-	local caseVide = ""
+	local caseVide = " - - "
+	local m_ordreInverse = true  -- pour inverser les ordres de classement dans la liste vue ---
 --------------------------------------
 ---------- L'INTERFACE ----------
 --------------------------------------	
@@ -470,8 +471,13 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 
 	fn dateToString 	_date = (
 		local result
+		zeroJour = if _date[4] <10 then  "0"  else ""
+		zeroMois = if _date[2] <10 then  "0"  else ""
+		zeroH = if _date[5] <10 then  "0"  else ""
+		zeroM = if _date[6] <10 then  "0"  else ""
+		zeroS = if _date[7] <10 then  "0"  else ""
 		if _date[4] != 0 then 
-			result = _date[4] as string + "/"  + _date[2] as string+ "/"  + _date[1] as string + "  "  + _date[5] as string + ":"  + _date[6] as string + ":"  + _date[7] as string 
+			result = zeroJour + _date[4] as string + "/"  + zeroMois + _date[2] as string+ "/"  + _date[1] as string + "  "  + zeroH + _date[5] as string + ":"  + zeroM  + _date[6] as string + ":"  +zeroS + _date[7] as string 
 		else 
 			result = caseVide
 		result
@@ -678,13 +684,13 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			)
 			#liste: (
 				ui_listeVue.view = (dotNetClass "system.windows.forms.view").details
-				ui_listeVue.columns.add "Nom" 375
+				ui_listeVue.columns.add "Nom" 200
 				ui_listeVue.columns.add "Verts" 70
-				ui_listeVue.columns.add "Dernier import" 70
+				ui_listeVue.columns.add "Dernier import" 130
 				ui_listeVue.columns.add "Nbre d'imports" 70
 				ui_listeVue.columns.add "Proxy" 70
 				ui_listeVue.columns.add "Détail" 70
-				ui_listeVue.columns.add "Création" 70
+				ui_listeVue.columns.add "Création" 130
 				
 				ui_listeVue.FullRowSelect = true
 			)
@@ -906,9 +912,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 	)
 	
-
-	
-	
 	on ui_arborescence DragDrop arg do (
 	
 		
@@ -975,6 +978,58 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		
 ----- vue de la liste des elements   ------------------
+	on ui_listeVue columnClick arg do
+		(
+			cols = #("Nom", "Verts", "Dernier import", "Nbre d'import", "Proxy", "Détail", "Création" )
+			indexColonne = arg.Column+1
+			colClicked = cols[arg.Column+1]
+			debug ( "indexColonne : " +indexColonne as string)
+			
+			case indexColonne of (
+				1:	biblio.arbo.classerNoms			noeudSelect	ordreInverse:m_ordreInverse
+				2:	biblio.arbo.classerVertex		noeudSelect	ordreInverse:m_ordreInverse
+				3:	biblio.arbo.classerNoms			noeudSelect	ordreInverse:m_ordreInverse
+				4:	biblio.arbo.classerNbrImports	noeudSelect	ordreInverse:m_ordreInverse
+				5:	biblio.arbo.classerNoms			noeudSelect	ordreInverse:m_ordreInverse
+				6:	biblio.arbo.classerNoms			noeudSelect	ordreInverse:m_ordreInverse
+				7:	biblio.arbo.classerCreation		noeudSelect	ordreInverse:m_ordreInverse
+			)
+			m_ordreInverse = not m_ordreInverse
+			remplirTreeView  	biblio.arbo.root
+			AfficherElements 	noeudSelect
+-- 			noeudSelecNomUnique = noeudSelect.nomUnique
+			
+			/* 
+			fn classerNbrImports 	ordreInverse:false	 = (
+			qsort root 	sortParNbrImports
+		),
+		fn classerVertex 	ordreInverse:false	 = (
+			qsort root 	sortParVertex
+		),
+		fn classerNoms 
+			
+			
+			
+			
+			
+			
+			
+			
+			colClicked = cols[arg.Column+1]
+			
+			case of
+			(
+				(colClicked == "Object Name"): sortByCol = 0
+				(colClicked == "Type"): sortByCol = 1
+				(colClicked == "Verts"):  sortByCol = 2
+				(colClicked == "Faces"):  sortByCol = 3
+				(colClicked == "Materials"):  sortByCol = 4
+			)
+			populateList lv
+			changeForecolor() */
+		)
+		
+		
 	on ui_listeVue		 mouseUp arg do  (
 		
 		---- click droit ----

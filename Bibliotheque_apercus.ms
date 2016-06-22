@@ -296,14 +296,15 @@ struct Apercus (
 			sol
 		),		
 		fn preparerLumieres		 =	(
-			
+			/* 
 			-- l'état des lumieres avant apercu --
 			a_lumieresEtats = #()
 			for L in Lights where classOf L != Targetobject do (
-					append a_lumieresEtats L.on
+				if classof L == VRaySun then delete
+					append a_lumieresEtats L.onG
 					L.on = false
 			)
-			
+			 */
 			posLum = longueurMax_import * 2
 			
 			debug ("posLum = " + posLum as string )

@@ -446,7 +446,7 @@ struct Arborescence (
 							present = true
 					)
 					if not present do (
-						debug ( " DELETE :%\n"  fichier )
+						debug ( " DELETE :" + fichier )
 						deleteFile fichier
 					)
 				)
@@ -472,6 +472,136 @@ struct Arborescence (
 			
 		
 		),
+		
+		
+		
+		/* 
+		dateCreation 			= getLocalTime(),
+		dateDernierImport 	= #(0, 0, 0, 0, 0, 0, 0, 0),
+		nbrImports				= 0,
+		nbrVertex	
+		 */
+		
+		
+	--- classement par ordre ------
+	private
+		fn sortParNbrImports elem1  elem2 = (
+			case of
+			(
+				(elem1.nbrImports < elem2.nbrImports): -1
+				(elem1.nbrImports > elem2.nbrImports): 1
+				default: 0
+			)
+		),
+		fn sortParNbrImportsInv elem1  elem2 = (
+			case of
+			(
+				(elem1.nbrImports < elem2.nbrImports): 1
+				(elem1.nbrImports > elem2.nbrImports): -1
+				default: 0
+			)
+		),
+		fn sortParVertex elem1  elem2  = (
+			case of
+			(
+				(elem1.nbrVertex < elem2.nbrVertex): -1
+				(elem1.nbrVertex > elem2.nbrVertex): 1
+				default: 0
+			)
+		),
+		fn sortParVertexInv elem1  elem2  = (
+			case of
+			(
+				(elem1.nbrVertex < elem2.nbrVertex): 1
+				(elem1.nbrVertex > elem2.nbrVertex): -1
+				default: 0
+			)
+		),
+		fn sortParNom elem1  elem2 = (
+			case of
+			(
+				(elem1.nom < elem2.nom): -1
+				(elem1.nom > elem2.nom): 1
+				default: 0
+			)
+		),
+		
+		fn sortParNomInv elem1  elem2 = (
+			case of
+			(
+				(elem1.nom < elem2.nom): 1
+				(elem1.nom > elem2.nom): -1
+				default: 0
+			)
+		),
+		
+		
+		fn compareDate elem1  elem2 = (
+			
+			for i= 1 to elem1.dateCreation.count	 do 
+			(
+				
+				case of
+				(
+					(elem1.dateCreation[i] < elem2.dateCreation[i]): return -1
+					(elem1.dateCreation[i] > elem2.dateCreation[i]): return 1
+-- 					default: if  i != elem1.dateCreation.count  then continue else 0
+				)
+			)
+			0
+		),
+		
+		fn sortParCreation elem1  elem2 = (
+			/* case of
+			(
+				(elem1.nom < elem2.nom): -1
+				(elem1.nom > elem2.nom): 1
+				default: 0
+			) */
+			return compareDate elem1  elem2
+		),
+		
+		fn sortParCreationInv elem1  elem2 = (
+			
+			return compareDate elem1  elem2
+		),
+	public
+		fn classerCreation 	_noeud 	ordreInverse:false	 = (
+			case ordreInverse of (
+				false:	qsort 	_noeud.enfants 	sortParCreation
+				true:	qsort 	_noeud.enfants 	sortParCreationInv
+			)
+-- 			ecrireFichier()
+-- 			afficher()
+		),
+		fn classerNbrImports 	_noeud 	ordreInverse:false	 = (
+			case ordreInverse of (
+				false:	qsort 	_noeud.enfants 	sortParNbrImports
+				true:	qsort 	_noeud.enfants 	sortParNbrImportsInv
+			)
+-- 			ecrireFichier()
+-- 			afficher()
+		),
+		fn classerVertex 		_noeud 	ordreInverse:false	 = (
+			case ordreInverse of (
+				false:	qsort 	_noeud.enfants 	sortParVertex
+				true:	qsort 	_noeud.enfants 	sortParVertexInv
+			)
+-- 			ecrireFichier()
+-- 			afficher()
+		),
+		fn classerNoms 		_noeud 	ordreInverse:false	 = (
+			case ordreInverse of (
+				false:	qsort 	_noeud.enfants 	sortParNom
+				true:	qsort 	_noeud.enfants 	sortParNomInv
+			)
+-- 			ecrireFichier()
+-- 			afficher()
+		),
+		
+		
+		
+		
 		
 	---- manipulations ----	
 	public

@@ -219,17 +219,23 @@ struct Ajout (
 
 	public
 		-- ajout asset dans la biblio --
-		fn dossier 	_dossier = (
+		fn dossier 	_dossier  noeudParent:	= (
 			
-			local nomApercu
+			if noeudParent == unsupplied then (
+				noeudListeParent = biblio.m_rollPrincipal.getListeSelection()
+				noeudParent = biblio.arbo.getParNomUnique 		noeudListeParent.name
+			)
+			
+			local nomApercu, noeudListeParent
 			local sceneCourante = ""
+-- 			if noeudParent == unsupplied do
+-- 				noeudListeParent = biblio.m_rollPrincipal.getListeSelection()
 			
-			selectionTV = biblio.m_rollPrincipal.getListeSelection()
-			
+			debug ("-------------------------------------------------------------------------------------"  )
 			debug (" _dossier ::::::::::::::::::: " + _dossier as string )
-			debug (" selectionTV ::::::::::::::::::: " + selectionTV as string )
+-- 			debug (" selectionTV ::::::::::::::::::: " + selectionTV as string )
 			
-			if selectionTV !=undefined do (
+-- 			if selectionTV !=undefined do (
 				
 				holdMaxFile() 
 				
@@ -255,14 +261,28 @@ struct Ajout (
 					debug ( "----------------- i  : " + i  as string )
 					debug ( "----------------- ichiersDossier.count  : " + fichiersDossier.count  as string )
 					
-					noeudParent = biblio.arbo.getParNomUnique 	selectionTV.name
+					
+-- 					else
+-- 						noeudParent = biblio.arbo.getParNomUnique 		noeudParent.nomUnique
+						
 					ajouterAsset	fichierAImporter noeudParent
 					
 					biblio.m_rollPrincipal.AfficherElements 	biblio.m_rollPrincipal.noeudSelect
 					
 					i +=1.
 				)
-			
+
+
+				--- recurcivité ---
+				sousDossiers = getDirectories  ( _dossier +"/*" ) 
+				for sousDossier in sousDossiers do (
+					debug ("sousDossier :::::::::> " + sousDossier )
+					dossier 	sousDossier  noeudParent:noeudParent
+				)
+
+			debug ("---- FIN FIN FINF IN F---------------------------------------------------------------------------------"  )
+				
+				-- message de fin ---
 				i-=1
 				
 				if biblio.m_rollPrincipal.cancelled then 
@@ -276,7 +296,7 @@ struct Ajout (
 				biblio.m_rollPrincipal.remplirTreeView 	biblio.arbo.root
 				
 				fetchMaxFile quiet:true
-			)
+-- 			)
 		
 			
 		),
