@@ -119,13 +119,16 @@ struct Menus (
 					
 				)
 				subMenu "Préferences"	(
-					menuItem m_options 	"options" 
+					menuItem m_preferences 	"Préferences" 
 				)
 				on m_nouveauDossier picked do
 					bibliotheque.nouveauNoeud()
 				
 				on m_supprimer picked do 
 					bibliotheque.suprimerNoeud()
+				
+				on m_preferences picked do 					
+					bibliotheque.ouvrirPreferences()
 			)
 			return rcRolloutPrincipal
 		)

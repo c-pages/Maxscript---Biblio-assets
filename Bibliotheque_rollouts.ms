@@ -1,6 +1,6 @@
 
 
-
+/* 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------	Le rollout d'edition des tags  ---------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -20,6 +20,85 @@ rollout m_rollChoisirDossier "Dossiers de la bibliothèque" width:500 height:500
 		ui_arborescence.width 	= m_rollChoisirDossier.width - 2*UItaille_ecart.x 
 		ui_arborescence.height = m_rollChoisirDossier.height - 2*UItaille_ecart.y 
 	)
+	
+)
+
+ */
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+----------	Le rollout d'edition des tags  ---------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+rollout m_rollPreferences "Préférences de la bibliothèque" width:500 height:114
+(
+	
+	local biblio
+	local cheminApercusBack
+	local cheminProxiesBack
+	
+	groupBox 	grp_dossiers 	"Dossiers" 	pos:[14,12] width:472 height:66
+	
+	editText 	edt_apercus 	"" 				pos:[112,32] width:344 height:17
+	button 		btn_apercus 	"..." 			pos:[463,32] width:17 height:17
+	label 		lbl_apercus 	"Aperçus:" 	pos:[23,33] width:90 height:16	
+	
+	editText 	edt_proxy 		"" 				pos:[112,53] width:344 height:17
+	button 		btn_proxy 		"..." 			pos:[463,53] width:17 height:17
+	label 		lbl_proxy 		"Proxies:" 	pos:[23,54] width:90 height:16
+	
+	button 		btn_appliquer 	"Appliquer" 	pos:[14,82] width:99 height:18
+	button 		btn_annuler 	"Annuler" 	pos:[387,82] width:99 height:18
+	
+	on edt_apercus entered txt do (
+		if not doesFileExist txt then
+		/* 	biblio.apercu.dossierApercus	= txt
+		else */
+			edt_apercus.text 	=	cheminApercusBack -- biblio.apercu.dossierApercus
+	)
+	
+	on btn_apercus pressed do (
+		nouveauChemin = getSavePath "Dossier pour les apérçus"	 initialDir:edt_apercus.text
+		if nouveauChemin != undefined do
+			edt_apercus.text 	=	nouveauChemin
+		
+	)
+	
+	on edt_proxy entered txt do (
+		if not doesFileExist txt then
+			/* biblio.apercu.dossierApercus 			= txt
+		else  */
+			edt_proxy.text	= cheminProxiesBack  --biblio.conversion.dossierProxy	
+	)
+	
+	on btn_proxy pressed do (
+		nouveauChemin = getSavePath "Dossier pour les proxies"	 initialDir:edt_proxy.text
+		if nouveauChemin != undefined do
+			edt_apercus.text 	=	nouveauChemin
+	
+	)
+	
+	
+	
+	
+	on btn_appliquer pressed do (
+		m_rollPreferences.edt_apercus.text 	= biblio.apercu.dossierApercus
+		m_rollPreferences.edt_proxy.text 		= biblio.conversion.dossierProxy
+		try (	DestroyDialog biblio.m_rollPreferences ) catch ( format  ("rien à destroy\n") )
+	)
+	on btn_annuler pressed do (
+		try (	DestroyDialog biblio.m_rollPreferences ) catch ( format  ("rien à destroy\n") )
+	)
+	
+	
+	
+	on m_rollPreferences open do (
+		cheminApercusBack	= bibliotheque.conversion.dossierProxy
+		cheminProxiesBack	= bibliotheque.apercu.dossierApercus
+	)
+	
+/* 	on m_rollPreferences close do (
+		cheminApercusBack	= biblio.conversion.dossierProxy
+		cheminProxiesBack	= biblio.apercu.dossierApercus
+	) */
 	
 )
 
@@ -114,7 +193,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	local colorImage = color 36 36 36
 	
 	local biblio ---- le struct principal de la bibliotheque ----
-	local apercuVide = "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2014 - 64bit\\ENU\\scripts\\Bibliotheque\\apercus\\apVide.jpg"
+	local apercuVide = "C:\Users\kris\AppData\Local\Autodesk\3dsMax\2017 - 64bit\ENU\scripts\biblio\apercus\apVide.jpg"
 	local	EcouteurChangeSelection 	--- ecouteur de changement de selection de la scene ---
 	
 	-- dimensionnement --
@@ -129,12 +208,12 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	
 	-- icones --
-	local ico_BtnAjouterAsset					= "$userScripts\\bibliotheque\\ico\\NouvelAsset.bmp"
-	local ico_BtnAjouterDossier				= "$userScripts\\bibliotheque\\ico\\NouvelAssetsDossier.bmp"
-	local ico_BtnAjouterAssetFromScene	= "$userScripts\\bibliotheque\\ico\\NouvelAssetFromScene.bmp"
-	local ico_BtnImporter						= "$userScripts\\bibliotheque\\ico\\importerDansScene.bmp"
-	local ico_BtnImporterProxy				= "$userScripts\\bibliotheque\\ico\\importerDansSceneProxy.bmp"
-	local ico_BtnImporterCorona				= "$userScripts\\bibliotheque\\ico\\importerDansSceneCorona.bmp"
+	local ico_BtnAjouterAsset					= "$userScripts\\biblio\\ico\\NouvelAsset.bmp"
+	local ico_BtnAjouterDossier				= "$userScripts\\biblio\\ico\\NouvelAssetsDossier.bmp"
+	local ico_BtnAjouterAssetFromScene	= "$userScripts\\biblio\\ico\\NouvelAssetFromScene.bmp"
+	local ico_BtnImporter						= "$userScripts\\biblio\\ico\\importerDansScene.bmp"
+	local ico_BtnImporterProxy				= "$userScripts\\biblio\\ico\\importerDansSceneProxy.bmp"
+	local ico_BtnImporterCorona				= "$userScripts\\biblio\\ico\\importerDansSceneCorona.bmp"
 	
 	
 	-- Element selectionné ---
@@ -1248,6 +1327,16 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 	
 	
+	----- import dans scene Proxy corona ---------
+	on ui_btnOurvirAperc  pressed do (
+-- 		biblio.importer.proxy elemSelect
+-- 		ui_btnOurvirAperc
+		apercu = selectBitMap caption:"Choisir le nouvel aperçu"
+		if apercu!= undefined do (
+			display apercu
+		)
+	)
+	
 	
 	
 	
@@ -1309,31 +1398,39 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	on m_rollPrincipal close do (
 		debug "Fermer Fenetre"
 		fermer_interface()
-		biblio.isOpen = false
+		biblio.prefs.fenetre.isOpen = false
 		updateToolbarButtons()
 	)
 	
 	
 	on m_rollPrincipal resized 	tailleRollOut	 do (
-		repositionnerElementsUI 			tailleRollOut
-		biblio.setTailleRolloutPrincipal 	tailleRollOut
+		
+		repositionnerElementsUI	tailleRollOut
+		biblio.prefs.fenetre.taille 	= 	tailleRollOut
+		
 		
 		posRollOut = GetDialogPos 	biblio.m_rollPrincipal
+		
 		-- si Edition est accroché on le deplace avec ---
-		if biblio.getEditionAccroche() do (
+		if biblio.prefs.fenetre.accroche do (
 			
-			bordureDialogBox 	= [22,5]
-			coinAccroche 			= [ posRollOut.x + biblio.m_rollPrincipal.width , posRollOut.y ]
-			coinAccroche 			+= bordureDialogBox
+			bordureDialogBox 	= 		[22,5]
+			coinAccroche 			= 		[ posRollOut.x + biblio.m_rollPrincipal.width, posRollOut.y ]
+			coinAccroche 			+= 	bordureDialogBox
 			
 			SetDialogPos 	biblio.m_rollEditerTags 	coinAccroche
-			biblio.setPosRolloutEdition 					coinAccroche
+			-- 	biblio.setPosRolloutEdition 					coinAccroche
+			
 		)
+		
+		biblio.prefs.enregistrer()
+		
 	)
 	
 	on m_rollPrincipal moved 	posRollOut	 do (
 		
 		biblio.setPosRolloutPrincipal 	posRollOut
+		biblio.prefs.fenetre.pos 	= 	posRollOut
 		
 		-- si Edition est accroché on le deplace avec ---
 		if biblio.getEditionAccroche() do (
@@ -1344,7 +1441,11 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			
 			SetDialogPos 	biblio.m_rollEditerTags 	coinAccroche
 			biblio.setPosRolloutEdition 					coinAccroche
+			
 		)
+		
+		biblio.prefs.enregistrer()
+		
 	)
 	
 ) -- fin rollout

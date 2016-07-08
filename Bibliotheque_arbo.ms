@@ -126,7 +126,7 @@ struct Arborescence (
 	---- les parametres ----
 	public
 		root,
-		fichierArbo = "$userScripts\bibliotheque\Bibliotheque_arbo.ini",
+		fichierArbo = "$userScripts\biblio\Bibliotheque_arbo.ini",
 		nomApercuVide 		= "apVide" ,
 		noeudRecherche,
 	

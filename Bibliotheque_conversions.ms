@@ -1,6 +1,6 @@
 
 
-fileIn "$userScripts\bibliotheque\Bibliotheque_conversions_corona.ms"
+fileIn "$userScripts\biblio\Bibliotheque_conversions_corona.ms"
 
 ---------------------------------------
 ------ La structure convertion ------
@@ -10,7 +10,7 @@ struct Conversions (
 	biblio, 
 	
 	public 
-		dossierProxy 	= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2014 - 64bit\\ENU\\scripts\\Bibliotheque\\proxy" ,
+		dossierProxy 	= "$userScripts\biblio\proxy" ,
 		prefixProxy 		= "prox_",
 
 	public

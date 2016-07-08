@@ -1,21 +1,50 @@
 
 
 
+
+/* #######################################################################################################################
+
+	2017 Christophe Pages (http://www.c-pages.fr) 	
+
+##########################################################################################################################
+
+	changelog:
+	*v0.0 - [2016/04/11] -----------------------------------------------------------------------------
+	- Mise en place globale
+
+######################################################################################################################## */ 
+
+
+
+------------------------------------------------------------------------------
+------ DEclaration de la bibioltheque en global -------------------------
+------------------------------------------------------------------------------
+GLOBAL bibliotheque
+
+
+------------------------------------------------------------------------------
+------ DEBUG						 -----------------------------------------
+------------------------------------------------------------------------------
+---- output ----
 global debug, b_DEBUG = true
 fn debug _txt = 	if b_DEBUG do format "debug:	%\n" ( _txt as string )
 
+---- le fenetre -----
 try (	DestroyDialog bibliotheque.m_rollPrincipal ) catch ( format  ("rien à destroy\n") )
 
+
+
 ------------------------------------------------------------------------------
------- include des sous structures ----------------------------------------
+------ INCLUDE des sous structures ------------------------------------
 -- les sous structures composent la structure parincipale 			--
 ------------------------------------------------------------------------------
-fileIn "$userScripts\bibliotheque\Bibliotheque_menus.ms"
-fileIn "$userScripts\bibliotheque\Bibliotheque_arbo.ms"
-fileIn "$userScripts\bibliotheque\Bibliotheque_apercus.ms"
-fileIn "$userScripts\bibliotheque\Bibliotheque_conversions.ms"
-fileIn "$userScripts\bibliotheque\Bibliotheque_ajout&import.ms"
-fileIn "$userScripts\bibliotheque\Bibliotheque_outils.ms"
+fileIn "$userScripts\biblio\Bibliotheque_menus.ms"
+fileIn "$userScripts\biblio\Bibliotheque_arbo.ms"
+fileIn "$userScripts\biblio\Bibliotheque_apercus.ms"
+fileIn "$userScripts\biblio\Bibliotheque_conversions.ms"
+fileIn "$userScripts\biblio\Bibliotheque_ajout&import.ms"
+fileIn "$userScripts\biblio\Bibliotheque_outils.ms"
+fileIn "$userScripts\biblio\Bibliotheque_preference.ms"
 
 
 ------------------------------------------------------------------------------
@@ -24,7 +53,7 @@ fileIn "$userScripts\bibliotheque\Bibliotheque_outils.ms"
 ------------------------------------------------------------------------------
 struct BibliothequeAsset (
 	
-	--- quelques variables privées  de fonctionnement ---
+	/* ---- quelques variables privées  de fonctionnement ---
 	private
 		m_tailleRolloutPrincipal 		= [1300,900],
 		m_posRolloutPrincipal 		= [50,50],
@@ -33,25 +62,41 @@ struct BibliothequeAsset (
 		b_rolloutEditionAccroche	=	false,
 		m_posRolloutEdition 			= [50,50],
 		
-		b_infosOuvert					=	true,
+		b_infosOuvert					=	true, */
+		
+	-- les differentes structures de la bibliotheque ---------------------
+-- 	private
+	public
+		prefs				= preference (),
+	
+-- 	private
+	public
+		arbo				= Arborescence (),
+		apercu 			= Apercus (),
+		conversion 	= Conversions (),
+		menu 			= Menus (), 
+		importer		= Import (),
+		ajouter			= Ajout (),
+		outils         	= boiteOutils (),
+		
 		
 	public 
-		
-		isOpen = false,
-		m_couleurFond = (color 56 56 56),
-		m_convertToCoronaMats = true,
-	
+		/* 
+		isOpen 								= false,
+		m_couleurFond 					= (color 56 56 56),
+		m_convertToCoronaMats 	= true,
+	 */
 	
 	-- quelques fonctions pour y acceder --------------
-		fn setTailleRolloutPrincipal 		tailleRollOut  		= ( m_tailleRolloutPrincipal 	= tailleRollOut 	),
-		fn setPosRolloutPrincipal 			posRollOut  	= ( m_posRolloutPrincipal 	= posRollOut 		),
-		fn setEditionOuvert 				bool					= ( b_rolloutEditionOuvert 	= bool 				),
-		fn setEditionAccroche 				bool				= ( b_rolloutEditionAccroche = bool 				),
-		fn getEditionAccroche 									= ( return b_rolloutEditionAccroche 				),
-		fn setPosRolloutEdition 			posRollOut  		= ( m_posRolloutEdition 		= posRollOut 		),
-		fn getPosRolloutEdition 							  		= ( return	m_posRolloutEdition 					),
-		fn setInfosOuvert 					bool				= ( b_infosOuvert 				= bool 				),
-		fn getInfosOuvert 										= ( return b_infosOuvert 							),
+		fn setTailleRolloutPrincipal 		tailleRollOut  	= ( prefs.fenetre.taille 	= tailleRollOut 	),
+		fn setPosRolloutPrincipal 		posRollOut  	= ( prefs.fenetre.pos 	= posRollOut 		),
+		fn setEditionOuvert 				bool				= ( prefs.fenetre.infos 	= bool 				),
+		fn setEditionAccroche 			bool				= ( prefs.fenetre.edition = bool 				),
+		fn getEditionAccroche 									= ( return prefs.fenetre.edition 				),
+-- 		fn setPosRolloutEdition 			posRollOut  		= ( m_posRolloutEdition 		= posRollOut 		),
+-- 		fn getPosRolloutEdition 							  		= ( return	m_posRolloutEdition 					),
+		fn setInfosOuvert 					bool				= ( prefs.fenetre.infos 				= bool 				),
+		fn getInfosOuvert 										= ( return prefs.fenetre.infos 							),
 		
 		
 		
@@ -59,20 +104,10 @@ struct BibliothequeAsset (
 -- 	private
 	public
 		m_rollPrincipal,				------- le roultout principale ---
--- 		m_rollEditerTags,			------- le roultout pour editer les tags des elements selectionnés ---
+		m_rollPreferences,		------- le roultout  des differentes otpions, chemins... ---
 -- 		m_rollChoisirDossier,		------- Un explorateur pour choisir une destination dans la biblio ---
 		
 		
-	-- les differentes structures de la bibliotheque ---------------------
--- 	private
-	public
-		arbo			= Arborescence (),
-		apercu 		= Apercus (),
-		conversion 	= Conversions (),
-		menu 		= Menus (), 
-		importer		= Import (),
-		ajouter		= Ajout (),
-		outils         = boiteOutils (),
 		
 	-- les methodes  publics ------------------------------------------------
 	public
@@ -228,10 +263,13 @@ struct BibliothequeAsset (
 		-- la fenetre --	
 		fn ouvrirFenetre 		= (
 			
+			
+			
 			debug "ouvrir fenetre ..."
 			
 			try (	DestroyDialog m_rollPrincipal ) catch ( format  ("rien à destroy\n") )
-			createDialog m_rollPrincipal pos:m_posRolloutPrincipal  width:m_tailleRolloutPrincipal.x  height:m_tailleRolloutPrincipal.y  \
+			
+			createDialog m_rollPrincipal pos:prefs.fenetre.pos  width:prefs.fenetre.taille.x  height:prefs.fenetre.taille.y  \
 						lockHeight:false  style:#(#style_resizing,#style_titlebar , /*#style_toolwindow, */#style_sysmenu, #style_minimizebox, #style_maximizebox/* , #style_sunkenedge */, #style_sysmenu )	\
 						menu:(menu.getMenuRolloutPrincipal()	 )	-- bgcolor:m_couleurFond
 			
@@ -240,17 +278,30 @@ struct BibliothequeAsset (
 			debug " ... ouvrir fenetre 2 ..."
 			m_rollPrincipal.remplirTreeView 	arbo.root
 			debug " ... ouvrir fenetre 3 ..."
-			m_rollPrincipal.repositionnerElementsUI 	m_tailleRolloutPrincipal
+			m_rollPrincipal.repositionnerElementsUI 	prefs.fenetre.taille
 			m_rollPrincipal.ui_arborescence.expandAll()
 			m_rollPrincipal.ui_arborescence.SelectedNode = m_rollPrincipal.ui_arborescence.nodes.item[0]	--.nodes.item[0]
 			m_rollPrincipal.AfficherElements 	arbo.root 	--.enfants[1]
 			m_rollPrincipal.maj_UI()
 			
-
 			debug "...fenetre ouverte."
+			
 		),
+		
 		fn fermerFenetre = (
 			try (	DestroyDialog m_rollPrincipal ) catch ( format  ("rien à destroy\n") )
+		),
+		
+		fn ouvrirPreferences = (
+			
+			try (	DestroyDialog m_rollPreferences ) catch ( format  ("rien à destroy\n") )
+			createDialog m_rollPreferences 	 \ --pos:prefs.fenetre.pos  width:prefs.fenetre.taille.x  height:prefs.fenetre.taille.y  \
+						lockHeight:false  style:#(/*#style_resizing,#style_titlebar , */#style_toolwindow/*, #style_sysmenu*//*, #style_minimizebox, #style_maximizebox , #style_sunkenedge , #style_sysmenu */)	\
+						--menu:(menu.getMenuRolloutPrincipal()	 )
+			m_rollPreferences.biblio 					= this
+			m_rollPreferences.edt_apercus.text 	= apercu.dossierApercus
+			m_rollPreferences.edt_proxy.text 		= conversion.dossierProxy
+			
 		),
 		
 	--  creation ASSETS  ------------------------------------------------
@@ -264,7 +315,7 @@ private
 			
 			debug "#### BIBLIO INITIALISATION  ####"
 			-- inclusion des rollouts --
-			include  "$userScripts\bibliotheque\Bibliotheque_rollouts.ms" 
+			include  "$userScripts\biblio\Bibliotheque_rollouts.ms" 
 			
 			debug "	BIBLIO INITIALISATION : 1  "
 			
@@ -281,9 +332,9 @@ private
 			debug "	BIBLIO INITIALISATION : 3"
 			
 			--- nettoyer le dossier des apercus (supprime les apercus non utilisé par l'arbo )  peut etre long ---
--- 			
-			arbo.nettoyer()			
+-- 			arbo.nettoyer()
 			
+			prefs.charger()
 			
 			debug "	BIBLIO INITIALISATION : 4"
 		),
@@ -306,15 +357,17 @@ private
 --------------------------------------------------------------------------------------------------------
 
  
--- clearListener()
+clearListener()
 
 bibliotheque = BibliothequeAsset()
 
--- bibliotheque.ouvrirFenetre()
+bibliotheque.ouvrirFenetre()
 roll = bibliotheque.m_rollPrincipal
--- bib.arbo.afficher()
+-- bibliotheque.arbo.afficher()
 
 /*
+
+display "$userScripts\\Biblio\\apercus\\apVide.jpg"
 
 showmethods roll.ui_listeVue
 

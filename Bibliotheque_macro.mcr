@@ -25,6 +25,6 @@ toolTip:""
 		
 	)
 	
-	on isChecked return try ( bibliotheque.isOpen ) catch ()
+	on isChecked return bibliotheque.isOpen
 	
 )

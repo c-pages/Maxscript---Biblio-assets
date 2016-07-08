@@ -36,7 +36,8 @@ struct Apercus (
 		nomDetail 				= "apDetail_",
 		nomApercuVide 		= "apVide" ,
 	public
-		dossierApercus 		= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2014 - 64bit\\ENU\\scripts\\Bibliotheque\\apercus",
+-- 		dossierApercus 		= "$userScripts\\biblio\\apercus",
+		dossierApercus 		= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2017 - 64bit\\ENU\\scripts\\biblio\\apercus",
 	private
 		cameraAngleVueDetail 		= 9,
 		
