@@ -11,57 +11,30 @@ struct Apercus (
 		biblio,
 		arbo,
 		
-	-- parametres de rendu --
-	public
-		tailleApercu 			= [256,256],
-		
-	private
-		------ RENDU ----
-		moteurDeRendu 		= Corona_1_4(),
-	
-		-- noise --
-		noiseLevel 				= 7,
-		noiseLevelDetail		= 11,
-		denoiseAmount 		= .4,
-		
-		-- post --
-		exposition 				= -5,
-		highlightCompress	= 1.4,
-		temperatureRendu 	= 5000,
-		contraste 				= 3,
-		
-		-- noms FICHIERS ET ADRESSES  ---
--- 		fichierRendu 			= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2014 - 64bit\\ENU\\scripts\\Bibliotheque\\apercus\\apercu.jpg",
-		nomApercu 			= "apercu_",
-		nomDetail 				= "apDetail_",
-		nomApercuVide 		= "apVide" ,
-	public
--- 		dossierApercus 		= "$userScripts\\biblio\\apercus",
-		dossierApercus 		= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2017 - 64bit\\ENU\\scripts\\biblio\\apercus",
-	private
-		cameraAngleVueDetail 		= 9,
-		
 		-- la CAMERA --
 		cameraApercu,
-		cameraAngleVue 		= 40,
 		
+		sol,
+	/* 
 		-- gestion CALQUES pour isolation --
-		nomCalqueImport 		= "ImportTemp",
 		a_calquesScene 			=#(),
 		a_calquesScene_etats 	=#(),
 		calqueActif,
 		calqueImport,
 		
+		a_objetsImport 		= #(),
+		a_calquesImport 	= #(),
+		a_lumieresEtats		= #(),
+		 */
 		-- pour IMPORT dans scene --
-		a_objetsScene 	= #(),
-		a_objetsImport 	= #(),
-		a_calquesImport = #(),
-		a_lumieresEtats	= #(),
-		
+		a_objetsImport 		= #(),
 		-- stockage de l'ancien moteur de rendu et ses parametres -
 		moteurRenduPrecedant,
 		
-		sol,
+		
+		
+		
+		
 		
 	public
 		BB_import,
@@ -76,7 +49,7 @@ struct Apercus (
 			
 			debug ("______________creerNomRendu_______ "  + _prefix )
 			local nouveauNom =""
-			listeApercus = getFiles ( dossierApercus + "\\*.jpg" )
+			listeApercus = getFiles ( biblio.prefs.apercus.dossier + "\\*.jpg" )
 			
 			trouveNouveauNom = false
 			i = 0
@@ -96,12 +69,12 @@ struct Apercus (
 		
 		
 		
-		
+		/* 
 		fn creerCalqueImport = (
-			calqueImport				= LayerManager.getLayerFromName nomCalqueImport
+			calqueImport				= LayerManager.getLayerFromName biblio.prefs.apercus.nomCalqueImport
 			if calqueImport == undefined do (
 				-- on creer le calque dans lequel on va faire l'import  et on l'initialise --
-				calqueImport 				= LayerManager.newLayerFromName nomCalqueImport
+				calqueImport 				= LayerManager.newLayerFromName biblio.prefs.apercus.nomCalqueImport
 				calqueImport.on 			= true
 				calqueImport.lock  		= false
 				calqueImport.current 	= true
@@ -136,41 +109,12 @@ struct Apercus (
 			calqueActif.current = true
 			
 			-- on supprime le calque d'import --
-			LayerManager.deleteLayerByName  nomCalqueImport
+			LayerManager.deleteLayerByName  biblio.prefs.apercus.nomCalqueImport
 			
 		),	-- FIN 	desIsoler
 		
-		
-		fn Importer		_fichier = (
-			
-			debug ( "apercu->Importer : " + _fichier )
-			
-			-- on vide les tableau --
-			a_objetsImport = #()
-			a_calquesImport = #()
-			
-			-- on liste les objets de la scene avant import --
-			a_objetsScene = for i in objects collect i
-			
-			-- on merge le fichier --
-			mergeMaxFile _fichier #select #autoRenameDups #renameMtlDups #neverReparent
-			
-			-- on liste les objets importés --
-			for obj in Objects do (
-				bpresent = false
-				for objInitial in a_objetsScene do 
-					if obj == objInitial do bpresent =true
-				if not bpresent do append a_objetsImport obj
-			)
-			
-			-- on les mets les objets importés dans le calque d'import --
-			for objImport in a_objetsImport do 
-				if objImport != undefined do (
-					append a_calquesImport	objImport.layer
-					(LayerManager.getLayerFromName nomCalqueImport ).addnode objImport
-				)
-			
-		),	--FIN Importer_Fichier_Pour_Edition
+		 */
+		/* 
 		fn retirerImport = (
 			
 			debug "apercu->retirerIzmport"
@@ -186,59 +130,110 @@ struct Apercus (
 				try (
 					if not b_present do LayerManager.deleteLayerByName  calqueImport.name
 				) catch ( 
-					debug ("ERREUR suppression calque : " /*+ calqueImport.name*/ ) 
+					debug ("ERREUR suppression calque : "  ) 
 				)
 			)
 			
-		),
-		
+		), */
 		
 		fn calculerBB 	_objets	=	(
 			
 			-- on calcul le bounding box de l'ensemble des objets --
-			BB_result = nodeLocalBoundingBox  _objets[1]
+			BB_import = nodeLocalBoundingBox  _objets[1]
+-- 			ref = (matrix3 [0,0,0] [0,0,0] [0,0,0] [0,0,0]) 
+-- 			BB_import = nodeGetBoundingBox   _objets[1]		 ref
+			
 			for obj in _objets where ( superclassof obj != light  	and	superclassof obj != camera 	and 	superclassof obj != helper	and 	superclassof obj != shape and classOf obj != Targetobject and not obj.ishidden )	do (
 				
 				-- XForm pour eviter probleme de taille des fois, à vois si ca fout pas le bordel --
 -- 				ResetXForm  obj
 				
 				BoundingTemp = nodeLocalBoundingBox  obj
+-- 				BoundingTemp = nodeGetBoundingBox   obj		ref
 				
-				if BoundingTemp[1].x < BB_result[1].x 	do 	BB_result[1].x = BoundingTemp[1].x 
-				if BoundingTemp[1].y < BB_result[1].y 	do 	BB_result[1].y = BoundingTemp[1].y 
-				if BoundingTemp[1].z < BB_result[1].z 	do 	BB_result[1].z = BoundingTemp[1].z 
+				if BoundingTemp[1].x < BB_import[1].x 	do 	BB_import[1].x = BoundingTemp[1].x 
+				if BoundingTemp[1].y < BB_import[1].y 	do 	BB_import[1].y = BoundingTemp[1].y 
+				if BoundingTemp[1].z < BB_import[1].z 	do 	BB_import[1].z = BoundingTemp[1].z 
 					
-				if BoundingTemp[2].x > BB_result[2].x 	do 	BB_result[2].x = BoundingTemp[2].x 
-				if BoundingTemp[2].y > BB_result[2].y 	do 	BB_result[2].y = BoundingTemp[2].y
-				if BoundingTemp[2].z > BB_result[2].z 	do 	BB_result[2].z = BoundingTemp[2].z 					
+				if BoundingTemp[2].x > BB_import[2].x 	do 	BB_import[2].x = BoundingTemp[2].x 
+				if BoundingTemp[2].y > BB_import[2].y 	do 	BB_import[2].y = BoundingTemp[2].y
+				if BoundingTemp[2].z > BB_import[2].z 	do 	BB_import[2].z = BoundingTemp[2].z 					
 				
 			)
 			
-			-- no calcul quelques données util pour la mise en place de la scene de rendu --
-			centre_import = [ ( BB_result[2].x - BB_result[1].x )/2 + BB_result[1].x, ( BB_result[2].y - BB_result[1].y )/2 +BB_result[1].y, ( BB_result[2].z - BB_result[1].z  )/2 + BB_result[1].z ]
-			BB_import = BB_result
+			-- on calcul quelques données utils pour la mise en place de la scene de rendu --
+			centre_import = [ ( BB_import[2].x - BB_import[1].x )/2 + BB_import[1].x, ( BB_import[2].y - BB_import[1].y )/2 +BB_import[1].y, ( BB_import[2].z - BB_import[1].z  )/2 + BB_import[1].z ]
 			
+			--- la longueur max ---
 			BBLargeur	=	BB_import[2].x - BB_import[1].x
 			BBLongeur	=	BB_import[2].y - BB_import[1].y
 			BBHauteur	=	BB_import[2].z - BB_import[1].z
--- 			longueurMax_import = amax BBLargeur  BBLongeur  BBHauteur
 			hypot_1  = sqrt   ( BBLargeur*BBLargeur   + BBLongeur*BBLongeur)   
 			longueurMax_import = sqrt ( hypot_1*hypot_1 + BBHauteur*BBHauteur)
 			
+			------- DEBUG -------
+			debug ( "------------ BB ---------- "  )
+			debug ( "BB_import : " + BB_import as string )
+			debug ( "centre_import : " + centre_import as string )
+			debug ( "longueurMax_import : " + longueurMax_import as string )
 			
-			-- debug --
--- 			pt = point name:"CENTRE" pos:centre_import size:longueurMax_import
+			ptCtr 	= point name:"CENTRE" pos:centre_import 	size:longueurMax_import
+			ptMin 	= point name:"Min" 		pos:BB_import[1]	 	size:longueurMax_import
+			ptMax 	= point name:"Max" 		pos:BB_import[2] 		size:longueurMax_import
 			
 			return BB_result
 		),
 		
 		
-		
-		fn poserCamera 	detail:	 = (
-			local CameraPosX
+		fn importer		_fichier = (
 			
-			marge = longueurMax_import * 0
-			distCam = tan ( cameraAngleVue/2) * ( longueurMax_import + marge )  *3
+			debug ( "apercu->Importer : " + _fichier )
+			-- on vide les tableau --
+			a_objetsImport = #()
+			/* 
+			a_calquesImport = #()
+			 
+			-- on liste les objets de la scene avant import --
+			a_objetsScene = for i in objects collect i
+			*/
+			-- on merge le fichier --
+			mergeMaxFile _fichier #select #autoRenameDups #renameMtlDups #neverReparent
+			
+			-- on liste les objets importés --
+			a_objetsImport = for i in selection collect i
+			
+			-- calcul du BB et du centre de l'import --
+			calculerBB  	a_objetsImport
+			
+			/* 
+				
+			for obj in Objects do (
+				bpresent = false
+				for objInitial in a_objetsScene do 
+					if obj == objInitial do bpresent =true
+				if not bpresent do append a_objetsImport obj
+			)
+			-- on les mets les objets importés dans le calque d'import --
+			for objImport in a_objetsImport do 
+				if objImport != undefined do (
+					append 	a_calquesImport	objImport.layer
+					(LayerManager.getLayerFromName biblio.prefs.apercus.nomCalqueImport ).addnode objImport
+				) */
+			
+		),	--FIN Importer_Fichier_Pour_Edition
+		
+		fn poserCamera 	detail:false	 = (
+			
+			local CameraPosX, distCam
+			
+			marge 		= longueurMax_import * 0
+-- 			if detail then 
+-- 				distCam 	= tan ( biblio.prefs.apercus.angleVue/2) * ( longueurMax_import + marge )  *3
+-- 			else 
+-- 				distCam 	= tan ( biblio.prefs.apercus.angleVueDetail/2) * ( longueurMax_import + marge )  *3
+			
+			
+			distCam 	= longueurMax_import * biblio.prefs.apercus.coefDistance
 			
 			debug  ( "distCam : " + distCam as string )
 			
@@ -253,15 +248,16 @@ struct Apercus (
 			TargetX =  centre_import.x
 			TargetY =  centre_import.y
 			TargetZ =  centre_import.z
+			
 			if ( not detail ) then
-				Capture_FOV = cameraAngleVue
+				Capture_FOV = biblio.prefs.apercus.angleVue
 			else 
-				Capture_FOV = cameraAngleVueDetail
+				Capture_FOV = biblio.prefs.apercus.angleVueDetail
 			
 			cameraApercu =  Targetcamera fov:Capture_FOV pos:[CameraPosX,CameraPosY,CameraPosZ] name:"Camera_apercu" orthoProjection:false target:(Targetobject transform:(matrix3 [1,0,0] [0,1,0] [0,0,1] [TargetX,TargetY, TargetZ] ) name:"TargetCapture") 
 			viewport.setCamera cameraApercu
 			
-			(LayerManager.getLayerFromName nomCalqueImport ).addnode cameraApercu
+-- 			( LayerManager.getLayerFromName biblio.prefs.apercus.nomCalqueImport ).addnode cameraApercu
 			
 			-- on l'ajoute à la liste import pour le suppr à la fin --
 			append a_objetsImport cameraApercu
@@ -270,7 +266,6 @@ struct Apercus (
 			
 		),
 		fn poserSol 		 = (
-			
 			
 			TailleSol = longueurMax_import * 100
 			Extrusion = longueurMax_import * 20
@@ -283,17 +278,11 @@ struct Apercus (
 			addModifier sol (TurboSmooth ())
 			sol.modifiers[1].iterations = 3
 			
-			(LayerManager.getLayerFromName 	nomCalqueImport ).addnode Sol
-
-			matSol = CoronaMtl ()
--- 			matSol.diff_color = (execute (CaptureCouleurSol as string) ) 
--- 			matSol.refl_weight = CapturesolReflexion
--- 			matSol.opts_ao_distance = ( BBLargeur +	BBLongeur + BBHauteur) / 3 / 2
-			
+			matSol = CoronaMtl ()			
 			sol.material = matSol
 			
 			-- on l'ajoute à la liste import pour le suppr à la fin --
-			append a_objetsImport sol
+			append a_objetsImport 	sol
 			sol
 		),		
 		fn preparerLumieres		 =	(
@@ -312,28 +301,28 @@ struct Apercus (
 			
 			-- creation de la lumiere pour l'apercu --
 			soleilCorona = CoronaSun targeted:on name:"Soleil_apercu" pos:[centre_import.x + .5*posLum ,centre_import.y - 2*posLum, centre_import.z + 2*posLum] isSelected:off  target:(Targetobject transform:(matrix3 [1,0,0] [0,1,0] [0,0,1] [centre_import.x,centre_import.y, centre_import.z] ) name:"TargetLumiereCapture") 
-			append a_objetsImport 	soleilCorona
+-- 			append a_objetsImport 	soleilCorona
 			
-			(LayerManager.getLayerFromName 	nomCalqueImport ).addnode soleilCorona
+-- 			(LayerManager.getLayerFromName 	biblio.prefs.apercus.nomCalqueImport ).addnode soleilCorona
 		),
 		fn preparerRendu 		detail:  =(
 			
 			debug "apercu->preparerRendu"
-			
-			-- calcul du BB et du centre de l'import --
-			calculerBB  a_objetsImport
+-- 			
+-- 			-- calcul du BB et du centre de l'import --
+-- 			calculerBB  	a_objetsImport
 -- 			
 -- 			-- le calque des element du rendu ---
 -- 			creerCalqueImport()
 			
 			-- conversion des materiaux  --
-			biblio.conversion.matsToCorona  a_objetsImport
+			biblio.conversion.matsToCorona  	a_objetsImport
 			
 			-- on s'occupe des lumieres -- 
 			preparerLumieres()
 			
 			-- la camera --
-			poserCamera detail:detail
+			poserCamera 	detail:detail
 			
 			-- le sol --
 			poserSol()
@@ -341,18 +330,18 @@ struct Apercus (
 			-- le moteur de rendu
 			nomMoteur = classof renderers.current as string
 			if ( findString nomMoteur "Corona" != 0 ) do (
-				moteurRenduPrecedant = renderers.current
-				renderers.current = moteurDeRendu
-				renderers.current.adaptivity_targetError 		= if detail then noiseLevelDetail else noiseLevel
-				renderers.current.denoise_blendAmount		= denoiseAmount
+				moteurRenduPrecedant 								= renderers.current
+				renderers.current 										= biblio.prefs.apercus.moteur
+				renderers.current.adaptivity_targetError 		= if detail then biblio.prefs.apercus.noiseLevelDetail else biblio.prefs.apercus.noiseLevel
+				renderers.current.denoise_blendAmount		= biblio.prefs.apercus.denoiseAmount
 				renderers.current.denoise_filterType			= 2
 				
-				renderers.current.colorMap_simpleExposure 			= exposition
-				renderers.current.colorMap_highlightCompression	= highlightCompress
-				renderers.current.colorMap_colorTemp					= temperatureRendu
-				renderers.current.colorMap_contrast					= contraste
+				renderers.current.colorMap_simpleExposure 			= biblio.prefs.apercus.exposition
+				renderers.current.colorMap_highlightCompression	= biblio.prefs.apercus.highlightCompress
+				renderers.current.colorMap_colorTemp						= biblio.prefs.apercus.temperatureRendu
+				renderers.current.colorMap_contrast						= biblio.prefs.apercus.contraste
 				
-				renderers.current.vfb_type						= 2	-- 0:pour cacher le VFB corona --
+				renderers.current.vfb_type							= 2	-- 0:pour cacher le VFB corona --
 				renderers.current.bg_texmap						= CoronaSky()
 				renderers.current.bg_source						= 1
 			)
@@ -360,16 +349,16 @@ struct Apercus (
 		),
 		
 		
-		fn rendre detail: =(
+		fn rendre detail:false	=(
 			debug "apercu->rendre"
 			local nomRendu 
-			local prefix = if not detail then ( ""+ nomApercu )
-														else	( ""+ nomDetail )
+			local prefix = if not detail 	then ( "" + biblio.prefs.apercus.nom )
+														else	( "" + biblio.prefs.apercus.nomDetail )
 			
-			nomRendu = dossierApercus + "\\" + ( creerNomRendu 	prefix ) + ".jpg"
+			nomRendu = biblio.prefs.apercus.dossier + "\\" + ( creerNomRendu 	prefix ) + ".jpg"
 			
-			Rendu = 	render cameraApercu 			outputSize:tailleApercu   \
-							outputfile:nomRendu 			vfb:false 			quiet:false	\
+			Rendu = 	render cameraApercu 			outputSize:biblio.prefs.apercus.taille   \
+							outputfile:nomRendu 			vfb:false 			quiet:false					\
 							cancelled:&TestCancelled	 	missingExtFilesAction:#logmsg
 			
 -- 			display  Rendu
@@ -392,11 +381,11 @@ struct Apercus (
 			
 -- 			viderScene ()
 			
-			creerCalqueImport()
-			Importer 	_fichier
+-- 			creerCalqueImport()
+			importer 	_fichier
 			preparerRendu 	detail:detail
 			nomRenduApercu = rendre  detail:detail
-			delete sol
+-- 			delete sol
 			
 			debug ( "Apercu créé : " + nomRenduApercu )
 			nomRenduApercu

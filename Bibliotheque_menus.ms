@@ -29,8 +29,8 @@ struct Menus (
 				seperator sep01
 				
 				subMenu  "Options d'import" (
-					menuItem matNeRienFaire 			"Matériaux bruts" 						checked:( not bibliotheque.m_convertToCoronaMats )
-					menuItem matconvertCorona 		"Convertir matériaux en Corona" 		checked:( bibliotheque.m_convertToCoronaMats )
+					menuItem matNeRienFaire 		"Matériaux bruts" 								checked:( not bibliotheque.prefs.apercus.convertToCoronaMats )
+					menuItem matconvertCorona 		"Convertir matériaux en Corona" 		checked:( bibliotheque.prefs.apercus.convertToCoronaMats )
 				)
 				
 				seperator sep02
@@ -115,14 +115,19 @@ struct Menus (
 			(
 				subMenu "Edit"	(
 					menuItem m_nouveauDossier 	"Nouveau dossier" 
-					menuItem m_supprimer 			"Supprimer" 
-					
+					menuItem m_supprimer 			"Supprimer"					
 				)
 				subMenu "Préferences"	(
-					menuItem m_preferences 	"Préferences" 
+					menuItem m_preferences 			"Préferences" 
+					menuItem m_resetPreferences 	"Reinitialiser" 
 				)
-				on m_nouveauDossier picked do
+				on m_nouveauDossier picked do	
 					bibliotheque.nouveauNoeud()
+				
+				on m_resetPreferences picked do (
+					if queryBox "Etes-vous sûr de vouloir réinitialiser les préférences de la bibliotheque ?" do
+						bibliotheque.prefs.reset()
+				)
 				
 				on m_supprimer picked do 
 					bibliotheque.suprimerNoeud()

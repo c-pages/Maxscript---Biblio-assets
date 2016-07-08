@@ -11,24 +11,24 @@ struct Element (
 	
 	-- parametre de l'element --
 	public
-		nomUnique 		= "E",		------ NomUnique de l'élément, ne doit jamais y avoir 2 element avec le mm nomUnique !!! ---
-		nom 				= "nom",	------ le nom affiché de l'élément ---
-		type				= #vide,
-		fichier			= "",
-		apercu			= "",
-		proxy				= "",
-		detail				= "",
-		tags				="",
-		notes 			= "",
-		dateCreation 			= getLocalTime(),
+		nomUnique 				= "E",		------ NomUnique de l'élément, ne doit jamais y avoir 2 element avec le mm nomUnique !!! ---
+		nom 							= "nom",	------ le nom affiché de l'élément ---
+		type							= #vide,
+		fichier						= "",
+		apercu						= "",
+		proxy						= "",
+		detail						= "",
+		tags							= "",
+		notes 						= "",
+		dateCreation 				= getLocalTime(),
 		dateDernierImport 	= #(0, 0, 0, 0, 0, 0, 0, 0),
 		nbrImports				= 0,
-		nbrVertex				= 10101010,
-	
+		nbrVertex					= 0,
+		
 	-- le composite --
 	public
-		parent 			= undefined,
-		enfants 			= #(),		
+		parent 						= undefined,
+		enfants 					= #(),		
 		
 	public
 		fn compteElements = (
@@ -126,7 +126,7 @@ struct Arborescence (
 	---- les parametres ----
 	public
 		root,
-		fichierArbo = "$userScripts\biblio\Bibliotheque_arbo.ini",
+		fichierArbo = "$userScripts\biblio\arbo.ini",
 		nomApercuVide 		= "apVide" ,
 		noeudRecherche,
 	

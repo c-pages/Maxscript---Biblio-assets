@@ -570,9 +570,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			noeudSelect = _noeud
 			
 			ui_listeVue.items.Clear()
-			tailleImage = biblio.apercu.tailleApercu
+			tailleImage = biblio.prefs.apercus.taille
 			apercusImages = dotNetObject "System.Windows.Forms.ImageList"
-			apercusImages.imageSize = dotNetObject "System.Drawing.Size" 	tailleImage.x 	tailleImage.y
+			apercusImages.imageSize = dotNetObject "System.Drawing.Size" 	biblio.prefs.fenetre.tailleApercus.x 	biblio.prefs.fenetre.tailleApercus.y
 			apercusImages.ColorDepth = apercusImages.ColorDepth.Depth24Bit
 			
 			
@@ -885,16 +885,26 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	
 	
-	on ui_btnImporter pressed do
-		( debug "Importer dans la scene." )
 	
-	on ui_btnCreerAssetFichier pressed do biblio.ajouter.fichier() 
+	on ui_btnCreerAssetFichier pressed do (
+		if (getListeSelection() !=undefined ) do  (
+			fichierAImporter = 	getOpenFileName  caption:"Fichier à integrer dans la bibliotheque" 	\
+											types:"model (*.max)|*.max|All Files (*.*)|*.*|"							\
+											filename:( biblio.prefs.apercus.dossierImport + "\\")
+			
+			if 	fichierAImporter != undefined  do 
+				biblio.ajouter.fichier  fichierAImporter
+		)
+	)
 	
 	
 	on ui_btnCreerAssetDossier pressed do (
-		dossier = getSavePath "" initialDir:"F:\Bibeul 3D\ARCHMODELS"
-		if dossier!=undefined do 
+		dossier = getSavePath ""	 initialDir:biblio.prefs.apercus.dossierImport
+		if dossier!=undefined do (
 			biblio.ajouter.dossier 	dossier 
+			biblio.prefs.apercus.dossierImport =  dossier
+			biblio.prefs.enregistrer()
+		)
 	)
 	
 ----- L'arborescence ------------------
@@ -1400,6 +1410,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		fermer_interface()
 		biblio.prefs.fenetre.isOpen = false
 		updateToolbarButtons()
+		biblio.prefs.enregistrer()
 	)
 	
 	
@@ -1423,7 +1434,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			
 		)
 		
-		biblio.prefs.enregistrer()
+-- 		biblio.prefs.enregistrer()
 		
 	)
 	
@@ -1444,7 +1455,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			
 		)
 		
-		biblio.prefs.enregistrer()
+-- 		biblio.prefs.enregistrer()
 		
 	)
 	

@@ -1,5 +1,6 @@
 
 
+clearListener()
 
 
 /* #######################################################################################################################
@@ -357,7 +358,7 @@ private
 --------------------------------------------------------------------------------------------------------
 
  
-clearListener()
+-- clearListener()
 
 bibliotheque = BibliothequeAsset()
 
@@ -366,6 +367,8 @@ roll = bibliotheque.m_rollPrincipal
 -- bibliotheque.arbo.afficher()
 
 /*
+
+		bibliotheque.apercu.calculerBB ( selection as array )
 
 display "$userScripts\\Biblio\\apercus\\apVide.jpg"
 

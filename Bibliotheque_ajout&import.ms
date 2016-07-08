@@ -188,11 +188,10 @@ struct Ajout (
 	private
 		fn ajouterAsset	fichierMax  noeudParent = (
 			
-			
-			holdMaxFile() 
 			if classOf noeudParent == Element do		noeudParent = noeudParent.parent
-			biblio.outils.viderScene()
+-- 			biblio.outils.viderScene()
 			
+			resetMaxFile #noPrompt
 			-- le nom --
 			_nom = getFilenameFile  fichierMax
 			
@@ -204,16 +203,15 @@ struct Ajout (
 			
 			nouvelAsset.nbrVertex = biblio.outils.compterVertex  (objects as array )
 			
-			debug ( " 	# objects as array : " + ( objects as array ) as string  )
-			debug ( " 	# creation element : " + nouvelAsset.nomUnique + " / " + nouvelAsset.nom )
-			debug ( " 	# noeudParent : " + noeudParent.nomUnique + " / " + noeudParent.nom )
-			debug ( " 	# nbrVertex : " + nouvelAsset.nbrVertex  as string )
+-- 			debug ( " 	# objects as array : " + ( objects as array ) as string  )
+-- 			debug ( " 	# creation element : " + nouvelAsset.nomUnique + " / " + nouvelAsset.nom )
+-- 			debug ( " 	# noeudParent : " + noeudParent.nomUnique + " / " + noeudParent.nom )
+-- 			debug ( " 	# nbrVertex : " + nouvelAsset.nbrVertex  as string )
 			
 			
 			
 			biblio.arbo.ecrireFichier()
 			
-			fetchMaxFile quiet:true
 			
 		) ,
 
@@ -231,108 +229,99 @@ struct Ajout (
 -- 			if noeudParent == unsupplied do
 -- 				noeudListeParent = biblio.m_rollPrincipal.getListeSelection()
 			
-			debug ("-------------------------------------------------------------------------------------"  )
-			debug (" _dossier ::::::::::::::::::: " + _dossier as string )
+-- 			debug ("-------------------------------------------------------------------------------------"  )
+-- 			debug (" _dossier ::::::::::::::::::: " + _dossier as string )
 -- 			debug (" selectionTV ::::::::::::::::::: " + selectionTV as string )
 			
 -- 			if selectionTV !=undefined do (
+			
+			holdMaxFile() 
+			
+			biblio.m_rollPrincipal.setProgress "Ajout à la bilbiothèque  ..." 0
+			
+			
+-- 			debug "ajouterAssetFichier"
+			fichiersDossier = getFiles ( _dossier+  "\\*.max") 
+-- 			debug (" fichiersDossier ::::::::::::::::::: " + fichiersDossier as string )
+			fichiersAImporter = 	for fichier in fichiersDossier /*where getFilenameType fichier =="max" */	collect fichier
+			i = 1.
+			for fichierAImporter in fichiersDossier do
+			(
 				
-				holdMaxFile() 
+				if biblio.m_rollPrincipal.cancelled do continue
 				
-				biblio.m_rollPrincipal.setProgress "Ajout à la bilbiothèque  ..." 0
+				pourcent = ( ( i - 1.) / fichiersDossier.count * 100. )				
+				biblio.m_rollPrincipal.setProgress ("Ajout à la bilbiothèque " + ( i as integer )  as string + "/" + fichiersDossier.count as string  + " fichiers" ) 	pourcent
+				
+-- 				resetMaxFile 		#noPrompt
+-- 				debug ( "-----------------Importer " + fichierAImporter + "   -------------------------- pourcent : " + pourcent as string )
+-- 				debug ( "----------------- i  : " + i  as string )
+-- 				debug ( "----------------- ichiersDossier.count  : " + fichiersDossier.count  as string )
 				
 				
-				debug "ajouterAssetFichier"
-				fichiersDossier = getFiles ( _dossier+  "\\*.max") 
-				debug (" fichiersDossier ::::::::::::::::::: " + fichiersDossier as string )
-				fichiersAImporter = 	for fichier in fichiersDossier /*where getFilenameType fichier =="max" */	collect fichier
-				i = 1.
-				for fichierAImporter in fichiersDossier do
-				(
-					
-					if biblio.m_rollPrincipal.cancelled do continue
-					
-					pourcent = ( ( i - 1.) / fichiersDossier.count * 100. )
-					
-					biblio.m_rollPrincipal.setProgress ("Ajout à la bilbiothèque " + ( i as integer )  as string + "/" + fichiersDossier.count as string  + " fichiers" ) 	pourcent
-					
-					
-					debug ( "-----------------Importer " + fichierAImporter + "   -------------------------- pourcent : " + pourcent as string )
-					debug ( "----------------- i  : " + i  as string )
-					debug ( "----------------- ichiersDossier.count  : " + fichiersDossier.count  as string )
-					
-					
 -- 					else
 -- 						noeudParent = biblio.arbo.getParNomUnique 		noeudParent.nomUnique
-						
-					ajouterAsset	fichierAImporter noeudParent
-					
-					biblio.m_rollPrincipal.AfficherElements 	biblio.m_rollPrincipal.noeudSelect
-					
-					i +=1.
-				)
+				
+				ajouterAsset	fichierAImporter noeudParent
+				
+				biblio.m_rollPrincipal.AfficherElements 	biblio.m_rollPrincipal.noeudSelect
+				
+				i +=1.
+			)
 
 
-				--- recurcivité ---
-				sousDossiers = getDirectories  ( _dossier +"/*" ) 
-				for sousDossier in sousDossiers do (
-					debug ("sousDossier :::::::::> " + sousDossier )
-					dossier 	sousDossier  noeudParent:noeudParent
-				)
+			--- recurcivité ---
+			sousDossiers = getDirectories  ( _dossier +"/*" ) 
+			for sousDossier in sousDossiers do (
+				debug ("sousDossier :::::::::> " + sousDossier )
+				dossier 	sousDossier  noeudParent:noeudParent
+			)
 
 			debug ("---- FIN FIN FINF IN F---------------------------------------------------------------------------------"  )
-				
-				-- message de fin ---
-				i-=1
-				
-				if biblio.m_rollPrincipal.cancelled then 
-					biblio.m_rollPrincipal.setProgress ("Ajout à la bilbiothèque : " + ( i as integer )  as string + "/" + fichiersDossier.count as string  + " *Annulé*") 100
-				else 
-					biblio.m_rollPrincipal.setProgress ("Ajout à la bilbiothèque : " + ( i as integer )  as string + "/" + fichiersDossier.count as string  + " nouveaux éléments.") 100				
-				biblio.m_rollPrincipal.cancelled = false
 			
-				
-				-- actualiser le treeview ---
-				biblio.m_rollPrincipal.remplirTreeView 	biblio.arbo.root
-				
-				fetchMaxFile quiet:true
+			-- message de fin ---
+			i-=1
+			
+			if biblio.m_rollPrincipal.cancelled then 
+				biblio.m_rollPrincipal.setProgress ("Ajout à la bilbiothèque : " + ( i as integer )  as string + "/" + fichiersDossier.count as string  + " *Annulé*") 100
+			else 
+				biblio.m_rollPrincipal.setProgress ("Ajout à la bilbiothèque : " + ( i as integer )  as string + "/" + fichiersDossier.count as string  + " nouveaux éléments.") 100				
+			biblio.m_rollPrincipal.cancelled = false
+		
+			
+			-- actualiser le treeview ---
+			biblio.m_rollPrincipal.remplirTreeView 	biblio.arbo.root
+			
+			fetchMaxFile quiet:true
 -- 			)
 		
 			
 		),
 		
 		-- ajout asset dans la biblio --
-		fn fichier = (
+		fn fichier  _fichier = (
 			
-			debug "ajouterAssetFichier"
+			debug ( "### PAR LA ### "  )
+			debug ( "Importer " + _fichier )
 			
-			fichierAImporter = getOpenFileName  caption:"Fichier à integrer dans la bibliotheque" \
-											types:"model (*.max)|*.max|All Files (*.*)|*.*|"	
+			biblio.m_rollPrincipal.setProgress "Ajout à la bilbiothèque  ..." 0
 			
-			if 	fichierAImporter != undefined  do ( 
-				
-				biblio.m_rollPrincipal.setProgress "Ajout à la bilbiothèque  ..." 0
-					holdMaxFile() 
-					
-					debug ( "Importer " + fichierAImporter )
-				
-					selectionTV = biblio.m_rollPrincipal.getListeSelection()
-					if selectionTV !=undefined do (
-					
-						noeudParent = biblio.arbo.getParNomUnique 	selectionTV.name
-						ajouterAsset	fichierAImporter noeudParent
-						
-						-- actualiser le treeview ---
-						biblio.m_rollPrincipal.remplirTreeView 	biblio.arbo.root
-						
-						
-					)
-	-- 					show 	( selectionTV )
-					
-					fetchMaxFile quiet:true
-					biblio.m_rollPrincipal.setProgress ("Ajout à la bilbiothèque : 1 nouvel élément.") 100
-					
-				)
+			holdMaxFile() 
+			
+-- 			resetMaxFile 	#noPrompt
+			
+			selectionTV = biblio.m_rollPrincipal.getListeSelection()
+			
+			noeudParent = biblio.arbo.getParNomUnique 	selectionTV.name
+			ajouterAsset		_fichier		 noeudParent
+			
+			-- actualiser le treeview ---
+			biblio.m_rollPrincipal.remplirTreeView 	biblio.arbo.root
+			
+			
+			biblio.m_rollPrincipal.setProgress ("Ajout à la bilbiothèque : 1 nouvel élément.") 100
+			
+			fetchMaxFile quiet:true
 			
 		),
 		fn selec = (
