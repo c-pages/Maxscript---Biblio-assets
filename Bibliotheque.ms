@@ -54,18 +54,6 @@ fileIn "$userScripts\biblio\Bibliotheque_preference.ms"
 ------------------------------------------------------------------------------
 struct BibliothequeAsset (
 	
-	/* ---- quelques variables privées  de fonctionnement ---
-	private
-		m_tailleRolloutPrincipal 		= [1300,900],
-		m_posRolloutPrincipal 		= [50,50],
-		
-		b_rolloutEditionOuvert		=	false,
-		b_rolloutEditionAccroche	=	false,
-		m_posRolloutEdition 			= [50,50],
-		
-		b_infosOuvert					=	true, */
-		
-	-- les differentes structures de la bibliotheque ---------------------
 -- 	private
 	public
 		prefs				= preference (),
@@ -82,18 +70,13 @@ struct BibliothequeAsset (
 		
 		
 	public 
-		/* 
-		isOpen 								= false,
-		m_couleurFond 					= (color 56 56 56),
-		m_convertToCoronaMats 	= true,
-	 */
 	
-	-- quelques fonctions pour y acceder --------------
+	-- quelques fonctions accesseurs ( voir si on garde ... ) --------------
 		fn setTailleRolloutPrincipal 		tailleRollOut  	= ( prefs.fenetre.taille 	= tailleRollOut 	),
 		fn setPosRolloutPrincipal 		posRollOut  	= ( prefs.fenetre.pos 	= posRollOut 		),
 		fn setEditionOuvert 				bool				= ( prefs.fenetre.infos 	= bool 				),
 		fn setEditionAccroche 			bool				= ( prefs.fenetre.edition = bool 				),
-		fn getEditionAccroche 									= ( return prefs.fenetre.edition 				),
+		fn getEditionAccroche 								= ( return prefs.fenetre.edition 				),
 -- 		fn setPosRolloutEdition 			posRollOut  		= ( m_posRolloutEdition 		= posRollOut 		),
 -- 		fn getPosRolloutEdition 							  		= ( return	m_posRolloutEdition 					),
 		fn setInfosOuvert 					bool				= ( prefs.fenetre.infos 				= bool 				),
@@ -104,9 +87,9 @@ struct BibliothequeAsset (
 	-- les rollouts de la bibliotheque	----------------------------------
 -- 	private
 	public
-		m_rollPrincipal,				------- le roultout principale ---
+		m_rollPrincipal,			------- le roultout principale ---
 		m_rollPreferences,		------- le roultout  des differentes otpions, chemins... ---
--- 		m_rollChoisirDossier,		------- Un explorateur pour choisir une destination dans la biblio ---
+		m_rollInfos,				------- le rollout des infos ---
 		
 		
 		
@@ -248,9 +231,9 @@ struct BibliothequeAsset (
 					m_rollPrincipal.afficherInfos()
 					fetchMaxFile quiet:true
 					
-				
+					
 				)
-		
+				
 		)	,
 		
 		

@@ -26,7 +26,55 @@ rollout m_rollChoisirDossier "Dossiers de la bibliothèque" width:500 height:500
  */
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
-----------	Le rollout d'edition des tags  ---------------------------------------------------------------------------------------------------------------------
+----------	Le rollout des infos  ---------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+rollout m_rollInfos "Infos" width:280 height:597
+(
+	local ui_listBtns_infos	= #()
+	
+	label 'ui_lblNom' "Nom: " pos:[17,15] width:36 height:19 align:#left
+	edittext 'ui_editNom' "" pos:[59,15] width:200 height:17 align:#left
+	
+	label 'ui_lblFichier' "Fichier: " pos:[17,42] width:44 height:19 align:#left
+	edittext 'ui_editFichier' "" pos:[59,42] width:175 height:17 align:#left
+	button 'ui_btnOuvrirFichierMax' "..." pos:[236,42] width:25 height:17 toolTip:"Choisir le fichier .max de référence de cet asset." align:#left
+	
+	label 'ui_lblApercu' "Aperçu:" pos:[14,69] width:44 height:19 align:#left
+	edittext 'ui_editApercu' "" pos:[59,67] width:135 height:17 align:#left
+	button 'ui_btnOurvirApercu' "..." pos:[198,67] width:25 height:17 toolTip:"Choisir l'image servant d'aperçu à cet asset (200px X 200px)." align:#left
+-- 	button 		ui_btnOurvirSceneApercu	"..." pos:[366,79] width:25 height:17 toolTip:"Choisir l'image servant d'aperçu à cet asset (200px X 200px)."
+	button 'ui_btnCreerApercu' "Créer" pos:[227,302] width:35 height:17 toolTip:"Création automatique de l'aperçu de cet asset." align:#left
+		
+	label 'ui_lblDetail' "Détail:" pos:[11,304] width:44 height:19 align:#left
+	edittext 'ui_editDetail' "" pos:[61,303] width:135 height:17 align:#left
+	button 'ui_btnOurvirDetail' "..." pos:[198,302] width:25 height:17 toolTip:"Choisir l'image servant d'aperçu détail à cet asset (200px X 200px)." align:#left
+	button 'ui_btnCreerDetail' "Créer" pos:[227,68] width:35 height:17 toolTip:"Création automatique de l'aperçu détail de cet asset." align:#left
+	
+	label 'ui_lblTags' "Mots clés:" pos:[13,97] width:217 height:19 align:#left
+	edittext 'ui_editTags' "" pos:[10,116] width:256 height:17 align:#left
+-- 	edittext		ui_editTags 				"" pos:[16,136] width:(ui_grpInfos.width - 3* UItaille_ecart.x )  height:17
+	
+	label 'ui_lblNotes' "Notes:" pos:[13,146] width:217 height:19 align:#left	
+	
+	
+	edittext 'ui_editNotes' "" pos:[12,166] width:256 height:122 align:#left
+-- 	edittext 	ui_editNotes 				"" pos:[16,185] width:(ui_grpInfos.width - 3* UItaille_ecart.x )	 height:122
+	
+	
+	bitmap 'ui_bmpDetail' "" pos:[12,325] width:256 height:256 align:#left	 
+	
+	
+	fn init = (
+		
+		ui_listBtns_infos = #( ui_lblNom, ui_editNom, ui_lblFichier,	ui_editFichier ,	ui_btnOuvrirFichierMax ,	ui_lblApercu	,	\
+									ui_editApercu 		,	ui_btnOurvirApercu	,	ui_btnCreerApercu	,	ui_lblDetail			,	ui_editDetail		, \	
+									ui_btnOurvirDetail	,	ui_btnCreerDetail	,	ui_lblTags	,	ui_editTags 		,	ui_lblNotes 	,	ui_editNotes 	,		ui_bmpDetail  )
+	)
+	on m_rollInfos open do init()
+	
+)
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+----------	Le rollout des preferences  ---------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 rollout m_rollPreferences "Préférences de la bibliothèque" width:500 height:114
 (
@@ -103,7 +151,7 @@ rollout m_rollPreferences "Préférences de la bibliothèque" width:500 height:1
 )
 
 
-
+/* 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------	Le rollout d'edition des tags  ---------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -177,7 +225,9 @@ rollout m_rollEditerTags "Bibliothèque" width:411 height:454
 	on ui_btnAnnuler pressed do
 		try (	DestroyDialog m_rollEditerTags ) catch ( format  ("rien à destroy\n") )
 )
-
+ */
+ 
+ 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------	Le rollout principale ---------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -228,7 +278,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	-- drag end drop du dotNet ---
 	local dragDropEffect = dotNetClass "System.Windows.Forms.DragDropEffects"
 	
-	local ui_listBtns_infos=#()
+-- 	local ui_listBtns_infos=#()
 	local b_dragDossier = false
 	local b_autoExpendArbo = true
 	
@@ -288,14 +338,15 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	progressBar 		ui_progressBar				"ProgressBar" pos:[25,351] width:175 height:19 color:(color 50 150 246) tooltip:"action: \ntempsRestant:\n"
 	
 	button				ui_progressCancel		"X"	pos:[16,118] width:UItaille_petitsBtns.x height:UItaille_petitsBtns.y
+	/* 
 	--- infos ---
 	groupBox			ui_grpInfos				""	pos:[ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x , ui_editRecherche.pos.y] width:(256 + 2*UItaille_marge.x)  height:200 	
-		
+	 */
 	---- Edition des infos----	
-	checkbutton 		ui_btnAfficherInfo		"I" pos:[ui_grpInfos.pos.x ,   ui_grpInfos.pos.y  + ui_grpInfos.height + UItaille_ecart.y ] \
+	checkbutton 		ui_btnAfficherInfo		"I" pos:[ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x ,   ui_editRecherche.pos.y  + ui_arborescence.height + UItaille_ecart.y ] \
 															width:UItaille_petitsBtns.x 		height:UItaille_petitsBtns.y \
 															toolTip:"Afficher/cacher les infos"			border:false
-		
+		/* 
 		
 	label 		ui_lblNom 					"Nom: " pos:[17,23] width:36 height:19
 	edittext 	ui_editNom 				"" 		pos:[59,23] width:200 height:17
@@ -322,7 +373,8 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	edittext 	ui_editNotes 				"" pos:[16,185] width:(ui_grpInfos.width - 3* UItaille_ecart.x )	 height:122
 		
 	
-	bitmap		ui_bmpDetail 		pos:[16 ,167] width:256 height:256	
+	bitmap		ui_bmpDetail 		pos:[16 ,167] width:256 height:256	 
+	*/
 	
 	
 ----------------------------------------
@@ -371,7 +423,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		ui_progressCancel.pos		= ui_progressBar.pos + [175 + UItaille_ecart.y , 0]
 		
 		ui_btnAfficherInfo.checked 	= b_afficheInfos
-		
+		/* 
 		
 		b_afficheInfos 				= biblio.getInfosOuvert()
 		
@@ -449,13 +501,13 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			ui_editNotes.pos				= repere + 4 * hauteur + 2* petiteHauteur
 			ui_editNotes.height			= ui_lblDetail.pos.y - ( ui_editNotes.pos.y + 2*UItaille_ecart.y   )
 			
-		) else (
+		) else ( */
 			
 			ui_listeVue.width			= tailleRollOut.x  - ( ui_arborescence.width + 5* UItaille_ecart.x + UItaille_petitsBtns.x  ) 
 			ui_listeVue.height			= hauteurExplorateur - ( ui_editRecherche.height + UItaille_ecart.y )
 			ui_btnAfficherInfo.pos 	= [ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x   ,  ui_listeVue.pos.y  + ui_listeVue.height - ( UItaille_petitsBtns.y ) ]     
 			
-		)
+-- 		)
 		
 		ui_editRecherche.width  =  ui_listeVue.width - ( 2*UItaille_ecart.x  + UItaille_petitsBtns.x )
 		
@@ -465,11 +517,11 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		-- on limite la taille du rollout 
 		thisRollout = biblio.m_rollPrincipal
 		
-		if tailleRollOut.x < UItaille_fenetreMin.x do thisRollout.width 	= UItaille_fenetreMin.x
-		if tailleRollOut.y < UItaille_fenetreMin.y do thisRollout.height 	= UItaille_fenetreMin.y
+		-- 		if tailleRollOut.x < UItaille_fenetreMin.x do thisRollout.width 	= UItaille_fenetreMin.x
+		-- 		if tailleRollOut.y < UItaille_fenetreMin.y do thisRollout.height 	= UItaille_fenetreMin.y
 		
-		-- maj de la taille --
-		UItaille_fenetre = [ thisRollout.width , thisRollout.height  ]
+		-- maj prefereences de la taille --
+		biblio.prefs.fenetre.taille = [ thisRollout.width , thisRollout.height  ]
 		
 		
 	)
@@ -615,25 +667,29 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	fn afficherInfos = (
 		debug "afficher infos !!<<<<<<<<<<<<<<<"
+		
+		
 		affNom 		=""
 		affFichier 	=""
 		affApercu 	=""
-		affDetail		=""
+		affDetail	=""
 		affTags 		=""
 		affNotes 	=""
-		ui_bmpDetail.bitmap  = (bitmap 255 255 color:(colorImage) )
+		
+		biblio.m_rollInfos.ui_bmpDetail.bitmap  = (bitmap 255 255 color:(colorImage) )
 		
 		b_solo = elemSelect.count == 1
-		for btn in ui_listBtns_infos do
+		for btn in biblio.m_rollInfos.ui_listBtns_infos do
 			btn.enabled = b_solo
+		
 		if elemSelect.count>0 do (
-			ui_editTags.enabled =true
-			ui_lblTags.enabled =true
-			ui_editNotes.enabled =true
-			ui_lblNotes.enabled =true
+			biblio.m_rollInfos.ui_editTags.enabled =true
+			biblio.m_rollInfos.ui_lblTags.enabled =true
+			biblio.m_rollInfos.ui_editNotes.enabled =true
+			biblio.m_rollInfos.ui_lblNotes.enabled =true
 					
-			ui_btnCreerApercu.enabled =true
-			ui_btnCreerDetail.enabled =true
+			biblio.m_rollInfos.ui_btnCreerApercu.enabled =true
+			biblio.m_rollInfos.ui_btnCreerDetail.enabled =true
 		)
 		
 		if b_solo then (
@@ -646,7 +702,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			affTags 		=	elem.tags as string
 			affNotes 	=	elem.notes
 			affDetail 	=	elem.detail
-			ui_bmpDetail.fileName = elem.detail
+			biblio.m_rollInfos.ui_bmpDetail.fileName = elem.detail
 			
 		) else (
 			listTags = #()
@@ -687,12 +743,12 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 -- 				affFichier 		=	elem.fichier
 -- 				affApercu 	=	elem.apercu
 		)
-		ui_editNom.text			=	affNom
-		ui_editFichier.text		=	affFichier
-		ui_editApercu.text		=	affApercu
-		ui_editTags.text			=	affTags
-		ui_editNotes.text		=	affNotes
-		ui_editDetail.text		=	affDetail
+		biblio.m_rollInfos.ui_editNom.text			=	affNom
+		biblio.m_rollInfos.ui_editFichier.text		=	affFichier
+		biblio.m_rollInfos.ui_editApercu.text		=	affApercu
+		biblio.m_rollInfos.ui_editTags.text			=	affTags
+		biblio.m_rollInfos.ui_editNotes.text		=	affNotes
+		biblio.m_rollInfos.ui_editDetail.text		=	affDetail 
 	)
 	
 	
@@ -748,10 +804,10 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	---- 	initialisation de l'interface  ----
 	fn initialiser_interface  = (
-		
-		ui_listBtns_infos = #( ui_lblNom, ui_editNom, ui_lblFichier,	ui_editFichier ,	ui_btnOuvrirFichierMax ,	ui_lblApercu	,	\
-									ui_editApercu 		,	ui_btnOurvirApercu	,	ui_btnCreerApercu	,	ui_lblDetail			,	ui_editDetail		, \	
-									ui_btnOurvirDetail	,	ui_btnCreerDetail	,	ui_lblTags	,	ui_editTags 		,	ui_lblNotes 	,	ui_editNotes 	,		ui_bmpDetail  )
+-- 		
+-- 		ui_listBtns_infos = #( ui_lblNom, ui_editNom, ui_lblFichier,	ui_editFichier ,	ui_btnOuvrirFichierMax ,	ui_lblApercu	,	\
+-- 									ui_editApercu 		,	ui_btnOurvirApercu	,	ui_btnCreerApercu	,	ui_lblDetail			,	ui_editDetail		, \	
+-- 									ui_btnOurvirDetail	,	ui_btnCreerDetail	,	ui_lblTags	,	ui_editTags 		,	ui_lblNotes 	,	ui_editNotes 	,		ui_bmpDetail  )
 										
 -- 		-- la taille minimum de la fenetre ----
 		ui_listeVue.Clear()
@@ -805,7 +861,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		--- maj interface ---
 		
-		maj_UI ()
+-- 		maj_UI ()
 		
 	)
 	
@@ -1226,7 +1282,16 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 ---- Edition/Infos  elements ----
 	on ui_btnAfficherInfo changed state do	(
 		biblio.setInfosOuvert 			state
-		repositionnerElementsUI		UItaille_fenetre
+-- 		repositionnerElementsUI		UItaille_fenetre
+		case state of (
+			true :	createDialog biblio.m_rollInfos 
+			false :	try (	DestroyDialog biblio.m_rollInfos ) catch ( format  ("rien à destroy\n") )
+		)
+	
+		
+-- 		createDialog m_rollInfos 	 \ --pos:prefs.fenetre.pos  width:prefs.fenetre.taille.x  height:prefs.fenetre.taille.y  \
+-- 					lockHeight:false  style:#(/*#style_resizing,#style_titlebar , */#style_toolwindow/*, #style_sysmenu*//*, #style_minimizebox, #style_maximizebox , #style_sunkenedge , #style_sysmenu */)	\
+					--menu:(menu.getMenuRolloutPrincipal()	 )
 	)
 	
 	
@@ -1416,7 +1481,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	on m_rollPrincipal resized 	tailleRollOut	 do (
 		
-		repositionnerElementsUI	tailleRollOut
+		repositionnerElementsUI		tailleRollOut
 		biblio.prefs.fenetre.taille 	= 	tailleRollOut
 		
 		
@@ -1460,7 +1525,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	)
 	
 ) -- fin rollout
-
 
 
 
