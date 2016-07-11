@@ -69,14 +69,14 @@ struct Noeud (
 	
 	-- parametre du noeud --
 	public
-		nomUnique 		= "N",
+		nomUnique 	= "N",
 		nom 				= "nom du noeud",
 		
 		
 	-- le composite --
 	public
 		parent  			= undefined ,
-		enfants 			= #(),
+		enfants 		= #(),
 		
 		fn compteElements = (
 			i=0
@@ -314,9 +314,16 @@ struct Arborescence (
 		
 		
 		
-	-- Recheerche de noeud
+	-- Recherche de noeud
 	result,
 	private
+		fn chercheParNomFichier 	_nom		_noeud = (
+-- 			result = undefined
+			if classof _noeud == element then 
+				if _noeud.fichier == _nom	 do result =  _noeud
+				else	for enfant in _noeud.enfants do chercheParNomFichier 	_nom		enfant 
+			
+		),
 		fn chercheParNomUnique 	_nom		_noeud = (
 -- 			result = undefined
 			if _noeud.nomUnique == _nom	 then result =  _noeud
@@ -331,6 +338,12 @@ struct Arborescence (
 		),
 		
 	public
+		fn getParFichier _nom = (
+			if _nom == "RECHERCHE" do return noeudRecherche
+			result = undefined
+			chercheParNomFichier 	_nom		root 
+			return result
+		),
 		fn getParNomUnique _nom = (
 			if _nom == "RECHERCHE" do return noeudRecherche
 			result = undefined
@@ -342,6 +355,11 @@ struct Arborescence (
 			result = undefined
 			chercheParNom 	_nom		root 
 			return result
+		),
+		fn dejaPresent  	_fichier = (
+			result =	if  getParFichier _fichier != undefined 	then 	true 
+																					else 		false
+			result
 		),
 		
 		fn getNoeudRecherche = return noeudRecherche ,

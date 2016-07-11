@@ -1,7 +1,5 @@
 
-
 clearListener()
-
 
 /* #######################################################################################################################
 
@@ -54,6 +52,14 @@ fileIn "$userScripts\biblio\Bibliotheque_preference.ms"
 ------------------------------------------------------------------------------
 struct BibliothequeAsset (
 	
+	-- les rollouts de la bibliotheque	----------------------------------
+	public
+		m_rollPrincipal,			------- le roultout principale ---
+		m_rollPreferences,		------- le roultout  des differentes otpions, chemins... ---
+		m_rollInfos,				------- le rollout des infos ---
+		m_rollApercus,			------- le rollout des parametres de aperçus ---
+	
+	-- les structs	----------------------------------
 -- 	private
 	public
 		prefs				= preference (),
@@ -68,9 +74,8 @@ struct BibliothequeAsset (
 		ajouter			= Ajout (),
 		outils         	= boiteOutils (),
 		
-		
 	public 
-	
+		
 	-- quelques fonctions accesseurs ( voir si on garde ... ) --------------
 		fn setTailleRolloutPrincipal 		tailleRollOut  	= ( prefs.fenetre.taille 	= tailleRollOut 	),
 		fn setPosRolloutPrincipal 		posRollOut  	= ( prefs.fenetre.pos 	= posRollOut 		),
@@ -84,17 +89,40 @@ struct BibliothequeAsset (
 		
 		
 		
-	-- les rollouts de la bibliotheque	----------------------------------
--- 	private
-	public
-		m_rollPrincipal,			------- le roultout principale ---
-		m_rollPreferences,		------- le roultout  des differentes otpions, chemins... ---
-		m_rollInfos,				------- le rollout des infos ---
 		
 		
 		
 	-- les methodes  publics ------------------------------------------------
 	public
+	
+	
+	
+		fn afficherInfos  = (
+				setInfosOuvert 			( not getInfosOuvert () )
+		-- 		repositionnerElementsUI		UItaille_fenetre
+				case ( getInfosOuvert () ) of (
+					true :	( 
+						createDialog m_rollInfos 
+						m_rollInfos.biblio = this
+						m_rollPrincipal.afficherInfos()
+					)
+					false :	try (	DestroyDialog m_rollInfos ) catch ( format  ("rien à destroy\n") )
+				)
+			),
+		fn afficherApercus = (
+-- 				setInfosOuvert 			state
+		-- 		repositionnerElementsUI		UItaille_fenetre
+				case state of (
+					true :	( 
+						createDialog m_rollApercus 
+						m_rollApercus.biblio = this
+					)
+					false :	try (	DestroyDialog m_rollInfos ) catch ( format  ("rien à destroy\n") )
+				)
+			),
+		
+	
+	
 	---- Suppression ----
 		fn  suprimerElems = (
 			if querybox "Etes-vous sûr de vouloir supprimer le ou les élément de la bibliothèque?" do (
@@ -171,6 +199,7 @@ struct BibliothequeAsset (
 						
 						if doesfileexist elem.fichier then( 
 							outils.viderScene()
+							resetMaxFile #noPrompt
 							elem.apercu = apercu.creer 	elem.fichier
 							arbo.ecrireFichier()
 							m_rollPrincipal.AfficherElements m_rollPrincipal.noeudSelect					
@@ -255,7 +284,7 @@ struct BibliothequeAsset (
 			
 			createDialog m_rollPrincipal pos:prefs.fenetre.pos  width:prefs.fenetre.taille.x  height:prefs.fenetre.taille.y  \
 						lockHeight:false  style:#(#style_resizing,#style_titlebar , /*#style_toolwindow, */#style_sysmenu, #style_minimizebox, #style_maximizebox/* , #style_sunkenedge */, #style_sysmenu )	\
-						menu:(menu.getMenuRolloutPrincipal()	 )	-- bgcolor:m_couleurFond
+						menu:(	menu.getMenuRolloutPrincipal() )	-- bgcolor:m_couleurFond
 			
 			debug " ... ouvrir fenetre 1 ..."
 			m_rollPrincipal.biblio = this

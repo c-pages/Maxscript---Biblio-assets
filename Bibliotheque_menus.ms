@@ -113,27 +113,40 @@ struct Menus (
 			
 			rcMenu rcRolloutPrincipal
 			(
+				---- menu ----
 				subMenu "Edit"	(
 					menuItem m_nouveauDossier 	"Nouveau dossier" 
 					menuItem m_supprimer 			"Supprimer"					
+				)
+				subMenu "Vues" (
+					menuItem m_afficherInfos 	"Infos"  		checked:( bibliotheque.getInfosOuvert() )
+					menuItem m_afficherApercus	"Aperçus" 
 				)
 				subMenu "Préferences"	(
 					menuItem m_preferences 			"Préferences" 
 					menuItem m_resetPreferences 	"Reinitialiser" 
 				)
+				
+				
+				
+				
+				---- evenements ----
 				on m_nouveauDossier picked do	
 					bibliotheque.nouveauNoeud()
-				
-				on m_resetPreferences picked do (
-					if queryBox "Etes-vous sûr de vouloir réinitialiser les préférences de la bibliotheque ?" do
-						bibliotheque.prefs.reset()
-				)
-				
 				on m_supprimer picked do 
 					bibliotheque.suprimerNoeud()
 				
+				on m_afficherInfos picked do	
+					bibliotheque.afficherInfos()
+				on m_afficherApercus picked do	
+					bibliotheque.afficherApercus()
+				
+				on m_resetPreferences picked do 
+					if queryBox "Etes-vous sûr de vouloir réinitialiser les préférences de la bibliotheque ?" do
+						bibliotheque.prefs.reset()				
 				on m_preferences picked do 					
 					bibliotheque.ouvrirPreferences()
+				
 			)
 			return rcRolloutPrincipal
 		)

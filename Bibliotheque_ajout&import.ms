@@ -190,28 +190,30 @@ struct Ajout (
 			
 			if classOf noeudParent == Element do		noeudParent = noeudParent.parent
 -- 			biblio.outils.viderScene()
-			
-			resetMaxFile #noPrompt
-			-- le nom --
-			_nom = getFilenameFile  fichierMax
-			
-			-- apercu --
-			_apercu = biblio.apercu.creer 	fichierMax
-			
-			-- creation de l'element dans l'arbo ---
-			nouvelAsset = biblio.arbo.creerElement 	nom:_nom  type:#model	fichier:fichierMax  apercu:_apercu	parent:noeudParent
-			
-			nouvelAsset.nbrVertex = biblio.outils.compterVertex  (objects as array )
-			
--- 			debug ( " 	# objects as array : " + ( objects as array ) as string  )
--- 			debug ( " 	# creation element : " + nouvelAsset.nomUnique + " / " + nouvelAsset.nom )
--- 			debug ( " 	# noeudParent : " + noeudParent.nomUnique + " / " + noeudParent.nom )
--- 			debug ( " 	# nbrVertex : " + nouvelAsset.nbrVertex  as string )
-			
-			
-			
-			biblio.arbo.ecrireFichier()
-			
+			if biblio.arbo.dejaPresent  fichierMax  then
+				messagebox ( fichierMax + " est deja present dans la bibliotheque, et ne sera pas ajouter.")
+			else (
+				resetMaxFile #noPrompt
+				-- le nom --
+				_nom = getFilenameFile  fichierMax
+				
+				-- apercu --
+				_apercu = biblio.apercu.creer 	fichierMax
+				
+				-- creation de l'element dans l'arbo ---
+				nouvelAsset = biblio.arbo.creerElement 	nom:_nom  type:#model	fichier:fichierMax  apercu:_apercu	parent:noeudParent
+				
+				nouvelAsset.nbrVertex = biblio.outils.compterVertex  (objects as array )
+				
+	-- 			debug ( " 	# objects as array : " + ( objects as array ) as string  )
+	-- 			debug ( " 	# creation element : " + nouvelAsset.nomUnique + " / " + nouvelAsset.nom )
+	-- 			debug ( " 	# noeudParent : " + noeudParent.nomUnique + " / " + noeudParent.nom )
+	-- 			debug ( " 	# nbrVertex : " + nouvelAsset.nbrVertex  as string )
+				
+				
+				
+				biblio.arbo.ecrireFichier()
+			)
 			
 		) ,
 

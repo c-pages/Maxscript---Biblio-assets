@@ -15,17 +15,7 @@ struct Apercus (
 		cameraApercu,
 		
 		sol,
-	/* 
-		-- gestion CALQUES pour isolation --
-		a_calquesScene 			=#(),
-		a_calquesScene_etats 	=#(),
-		calqueActif,
-		calqueImport,
-		
-		a_objetsImport 		= #(),
-		a_calquesImport 	= #(),
-		a_lumieresEtats		= #(),
-		 */
+	
 		-- pour IMPORT dans scene --
 		a_objetsImport 		= #(),
 		-- stockage de l'ancien moteur de rendu et ses parametres -
