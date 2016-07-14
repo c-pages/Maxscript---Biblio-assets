@@ -6,6 +6,10 @@ clearListener()
 	2017 Christophe Pages (http://www.c-pages.fr) 	
 
 ##########################################################################################################################
+	
+	Bibiotheque d'assets 
+	
+##########################################################################################################################
 
 	changelog:
 	*v0.0 - [2016/04/11] -----------------------------------------------------------------------------
@@ -77,15 +81,23 @@ struct BibliothequeAsset (
 	public 
 		
 	-- quelques fonctions accesseurs ( voir si on garde ... ) --------------
-		fn setTailleRolloutPrincipal 		tailleRollOut  	= ( prefs.fenetre.taille 	= tailleRollOut 	),
-		fn setPosRolloutPrincipal 		posRollOut  	= ( prefs.fenetre.pos 	= posRollOut 		),
-		fn setEditionOuvert 				bool				= ( prefs.fenetre.infos 	= bool 				),
-		fn setEditionAccroche 			bool				= ( prefs.fenetre.edition = bool 				),
+		fn setTailleRolloutPrincipal 		tailleRollOut  	= ( prefs.fenetre.taille 	= tailleRollOut 	
+			prefs.enregistrer() ),
+		fn setPosRolloutPrincipal 		posRollOut  	= ( prefs.fenetre.pos 	= posRollOut 		
+			prefs.enregistrer() ),
+		fn setEditionOuvert 				bool				= ( prefs.fenetre.infos 	= bool 				
+			prefs.enregistrer() ),
+		fn setEditionAccroche 			bool				= ( prefs.fenetre.edition = bool 				
+			prefs.enregistrer() ),
 		fn getEditionAccroche 								= ( return prefs.fenetre.edition 				),
 -- 		fn setPosRolloutEdition 			posRollOut  		= ( m_posRolloutEdition 		= posRollOut 		),
 -- 		fn getPosRolloutEdition 							  		= ( return	m_posRolloutEdition 					),
-		fn setInfosOuvert 					bool				= ( prefs.fenetre.infos 				= bool 				),
-		fn getInfosOuvert 										= ( return prefs.fenetre.infos 							),
+		fn setInfosOuvert 					bool				= ( 
+			prefs.fenetre.infos 				= bool 		
+			m_rollPrincipal.ui_btnAfficherInfo.checked = bool			
+			prefs.enregistrer() 
+		),
+		fn getInfosOuvert 										= ( return prefs.fenetre.infos ),
 		
 		
 		
@@ -94,15 +106,17 @@ struct BibliothequeAsset (
 		
 	-- les methodes  publics ------------------------------------------------
 	public
-	
-	
-	
+		
+		
+		
 		fn afficherInfos  = (
 				setInfosOuvert 			( not getInfosOuvert () )
+				m_rollPrincipal.ui_btnAfficherInfo.checked = getInfosOuvert ()	
 		-- 		repositionnerElementsUI		UItaille_fenetre
 				case ( getInfosOuvert () ) of (
 					true :	( 
-						createDialog m_rollInfos 
+						createDialog m_rollInfos 	pos:prefs.fenInfos.pos 	lockHeight:false	\
+																style:#(/*#style_resizing,*/#style_titlebar /*, #style_toolwindow, #style_sysmenu*//*, #style_minimizebox, #style_maximizebox , #style_sunkenedge , #style_sysmenu */)	
 						m_rollInfos.biblio = this
 						m_rollPrincipal.afficherInfos()
 					)
@@ -298,7 +312,13 @@ struct BibliothequeAsset (
 			m_rollPrincipal.maj_UI()
 			
 			debug "...fenetre ouverte."
-			
+			if ( getInfosOuvert () ) do (
+				
+				createDialog m_rollInfos 	pos:prefs.fenInfos.pos lockHeight:false	\
+														style:#(/*#style_resizing,*/#style_titlebar /*, #style_toolwindow, #style_sysmenu*//*, #style_minimizebox, #style_maximizebox , #style_sunkenedge , #style_sysmenu */)	
+				m_rollInfos.biblio = this
+				m_rollPrincipal.afficherInfos()
+			)
 		),
 		
 		fn fermerFenetre = (
@@ -311,30 +331,23 @@ struct BibliothequeAsset (
 			createDialog m_rollPreferences 	 \ --pos:prefs.fenetre.pos  width:prefs.fenetre.taille.x  height:prefs.fenetre.taille.y  \
 						lockHeight:false  style:#(/*#style_resizing,#style_titlebar , */#style_toolwindow/*, #style_sysmenu*//*, #style_minimizebox, #style_maximizebox , #style_sunkenedge , #style_sysmenu */)	\
 						--menu:(menu.getMenuRolloutPrincipal()	 )
-			m_rollPreferences.biblio 					= this
-			m_rollPreferences.edt_apercus.text 	= apercu.dossierApercus
-			m_rollPreferences.edt_proxy.text 		= conversion.dossierProxy
+-- 			m_rollPreferences.biblio 						= this
 			
 		),
 		
-	--  creation ASSETS  ------------------------------------------------
+		
 private
-	
 		
-		
-		
-		-- l'initialisation globale --
+		---- l'initialisation globale ----
 		fn initialiser = (
 			
 			debug "#### BIBLIO INITIALISATION  ####"
+			
 			-- inclusion des rollouts --
 			include  "$userScripts\biblio\Bibliotheque_rollouts.ms" 
 			
-			debug "	BIBLIO INITIALISATION : 1  "
-			
 			--- initialiser les structs ---
 			apercu.arbo = arbo
-			debug "	BIBLIO INITIALISATION : 2"
 			apercu.biblio = this
 			arbo.biblio = this
 			ajouter.biblio = this
@@ -342,14 +355,12 @@ private
 			importer.m_rollout = m_rollPrincipal
 			conversion.biblio = this
 			
-			debug "	BIBLIO INITIALISATION : 3"
-			
 			--- nettoyer le dossier des apercus (supprime les apercus non utilisé par l'arbo )  peut etre long ---
 -- 			arbo.nettoyer()
 			
+			--- charger les preferences ----
 			prefs.charger()
 			
-			debug "	BIBLIO INITIALISATION : 4"
 		),
 		
 		

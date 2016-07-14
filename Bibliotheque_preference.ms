@@ -4,6 +4,10 @@
 
 ##########################################################################################################################
 	
+	Bibiotheque d'assets 
+	
+##########################################################################################################################
+
 	Organisation des preferences dans des structs
 	
 ######################################################################################################################## */ 
@@ -16,7 +20,7 @@
 ------------------------------------------------------------------------------
 -- Les preferences actives pour les rendus des  aperçus			--
 ------------------------------------------------------------------------------
-struct renduApercus (
+struct prefsApercus (
 	taille								= [256,256],		
 	angleVue 						= 40,
 	angleVueDetail 				= 9,	
@@ -46,7 +50,7 @@ struct renduApercus (
 ------------------------------------------------------------------------------
 -- Les preferences pour la fenetre de la bibliotheque				--
 ------------------------------------------------------------------------------
-struct rollPrincipale (
+struct prefsRollPrincipale (
 	
 	taille 			= [1300,900],		---- la taille de la fenetre	---
 	pos 				= [50,50],			---- la position de la fenetre ---	
@@ -60,18 +64,52 @@ struct rollPrincipale (
 )
 
 ------------------------------------------------------------------------------
------- Les préférences ----------------------------------------------------
--- Regroupe les differents structs de préferences					--
+-- Les preferences pour la fenetre des infos							--
 ------------------------------------------------------------------------------
+struct prefsRollInfos (
+	
+	taille 			= [1300,900],		---- la taille de la fenetre	---
+	pos 				= [50,50]				---- la position de la fenetre ---	
+
+)
+
+------------------------------------------------------------------------------
+-- Les preferences pour la creation de proxies						--
+------------------------------------------------------------------------------
+struct prefsProxies (	
+	dossier 							= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2017 - 64bit\\ENU\\scripts\\biblio\\proxies"
+)
+------------------------------------------------------------------------------
+-- Les preferences pour les nouveau asset						--
+------------------------------------------------------------------------------
+struct prefsAssets (	
+	dossier 							= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2017 - 64bit\\ENU\\scripts\\biblio\\assets"
+)
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+------ LES PRéFéRENCES ----------------------------------------------------------------------------------------------------------------------------------
+-- le struct principal qui regroupe les differents structs de préferences					--------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------
 struct preference (
 
 private
+	---- le chemin de preferences	----
 	fichier = "$userScripts\biblio\prefs.ini",
 
 public	
-	fenetre 	=  	rollPrincipale (),
-	apercus = 	renduApercus(),
+	---- les structs des diferenetes preferences	----
+	fenetre 			=  prefsRollPrincipale (),
+	fenInfos	 	=  prefsRollInfos 		(),
+	apercus 		= 	prefsApercus 		(),
+	proxies	 		= 	prefsProxies 			(),
+	assets	 		= 	prefsAssets 			(),
 	
+public	
+	---- les fonctions	----
 	fn enregistrer = (
 		
 		---- APERCUS ----
@@ -142,8 +180,11 @@ public
 		)
 	),
 	fn reset = (
-		fenetre 	=  	rollPrincipale ()
-		apercus = 	renduApercus()
+		fenetre 			=  prefsRollPrincipale ()
+		fenInfos	 	=  prefsRollInfos 		()
+		apercus 		= 	prefsApercus 		()
+		proxies	 		= 	prefsProxies 			()
+		assets	 		= 	prefsAssets 			()
 		enregistrer ()
 	)
 	

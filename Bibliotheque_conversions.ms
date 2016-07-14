@@ -1,3 +1,18 @@
+/* #######################################################################################################################
+
+	2017 Christophe Pages (http://www.c-pages.fr) 
+
+##########################################################################################################################
+	
+	Bibiotheque d'assets 
+	
+##########################################################################################################################
+
+	Struct gerant les conversions vers Corona. 
+	Utilise "Bibliotheque_conversions_corona.ms" (customisation du converter fournis poar Corona) pour faire les conversions.
+	
+######################################################################################################################## */ 
+
 
 
 fileIn "$userScripts\biblio\Bibliotheque_conversions_corona.ms"
@@ -10,7 +25,6 @@ struct Conversions (
 	biblio, 
 	
 	public 
-		dossierProxy 	= "$userScripts\biblio\proxy" ,
 		prefixProxy 		= "prox_",
 
 	public

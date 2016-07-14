@@ -1,3 +1,17 @@
+/* #######################################################################################################################
+
+	2017 Christophe Pages (http://www.c-pages.fr) 
+
+##########################################################################################################################
+	
+	Bibiotheque d'assets 
+	
+##########################################################################################################################
+
+	Les differents rollout utilisés.
+	
+######################################################################################################################## */ 
+	
 
 
 
@@ -78,14 +92,18 @@ rollout m_rollInfos "Infos" width:280 height:597
 	
 	
 
-	
-	
-	----- Creer apercus ---------
-	
-	----- Creer Détails ---------
-		
 	on m_rollInfos open do
 		init()
+	
+	on m_rollInfos close do (
+		biblio.setInfosOuvert false
+	)
+	
+	
+	on m_rollInfos moved pos do
+		biblio.prefs.fenInfos.pos = pos
+	
+	
 	on ui_editNom entered txt 	do
 	(
 			if biblio.m_rollPrincipal.elemSelect.count == 1 do (
@@ -137,78 +155,102 @@ rollout m_rollInfos "Infos" width:280 height:597
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------	Le rollout des preferences  ---------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
-rollout m_rollPreferences "Préférences de la bibliothèque" width:500 height:114
+rollout m_rollPreferences "Préférences de la bibliothèque" width:716 height:136
 (
 	
 	local biblio
 	local cheminApercusBack
 	local cheminProxiesBack
 	
-	groupBox 	grp_dossiers 	"Dossiers" 	pos:[14,12] width:472 height:66
+	GroupBox 'grp_dossiers' "Dossiers" pos:[14,12] width:697 height:95 align:#left
 	
-	editText 	edt_apercus 	"" 				pos:[112,32] width:344 height:17
-	button 		btn_apercus 	"..." 			pos:[463,32] width:17 height:17
-	label 		lbl_apercus 	"Aperçus:" 	pos:[23,33] width:90 height:16	
+	edittext 'edt_apercus' "" pos:[112,32] width:560 height:17 align:#left
+	button 'btn_apercus' "..." pos:[684,32] width:17 height:17 align:#left
+	label 'lbl_apercus' "Aperçus:" pos:[23,32] width:90 height:16 align:#left	
 	
-	editText 	edt_proxy 		"" 				pos:[112,53] width:344 height:17
-	button 		btn_proxy 		"..." 			pos:[463,53] width:17 height:17
-	label 		lbl_proxy 		"Proxies:" 	pos:[23,54] width:90 height:16
 	
-	button 		btn_appliquer 	"Appliquer" 	pos:[14,82] width:99 height:18
-	button 		btn_annuler 	"Annuler" 	pos:[387,82] width:99 height:18
+	edittext 'edt_proxy' "" pos:[113,54] width:560 height:17 align:#left
+	button 'btn_proxy' "..." pos:[684,53] width:17 height:17 align:#left
+	label 'lbl_proxy' "Proxies:" pos:[23,54] width:90 height:16 align:#left
 	
-	on edt_apercus entered txt do (
-		if not doesFileExist txt then
-		/* 	biblio.apercu.dossierApercus	= txt
-		else */
-			edt_apercus.text 	=	cheminApercusBack -- biblio.apercu.dossierApercus
-	)
+	button 'btn_appliquer' "Appliquer" pos:[14,112] width:99 height:18 align:#left
+	button 'btn_annuler' "Annuler" pos:[604,111] width:99 height:18 align:#left
 	
-	on btn_apercus pressed do (
-		nouveauChemin = getSavePath "Dossier pour les apérçus"	 initialDir:edt_apercus.text
-		if nouveauChemin != undefined do
-			edt_apercus.text 	=	nouveauChemin
 		
-	)
 	
-	on edt_proxy entered txt do (
-		if not doesFileExist txt then
-			/* biblio.apercu.dossierApercus 			= txt
-		else  */
-			edt_proxy.text	= cheminProxiesBack  --biblio.conversion.dossierProxy	
-	)
 	
-	on btn_proxy pressed do (
-		nouveauChemin = getSavePath "Dossier pour les proxies"	 initialDir:edt_proxy.text
-		if nouveauChemin != undefined do
-			edt_apercus.text 	=	nouveauChemin
-	
-	)
+	edittext 'edt_assets' "" pos:[112,75] width:560 height:17 align:#left
+	button 'btn_assets' "..." pos:[684,75] width:17 height:17 align:#left
+	label 'lbl_assets' "Assets" pos:[23,76] width:90 height:16 align:#left
 	
 	
 	
-	
-	on btn_appliquer pressed do (
-		m_rollPreferences.edt_apercus.text 	= biblio.apercu.dossierApercus
-		m_rollPreferences.edt_proxy.text 		= biblio.conversion.dossierProxy
-		try (	DestroyDialog biblio.m_rollPreferences ) catch ( format  ("rien à destroy\n") )
-	)
-	on btn_annuler pressed do (
-		try (	DestroyDialog biblio.m_rollPreferences ) catch ( format  ("rien à destroy\n") )
-	)
-	
-	
-	
-	on m_rollPreferences open do (
-		cheminApercusBack	= bibliotheque.conversion.dossierProxy
-		cheminProxiesBack	= bibliotheque.apercu.dossierApercus
-	)
-	
-/* 	on m_rollPreferences close do (
-		cheminApercusBack	= biblio.conversion.dossierProxy
-		cheminProxiesBack	= biblio.apercu.dossierApercus
-	) */
-	
+	on m_rollPreferences open do
+	(
+			biblio = bibliotheque
+		
+			cheminApercusBack	= biblio.prefs.apercus.dossier
+			cheminProxiesBack		= biblio.prefs.proxies.dossier
+		
+			edt_apercus.text 		= biblio.prefs.apercus.dossier
+			edt_proxy.text 			= biblio.prefs.proxies.dossier
+			edt_assets.text 			= biblio.prefs.assets.dossier
+		)
+	on edt_apercus entered txt do
+	(
+			if not doesFileExist txt then
+			/* 	biblio.apercu.dossierApercus	= txt
+			else */
+				edt_apercus.text 	=	cheminApercusBack -- biblio.apercu.dossierApercus
+		)
+	on btn_apercus pressed do
+	(
+			nouveauChemin = getSavePath "Dossier pour les apérçus"	 initialDir:edt_apercus.text
+			if nouveauChemin != undefined do
+				edt_apercus.text 	=	nouveauChemin
+			
+		)
+	on edt_proxy entered txt do
+	(
+			if not doesFileExist txt then
+				/* biblio.apercu.dossierApercus 			= txt
+			else  */
+				edt_proxy.text	= cheminProxiesBack  --biblio.conversion.dossierProxy	
+		)
+	on btn_proxy pressed do
+	(
+			nouveauChemin = getSavePath "Dossier pour les proxies"	 initialDir:edt_proxy.text
+			if nouveauChemin != undefined do
+				edt_apercus.text 	=	nouveauChemin
+		
+		)
+	on btn_appliquer pressed do
+	(
+			biblio.prefs.apercus.dossier	 	= m_rollPreferences.edt_apercus.text
+			biblio.prefs.proxies.dossier 		= m_rollPreferences.edt_proxy.text
+			biblio.prefs.assets.dossier 		= m_rollPreferences.edt_assets.text
+			biblio.prefs.enregistrer()
+		
+			try (	DestroyDialog biblio.m_rollPreferences ) catch ( format  ("rien à destroy\n") )
+		)
+	on btn_annuler pressed do
+	(
+			try (	DestroyDialog biblio.m_rollPreferences ) catch ( format  ("rien à destroy\n") )
+		)
+	on edt_assets entered txt do
+	(
+			if not doesFileExist txt then
+				/* biblio.apercu.dossierApercus 			= txt
+			else  */
+				edt_proxy.text	= cheminProxiesBack  --biblio.conversion.dossierProxy	
+		)
+	on btn_assets pressed do
+	(
+			nouveauChemin = getSavePath "Dossier pour les proxies"	 initialDir:edt_assets.text
+			if nouveauChemin != undefined do
+				edt_aassets.text 	=	nouveauChemin
+		
+		)
 )
 
 
@@ -387,7 +429,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	---- Navigation  ----
 	dotNetControl 	ui_arborescence 			"TreeView" pos:UIpos_exploration width:200 height:150 	enabled:true																		---------- l'arborescence 
-	MultiListBox 		ui_lstBoxTags				"Mots clés:" 		pos:( UIpos_exploration + [0,150 + UItaille_ecart.x]) width:200 height:( 50 )
+	MultiListBox 		ui_lstBoxTags				"Mots clés:" 		pos:( UIpos_exploration + [0,150 + UItaille_ecart.x] ) width:200 height:( 50 )
 	edittext 			ui_editRecherche 		"" 		pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x ,  UIpos_exploration.y ] width:200 height:17		
 	
 	button				ui_btnToogleStyleVue	"Im" pos:(ui_editRecherche.pos + [ui_editRecherche.width + UItaille_ecart.x, 0 ]) width:UItaille_petitsBtns.x height:UItaille_petitsBtns.y \
@@ -1342,7 +1384,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 
 ---- Edition/Infos  elements ----
 	on ui_btnAfficherInfo changed state do	
-		biblio.afficherInfos state 
+		biblio.afficherInfos () 
 	
 		
 	
@@ -1520,6 +1562,11 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		biblio.prefs.fenetre.isOpen = false
 		updateToolbarButtons()
 		biblio.prefs.enregistrer()
+		
+		----on ferme les autres fenetres -----
+		try (	DestroyDialog biblio.m_rollInfos ) catch ( format  ("rien à destroy\n") )
+		try (	DestroyDialog biblio.m_rollPreferences ) catch ( format  ("rien à destroy\n") )
+		
 	)
 	
 	
@@ -1531,7 +1578,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		posRollOut = GetDialogPos 	biblio.m_rollPrincipal
 		
-		-- si Edition est accroché on le deplace avec ---
+		---- si Edition est accroché on le deplace avec ( a faire avec infos !!!!!! )----
 		if biblio.prefs.fenetre.accroche do (
 			
 			bordureDialogBox 	= 		[22,5]
@@ -1569,7 +1616,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	)
 	
 ) -- fin rollout
-
 
 
 
