@@ -21,6 +21,10 @@
 -- Les preferences actives pour les rendus des  aperçus			--
 ------------------------------------------------------------------------------
 struct prefsApercus (
+	
+	fichier ="",	-- le fichier des preferences
+	
+	---- les parametres ----
 	taille								= [256,256],		
 	angleVue 						= 40,
 	angleVueDetail 				= 9,	
@@ -39,7 +43,54 @@ struct prefsApercus (
 	nomCalqueImport 			= "ImportTemp",
 	dossier 							= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2017 - 64bit\\ENU\\scripts\\biblio\\apercus",
 	dossierImport 				=	"C:\Users\kris\Documents\donnees 3D",
-	convertToCoronaMats 	= true
+	convertToCoronaMats 	= true,
+	
+	---- les fonctions	----
+	fn enregistrer = (
+		
+		---- APERCUS ----
+		setINISetting   fichier		"apercus"   "tailleX"  						( taille.x 					as string )
+		setINISetting   fichier		"apercus"   "tailleY"  						( taille.y 					as string )
+		setINISetting   fichier		"apercus"   "angleVue"					( angleVue				as string )
+		setINISetting   fichier		"apercus"   "angleVueDetail"  			( angleVueDetail 		as string )
+		setINISetting   fichier		"apercus"   "moteur"  					( moteur 					as string )
+		setINISetting   fichier		"apercus"   "noiseLevel"  				( noiseLevel 				as string )
+		setINISetting   fichier		"apercus"   "noiseLevelDetail"			( noiseLevelDetail 		as string )
+		setINISetting   fichier		"apercus"   "denoiseAmount"			( denoiseAmount 		as string )
+		setINISetting   fichier		"apercus"   "exposition"  				( exposition 				as string )
+		setINISetting   fichier		"apercus"   "highlightCompress"		( highlightCompress	as string )
+		setINISetting   fichier		"apercus"   "temperatureRendu"		( temperatureRendu	as string )
+		setINISetting   fichier		"apercus"   "contraste"  					( contraste 				as string )
+		setINISetting   fichier		"apercus"   "nom"  						( nom 						as string )
+		setINISetting   fichier		"apercus"   "nomVide"  					( nomVide 				as string )
+		setINISetting   fichier		"apercus"   "nomCalqueImport"		( nomCalqueImport 	as string )
+		setINISetting   fichier		"apercus"   "dossier"  					( dossier 					as string )
+		setINISetting   fichier		"apercus"   "dossierImport"  			( dossierImport 			as string )
+		setINISetting   fichier		"apercus"   "convertToCoronaMats"	( convertToCoronaMats	as string )
+	),
+	
+	fn charger = (
+		---- APERCUS ----
+		taille.x 						= ( getINISetting   fichier		"apercus"   "tailleX"  						)	as integer 
+		taille.y 						= ( getINISetting   fichier		"apercus"   "tailleY"  						)	as integer 
+		angleVue					= ( getINISetting   fichier		"apercus"   "angleVue"					)	as float 
+		angleVueDetail 			= ( getINISetting   fichier		"apercus"   "angleVueDetail"  			)	as float
+		moteur 						= execute ( ( filterString ( getINISetting   fichier		"apercus"   "moteur"  ) ":")[1] +"()" )
+		noiseLevel 				= ( getINISetting   fichier		"apercus"   "noiseLevel"  				)	as float 
+		noiseLevelDetail 		= ( getINISetting   fichier		"apercus"   "noiseLevelDetail"			)	as float 
+		denoiseAmount 			= ( getINISetting   fichier		"apercus"   "denoiseAmount"			)	as float 
+		exposition 				= ( getINISetting   fichier		"apercus"   "exposition"  				)	as float 
+		highlightCompress 	= ( getINISetting   fichier		"apercus"   "highlightCompress"		)	as float 
+		temperatureRendu 	= ( getINISetting   fichier		"apercus"   "temperatureRendu"		)	as float 
+		contraste 					= ( getINISetting   fichier		"apercus"   "contraste"  					)	as float 
+		nom 							= ( getINISetting   fichier		"apercus"   "nom"  						)	
+		nomVide 					= ( getINISetting   fichier		"apercus"   "nomVide"  					)
+		nomCalqueImport 		= ( getINISetting   fichier		"apercus"   "nomCalqueImport"		)
+		dossier 						= ( getINISetting   fichier		"apercus"   "dossier"  					)
+		dossierImport 			= ( getINISetting   fichier		"apercus"   "dossierImport"  			)
+		convertToCoronaMats	=  if ( getINISetting   fichier		"apercus"   "convertToCoronaMats"	) == "true" then true else false
+	)
+
 )
 
 
@@ -52,6 +103,10 @@ struct prefsApercus (
 ------------------------------------------------------------------------------
 struct prefsRollPrincipale (
 	
+	fichier ="",	-- le fichier des preferences
+	
+	---- les parametres ----
+	
 	taille 			= [1300,900],		---- la taille de la fenetre	---
 	pos 				= [50,50],			---- la position de la fenetre ---	
 	infos				=	true,					---- si l'onglet "infos" est ouvert ---
@@ -59,7 +114,30 @@ struct prefsRollPrincipale (
 	accroche		=	false,				---- si le mode accroche fenetres est activé --- ( depreciated )
 	isOpen 			= false,
 	couleurFond 	= (color 56 56 56),
-	tailleApercus = [255, 255 ]
+	tailleApercus = [255, 255 ],
+	
+	---- les fonctions	----
+	fn enregistrer = (
+		setINISetting   fichier		"fenetre"   "tailleX"  	( taille.x 	as string )
+		setINISetting   fichier		"fenetre"   "tailleY"  	( taille.y 	as string )
+		setINISetting   fichier		"fenetre"   "posX"  		( pos.x 		as string )
+		setINISetting   fichier		"fenetre"   "posY"  		( pos.y 		as string )
+		setINISetting   fichier		"fenetre"   "infos"  		( infos 		as string )
+		setINISetting   fichier		"fenetre"   "edition"  	( edition 	as string )
+		setINISetting   fichier		"fenetre"   "accroche"	( accroche	as string )
+		setINISetting   fichier		"fenetre"   "tailleApercusX"  	( tailleApercus.x 	as string )
+		setINISetting   fichier		"fenetre"   "tailleApercusY"  	( tailleApercus.y 	as string )
+	),
+	
+	fn charger = (
+		taille.x		= ( getINISetting   fichier		"fenetre"  	"tailleX"  	)	as integer 
+		taille.y		= ( getINISetting   fichier		"fenetre"   "tailleY"  	)	as integer 
+		pos.x		= ( getINISetting   fichier 		"fenetre"   "posX"  		)	as integer 
+		pos.y		= ( getINISetting   fichier		"fenetre"   "posY"  		)	as integer 
+		infos			= if ( getINISetting   fichier	"fenetre"  	"infos"  		)	== "true" then true else false
+		edition 		= if ( getINISetting   fichier	"fenetre"   "edition"  	)	== "true" then true else false
+		accroche	= if ( getINISetting   fichier	"fenetre"  	"accroche"	)	== "true" then true else false
+	)
 
 )
 
@@ -68,22 +146,68 @@ struct prefsRollPrincipale (
 ------------------------------------------------------------------------------
 struct prefsRollInfos (
 	
+	fichier ="",	-- le fichier des preferences
+	
+	---- les parametres ----
 	taille 			= [1300,900],		---- la taille de la fenetre	---
-	pos 				= [50,50]				---- la position de la fenetre ---	
+	pos 				= [50,50],			---- la position de la fenetre ---	
+	
+	---- les fonctions	----
+	fn enregistrer =  (
+		setINISetting   fichier		"fenetreInfos"   "tailleX"  	( taille.x 	as string )
+		setINISetting   fichier		"fenetreInfos"   "tailleY"  	( taille.y 	as string )
+		setINISetting   fichier		"fenetreInfos"   "posX"  		( pos.x 		as string )
+		setINISetting   fichier		"fenetreInfos"   "posY"  		( pos.y 		as string )
+	),
+	
+	fn charger = (
+		taille.x		= ( getINISetting   fichier		"fenetreInfos"  	"tailleX"  	)	as integer 
+		taille.y		= ( getINISetting   fichier		"fenetreInfos"   "tailleY"  	)	as integer 
+		pos.x		= ( getINISetting   fichier 		"fenetreInfos"   "posX"  		)	as integer 
+		pos.y		= ( getINISetting   fichier		"fenetreInfos"   "posY"  		)	as integer 
+	)
 
 )
 
 ------------------------------------------------------------------------------
 -- Les preferences pour la creation de proxies						--
 ------------------------------------------------------------------------------
-struct prefsProxies (	
-	dossier 							= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2017 - 64bit\\ENU\\scripts\\biblio\\proxies"
+struct prefsProxies (
+	
+	fichier ="",	-- le fichier des preferences
+	
+	---- les parametres ----
+	dossier 							= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2017 - 64bit\\ENU\\scripts\\biblio\\proxies",
+	
+	---- les fonctions	----
+	fn enregistrer =  (
+		setINISetting   fichier		"Proxies"   		"dossier"  	dossier
+	),
+	
+	fn charger = (
+		dossier		= 	getINISetting   fichier		"Proxies"   "dossier"  	
+	)
+	
 )
 ------------------------------------------------------------------------------
 -- Les preferences pour les nouveau asset						--
 ------------------------------------------------------------------------------
-struct prefsAssets (	
-	dossier 							= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2017 - 64bit\\ENU\\scripts\\biblio\\assets"
+struct prefsAssets (
+	
+	fichier ="",	-- le fichier des preferences
+	
+	---- les parametres ----
+	dossier 							= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2017 - 64bit\\ENU\\scripts\\biblio\\assets",
+	
+	---- les fonctions	----
+	fn enregistrer =  (
+		setINISetting   fichier		"Assets"   		"dossier"  	dossier
+	),
+	
+	fn charger = (
+		dossier		= 	getINISetting   fichier		"Assets"   "dossier"  	
+	)
+	
 )
 
 
@@ -97,7 +221,7 @@ struct prefsAssets (
 struct preference (
 
 private
-	---- le chemin de preferences	----
+	---- le fichier des preferences	----
 	fichier = "$userScripts\biblio\prefs.ini",
 
 public	
@@ -111,83 +235,50 @@ public
 public	
 	---- les fonctions	----
 	fn enregistrer = (
-		
-		---- APERCUS ----
-		setINISetting   fichier		"apercus"   "tailleX"  						( apercus.taille.x 					as string )
-		setINISetting   fichier		"apercus"   "tailleY"  						( apercus.taille.y 					as string )
-		setINISetting   fichier		"apercus"   "angleVue"					( apercus.angleVue				as string )
-		setINISetting   fichier		"apercus"   "angleVueDetail"  			( apercus.angleVueDetail 		as string )
-		setINISetting   fichier		"apercus"   "moteur"  					( apercus.moteur 					as string )
-		setINISetting   fichier		"apercus"   "noiseLevel"  				( apercus.noiseLevel 				as string )
-		setINISetting   fichier		"apercus"   "noiseLevelDetail"			( apercus.noiseLevelDetail 		as string )
-		setINISetting   fichier		"apercus"   "denoiseAmount"			( apercus.denoiseAmount 		as string )
-		setINISetting   fichier		"apercus"   "exposition"  				( apercus.exposition 				as string )
-		setINISetting   fichier		"apercus"   "highlightCompress"		( apercus.highlightCompress	as string )
-		setINISetting   fichier		"apercus"   "temperatureRendu"		( apercus.temperatureRendu	as string )
-		setINISetting   fichier		"apercus"   "contraste"  					( apercus.contraste 				as string )
-		setINISetting   fichier		"apercus"   "nom"  						( apercus.nom 						as string )
-		setINISetting   fichier		"apercus"   "nomVide"  					( apercus.nomVide 				as string )
-		setINISetting   fichier		"apercus"   "nomCalqueImport"		( apercus.nomCalqueImport 	as string )
-		setINISetting   fichier		"apercus"   "dossier"  					( apercus.dossier 					as string )
-		setINISetting   fichier		"apercus"   "dossierImport"  			( apercus.dossierImport 			as string )
-		setINISetting   fichier		"apercus"   "convertToCoronaMats"	( apercus.convertToCoronaMats	as string )
-		
-		---- FENETRE ----
-		setINISetting   fichier		"fenetre"   "tailleX"  	( fenetre.taille.x 	as string )
-		setINISetting   fichier		"fenetre"   "tailleY"  	( fenetre.taille.y 	as string )
-		setINISetting   fichier		"fenetre"   "posX"  		( fenetre.pos.x 		as string )
-		setINISetting   fichier		"fenetre"   "posY"  		( fenetre.pos.y 		as string )
-		setINISetting   fichier		"fenetre"   "infos"  		( fenetre.infos 		as string )
-		setINISetting   fichier		"fenetre"   "edition"  	( fenetre.edition 	as string )
-		setINISetting   fichier		"fenetre"   "accroche"	( fenetre.accroche	as string )
-		setINISetting   fichier		"fenetre"   "tailleApercusX"  	( fenetre.tailleApercus.x 	as string )
-		setINISetting   fichier		"fenetre"   "tailleApercusY"  	( fenetre.tailleApercus.y 	as string )
+		fenetre.enregistrer()
+		fenInfos.enregistrer()
+		apercus.enregistrer()
+		proxies.enregistrer()
+		assets.enregistrer()
 	),
 	fn charger = (
 		---- si existe pas on initialise le fichier ----
 		if not doesFileExist fichier then enregistrer ()
 		---- sinon on charge ----
 		else (
-			
-			---- APERCUS ----
-			apercus.taille.x 						= ( getINISetting   fichier		"apercus"   "tailleX"  						)	as integer 
-			apercus.taille.y 						= ( getINISetting   fichier		"apercus"   "tailleY"  						)	as integer 
-			apercus.angleVue					= ( getINISetting   fichier		"apercus"   "angleVue"					)	as float 
-			apercus.angleVueDetail 			= ( getINISetting   fichier		"apercus"   "angleVueDetail"  			)	as float
-			apercus.moteur 						= execute ( ( filterString ( getINISetting   fichier		"apercus"   "moteur"  ) ":")[1] +"()" )
-			apercus.noiseLevel 				= ( getINISetting   fichier		"apercus"   "noiseLevel"  				)	as float 
-			apercus.noiseLevelDetail 		= ( getINISetting   fichier		"apercus"   "noiseLevelDetail"			)	as float 
-			apercus.denoiseAmount 			= ( getINISetting   fichier		"apercus"   "denoiseAmount"			)	as float 
-			apercus.exposition 				= ( getINISetting   fichier		"apercus"   "exposition"  				)	as float 
-			apercus.highlightCompress 	= ( getINISetting   fichier		"apercus"   "highlightCompress"		)	as float 
-			apercus.temperatureRendu 	= ( getINISetting   fichier		"apercus"   "temperatureRendu"		)	as float 
-			apercus.contraste 					= ( getINISetting   fichier		"apercus"   "contraste"  					)	as float 
-			apercus.nom 							= ( getINISetting   fichier		"apercus"   "nom"  						)	
-			apercus.nomVide 					= ( getINISetting   fichier		"apercus"   "nomVide"  					)
-			apercus.nomCalqueImport 		= ( getINISetting   fichier		"apercus"   "nomCalqueImport"		)
-			apercus.dossier 						= ( getINISetting   fichier		"apercus"   "dossier"  					)
-			apercus.dossierImport 			= ( getINISetting   fichier		"apercus"   "dossierImport"  			)
-			apercus.convertToCoronaMats	=  if ( getINISetting   fichier		"apercus"   "convertToCoronaMats"	) == "true" then true else false
-			
-			---- FENETRE ----
-			fenetre.taille.x		= ( getINISetting   fichier		"fenetre"  	"tailleX"  	)	as integer 
-			fenetre.taille.y		= ( getINISetting   fichier		"fenetre"   "tailleY"  	)	as integer 
-			fenetre.pos.x			= ( getINISetting   fichier 		"fenetre"   "posX"  		)	as integer 
-			fenetre.pos.y			= ( getINISetting   fichier		"fenetre"   "posY"  		)	as integer 
-			fenetre.infos			= if ( getINISetting   fichier	"fenetre"  	"infos"  		)	== "true" then true else false
-			fenetre.edition 		= if ( getINISetting   fichier	"fenetre"   "edition"  	)	== "true" then true else false
-			fenetre.accroche	= if ( getINISetting   fichier	"fenetre"  	"accroche"	)	== "true" then true else false
+			fenetre.charger()
+			fenInfos.charger()
+			apercus.charger()
+			proxies.charger()
+			assets.charger()
 		)
 	),
 	fn reset = (
+		
 		fenetre 			=  prefsRollPrincipale ()
 		fenInfos	 	=  prefsRollInfos 		()
 		apercus 		= 	prefsApercus 		()
 		proxies	 		= 	prefsProxies 			()
 		assets	 		= 	prefsAssets 			()
+		
+		fenetre.fichier	=	fichier
+		fenInfos.fichier	=	fichier
+		apercus.fichier	=	fichier
+		proxies.fichier	=	fichier
+		assets.fichier		=	fichier
+		
 		enregistrer ()
-	)
+	), 
 	
+	---- Initialisation ----
+	on create do (
+		
+		fenetre.fichier	=	fichier
+		fenInfos.fichier	=	fichier
+		apercus.fichier	=	fichier
+		proxies.fichier	=	fichier
+		assets.fichier		=	fichier
+	)
 )
 
 

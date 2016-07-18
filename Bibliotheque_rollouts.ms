@@ -16,9 +16,25 @@
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
-----------	Le rollout d'edition des tags  ---------------------------------------------------------------------------------------------------------------------
+----------	Le rollout de réglages des aperçus -----------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 rollout m_rollApercus "Parametres aperçus" width:500 height:500
+(
+	--- declarations locales -----
+	local biblio
+	
+	---- ui  ----
+
+	-- methodes -----
+	
+	--- evenements -----
+
+)
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+----------	Le rollout de creation d'asset depuis la scene ----------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+rollout m_rollNouvelAsset "Nouvel asset depuis la selection" width:500 height:500
 (
 	--- declarations locales -----
 	local biblio
@@ -100,8 +116,10 @@ rollout m_rollInfos "Infos" width:280 height:597
 	)
 	
 	
-	on m_rollInfos moved pos do
+	on m_rollInfos moved pos do (
 		biblio.prefs.fenInfos.pos = pos
+		biblio.prefs.enregistrer()
+	)
 	
 	
 	on ui_editNom entered txt 	do
@@ -211,19 +229,15 @@ rollout m_rollPreferences "Préférences de la bibliothèque" width:716 height:1
 			
 		)
 	on edt_proxy entered txt do
-	(
-			if not doesFileExist txt then
-				/* biblio.apercu.dossierApercus 			= txt
-			else  */
-				edt_proxy.text	= cheminProxiesBack  --biblio.conversion.dossierProxy	
-		)
+		if not doesFileExist txt do	edt_proxy.text	= cheminProxiesBack
+	
 	on btn_proxy pressed do
 	(
-			nouveauChemin = getSavePath "Dossier pour les proxies"	 initialDir:edt_proxy.text
-			if nouveauChemin != undefined do
-				edt_apercus.text 	=	nouveauChemin
-		
-		)
+		nouveauChemin = getSavePath	"Dossier pour les proxies"	 initialDir:edt_proxy.text
+		if nouveauChemin != undefined do
+			edt_apercus.text 	=	nouveauChemin
+	
+	)
 	on btn_appliquer pressed do
 	(
 			biblio.prefs.apercus.dossier	 	= m_rollPreferences.edt_apercus.text
@@ -231,11 +245,11 @@ rollout m_rollPreferences "Préférences de la bibliothèque" width:716 height:1
 			biblio.prefs.assets.dossier 		= m_rollPreferences.edt_assets.text
 			biblio.prefs.enregistrer()
 		
-			try (	DestroyDialog biblio.m_rollPreferences ) catch ( format  ("rien à destroy\n") )
+			try (	DestroyDialog biblio.m_rollPreferences ) catch ()
 		)
 	on btn_annuler pressed do
 	(
-			try (	DestroyDialog biblio.m_rollPreferences ) catch ( format  ("rien à destroy\n") )
+			try (	DestroyDialog biblio.m_rollPreferences ) catch ()
 		)
 	on edt_assets entered txt do
 	(
@@ -412,16 +426,12 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 															
 															
 															
-	button 				ui_btnImporterAssetDansScene			"" pos:[ui_btnCreerAssetSelection.pos.x + 2* UItaille_btns.x + 2*UItaille_ecart.x,  UIpos_barreEdition.y ] \
+	button 				ui_btnImporterAssetDansScene			"" pos:[200 + 3*UItaille_ecart.x,  UIpos_barreEdition.y ] \
 															width:UItaille_btns.x 		height:UItaille_btns.y \
 															toolTip:"Importe le ou les assets sélectionnés."			border:false	\
 															images:#( ico_BtnImporter , undefined, 2, 	1,1,2,2)
 	
--- 	button 				ui_btnImporterAssetDansSceneCorona			"" pos:[ui_btnImporterAssetDansScene.pos.x  + UItaille_btns.x +UItaille_ecart.x,  UIpos_barreEdition.y ] \
--- 															width:UItaille_btns.x 		height:UItaille_btns.y \
--- 															toolTip:"Importe le ou les assets sélectionnés en les convertissant en Corona."			border:false	\
--- 															images:#( ico_BtnImporterCorona , undefined, 2, 	1,1,2,2)
-	
+
 	button 				ui_btnImporterAssetDansSceneProxy			"" pos:[ui_btnImporterAssetDansScene.pos.x  + UItaille_btns.x +UItaille_ecart.x,  UIpos_barreEdition.y ] \
 															width:UItaille_btns.x 		height:UItaille_btns.y \
 															toolTip:"Importe le ou les assets sélectionnés à la scène en proxy Corona."			border:false	\
@@ -441,43 +451,12 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	progressBar 		ui_progressBar				"ProgressBar" pos:[25,351] width:175 height:19 color:(color 50 150 246) tooltip:"action: \ntempsRestant:\n"
 	
 	button				ui_progressCancel		"X"	pos:[16,118] width:UItaille_petitsBtns.x height:UItaille_petitsBtns.y
-	/* 
-	--- infos ---
-	groupBox			ui_grpInfos				""	pos:[ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x , ui_editRecherche.pos.y] width:(256 + 2*UItaille_marge.x)  height:200 	
-	 */
+
 	---- Edition des infos----	
 	checkbutton 		ui_btnAfficherInfo		"I" pos:[ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x ,   ui_editRecherche.pos.y  + ui_arborescence.height + UItaille_ecart.y ] \
 															width:UItaille_petitsBtns.x 		height:UItaille_petitsBtns.y \
 															toolTip:"Afficher/cacher les infos"			border:false
-		/* 
-		
-	label 		ui_lblNom 					"Nom: " pos:[17,23] width:36 height:19
-	edittext 	ui_editNom 				"" 		pos:[59,23] width:200 height:17
-		
-	label 		ui_lblFichier				"Fichier: " pos:[17,50] width:44 height:19
-	edittext 	ui_editFichier 				"" pos:[59,50] width:175 height:17
-	button 		ui_btnOuvrirFichierMax "..." pos:[366,51] width:25 height:17 toolTip:"Choisir le fichier .max de référence de cet asset."
-		
-	label 		ui_lblApercu				"Aperçu:" pos:[17,78] width:44 height:19
-	edittext	 	ui_editApercu 			"" pos:[59,78] width:135 height:17
-	button 		ui_btnOurvirApercu	"..." pos:[366,79] width:25 height:17 toolTip:"Choisir l'image servant d'aperçu à cet asset (200px X 200px)."
--- 	button 		ui_btnOurvirSceneApercu	"..." pos:[366,79] width:25 height:17 toolTip:"Choisir l'image servant d'aperçu à cet asset (200px X 200px)."
-	button 		ui_btnCreerApercu	"Créer" pos:[366,79] width:35 height:17	toolTip:"Création automatique de l'aperçu de cet asset."
-		
-	label 		ui_lblDetail				"Détail:" pos:[17,78] width:44 height:19
-	edittext	 	ui_editDetail			"" pos:[59,78] width:135 height:17
-	button 		ui_btnOurvirDetail		"..." pos:[366,79] width:25 height:17	toolTip:"Choisir l'image servant d'aperçu détail à cet asset (200px X 200px)."
-	button 		ui_btnCreerDetail		"Créer" pos:[366,79] width:35 height:17 toolTip:"Création automatique de l'aperçu détail de cet asset."
 	
-	label 		ui_lblTags					"Mots clés:" pos:[16,118] width:217 height:19
-	edittext		ui_editTags 				"" pos:[16,136] width:(ui_grpInfos.width - 3* UItaille_ecart.x )  height:17
-		
-	label 		ui_lblNotes 				"Notes:" pos:[16,167] width:217 height:19	
-	edittext 	ui_editNotes 				"" pos:[16,185] width:(ui_grpInfos.width - 3* UItaille_ecart.x )	 height:122
-		
-	
-	bitmap		ui_bmpDetail 		pos:[16 ,167] width:256 height:256	 
-	*/
 	
 	
 ----------------------------------------
@@ -526,91 +505,10 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		ui_progressCancel.pos		= ui_progressBar.pos + [175 + UItaille_ecart.y , 0]
 		
 		ui_btnAfficherInfo.checked 	= b_afficheInfos
-		/* 
 		
-		b_afficheInfos 				= biblio.getInfosOuvert()
-		
-		
-		-- quleque reperes ---
-		
-		ui_grpInfos.visible  					= b_afficheInfos
-		ui_lblNom.visible  					= b_afficheInfos
-		ui_editNom.visible  					= b_afficheInfos
-		ui_lblFichier.visible  				= b_afficheInfos
-		ui_editFichier.visible  				= b_afficheInfos
-		ui_btnOuvrirFichierMax.visible  	= b_afficheInfos
-		ui_lblApercu.visible  				= b_afficheInfos
-		ui_editApercu.visible  			= b_afficheInfos
-		ui_btnOurvirApercu.visible  		= b_afficheInfos
-		ui_btnCreerApercu.visible  		= b_afficheInfos
-		
-		ui_lblDetail.visible  		= b_afficheInfos
-		ui_editDetail.visible  		= b_afficheInfos
-		ui_btnOurvirDetail.visible  		= b_afficheInfos
-		ui_btnCreerDetail.visible  		= b_afficheInfos
-		
-		ui_lblTags.visible  					= b_afficheInfos
-		ui_editTags.visible  				= b_afficheInfos
-		ui_lblNotes.visible  					= b_afficheInfos
-		ui_editNotes.visible  				= b_afficheInfos
-		ui_bmpDetail.visible  				= b_afficheInfos 	
-		
-		if b_afficheInfos then (
-			
-			ui_grpInfos.pos.x 			= tailleRollOut.x - ( UItaille_marge.x + ui_grpInfos.width )
-			ui_grpInfos.height			= hauteurExplorateur - ( UItaille_petitsBtns.y + 2* UItaille_ecart.y  ) 
-			ui_listeVue.width			= tailleRollOut.x  - ( ui_arborescence.width + ui_grpInfos.width + 4* UItaille_ecart.x + UItaille_marge.x ) 
-			ui_listeVue.height			= hauteurExplorateur - ( ui_editRecherche.height + UItaille_ecart.y )
-			ui_btnAfficherInfo.pos 		= [ui_grpInfos.pos.x + ui_grpInfos.width - UItaille_petitsBtns.x  ,  ui_grpInfos.pos.y  + ui_grpInfos.height + UItaille_ecart.y ]   
-
--- 			ui_progressBar.width = ui_listeVue.width
-			
-			
-			repere 			= ui_grpInfos.pos + UItaille_marge + [0,5]
-			tabEdit_1 		= 	UItaille_ecart.x
-			tabEdit_2 		= 	tabEdit_1 + 60
-			hauteur 			= [0,25]
-			petiteHauteur = [0,18]
-			largeurTitre 	= [60,0]
-			
-			ui_lblNom.pos  					= repere
-			ui_editNom.pos  					= repere + largeurTitre
-			ui_lblFichier.pos					= repere + hauteur
-			ui_editFichier.pos				= repere + hauteur + largeurTitre
-			ui_btnOuvrirFichierMax.pos	= repere + hauteur + largeurTitre + [ui_editFichier.width,0] + [UItaille_ecart.x, 0]
-			
-			ui_lblApercu.pos				= repere + 2 * hauteur
-			ui_editApercu.pos				= repere + 2 * hauteur + largeurTitre
-			ui_btnCreerApercu.pos		= repere + 2 * hauteur + largeurTitre +  [ui_editFichier.width - 38 ,0]+ [UItaille_ecart.x, 0] 
-			ui_btnOurvirApercu.pos		= repere + 2 * hauteur + largeurTitre +  [ui_editFichier.width,0]+ [UItaille_ecart.x, 0]
-			
-			
-			
-			
-			ui_lblTags.pos					= repere + 3 * hauteur
-			ui_editTags.pos					= repere + 3 * hauteur + petiteHauteur
-			
-			
-			
-			
-			ui_bmpDetail.pos = [ui_grpInfos.pos.x + UItaille_marge.x ,ui_grpInfos.pos.y + ui_grpInfos.height - ( UItaille_ecart.y   + ui_bmpDetail.height ) ] 
-			
-			ui_lblDetail.pos				= ui_bmpDetail.pos -  hauteur
-			ui_editDetail.pos				= ui_lblDetail.pos + largeurTitre
-			ui_btnCreerDetail.pos		= ui_lblDetail.pos + largeurTitre +  [ui_editFichier.width - 41 ,0]+ [UItaille_ecart.x, 0] 
-			ui_btnOurvirDetail.pos		= ui_lblDetail.pos + largeurTitre +  [ui_editFichier.width,0]+ [UItaille_ecart.x, 0]
-			
-			ui_lblNotes.pos				= repere + 4 * hauteur + petiteHauteur
-			ui_editNotes.pos				= repere + 4 * hauteur + 2* petiteHauteur
-			ui_editNotes.height			= ui_lblDetail.pos.y - ( ui_editNotes.pos.y + 2*UItaille_ecart.y   )
-			
-		) else ( */
-			
-			ui_listeVue.width			= tailleRollOut.x  - ( ui_arborescence.width + 5* UItaille_ecart.x + UItaille_petitsBtns.x  ) 
-			ui_listeVue.height			= hauteurExplorateur - ( ui_editRecherche.height + UItaille_ecart.y )
-			ui_btnAfficherInfo.pos 	= [ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x   ,  ui_listeVue.pos.y  + ui_listeVue.height - ( UItaille_petitsBtns.y ) ]     
-			
--- 		)
+		ui_listeVue.width			= tailleRollOut.x  - ( ui_arborescence.width + 5* UItaille_ecart.x + UItaille_petitsBtns.x  ) 
+		ui_listeVue.height			= hauteurExplorateur - ( ui_editRecherche.height + UItaille_ecart.y )
+		ui_btnAfficherInfo.pos 	= [ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x   ,  ui_listeVue.pos.y  + ui_listeVue.height - ( UItaille_petitsBtns.y ) ]     
 		
 		ui_editRecherche.width  =  ui_listeVue.width - ( 2*UItaille_ecart.x  + UItaille_petitsBtns.x )
 		
@@ -619,9 +517,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		-- on limite la taille du rollout 
 		thisRollout = biblio.m_rollPrincipal
-		
-		-- 		if tailleRollOut.x < UItaille_fenetreMin.x do thisRollout.width 	= UItaille_fenetreMin.x
-		-- 		if tailleRollOut.y < UItaille_fenetreMin.y do thisRollout.height 	= UItaille_fenetreMin.y
 		
 		-- maj prefereences de la taille --
 		biblio.prefs.fenetre.taille = [ thisRollout.width , thisRollout.height  ]
@@ -643,15 +538,12 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 
 
 	fn chercherNoeud  _noeud _nomAChercher = (
--- 		format " ? chercheDsNoeud : % ?\n"  _noeud.name
 		result = undefined
 		if _noeud.name == _nomAChercher then (
 -- 			format " !! !! trouve  !! !!\n"
 			result = _noeud
 		)
 		else (
--- 			format " ... pas trouve  ... \n"
--- 			format " ? enfants : % ?\n"  _noeud.nodes.count
 			for i=0 to _noeud.nodes.count - 1 do (
 				node = _noeud.nodes.item[i]
 				result = chercherNoeud  node _nomAChercher
@@ -669,13 +561,11 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 
 	---- remplir le tree view avec l'arbo de la biblio ----
 	fn ajouterEnfantTreeView		_noeudArbo	 _noeudTV 	     =	(
-		--if _noeudArbo.nomUnique !="RECHERCHE" do (
-			
-			nouveauNoeudTV = _noeudTV.Nodes.add 		( _noeudArbo.nom + " (" + _noeudArbo.getNbrEnfants() as string + ")")
-			nouveauNoeudTV.name = _noeudArbo.nomUnique
-			for enfant in _noeudArbo.enfants where classof enfant == Noeud do
-				ajouterEnfantTreeView 	enfant  	nouveauNoeudTV
-		--)
+		
+		nouveauNoeudTV = _noeudTV.Nodes.add 		( _noeudArbo.nom + " (" + _noeudArbo.getNbrEnfants() as string + ")")
+		nouveauNoeudTV.name = _noeudArbo.nomUnique
+		for enfant in _noeudArbo.enfants where classof enfant == Noeud do
+			ajouterEnfantTreeView 	enfant  	nouveauNoeudTV
 	)
 
 
@@ -919,6 +809,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 				ui_listeVue.view = (dotNetClass "system.windows.forms.view").LargeIcon
 				ui_listeVue.Columns.add "Nom" 180
 				ui_listeVue.FullRowSelect = false
+				ui_listeVue.margin.all = 0
 			)
 			#liste: (
 				ui_listeVue.view = (dotNetClass "system.windows.forms.view").details
@@ -1058,16 +949,35 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	
 	on ui_btnCreerAssetDossier pressed do (
+		
 		dossier = getSavePath ""	 initialDir:biblio.prefs.apercus.dossierImport
+		
 		if dossier!=undefined do (
 			biblio.ajouter.dossier 	dossier 
 			biblio.prefs.apercus.dossierImport =  dossier
 			biblio.prefs.enregistrer()
 		)
+		
 	)
 	
------ L'arborescence ------------------
+	on ui_btnCreerAssetSelection pressed do (
+		
+		filename = getSaveFileName \
+						caption:"Enregistrer la selection dans un nouvel asset" \
+						filename:(biblio.prefs.assets.dossier + @"\") \
+						types:"Asset(*.max)|*.max" \
+						historyCategory:"Bibliotheque"
+		
+		
+		if filename != undefined do (
+			debug ("nouveau fichier max : " + filename )
+			saveNodes (selection as array )  filename
+			biblio.ajouter.fichier  filename
+		)
+		
+	)
 	
+	----- L'arborescence ------------------	
 	on ui_arborescence	 afterLabelEdit arg do
 		(
 			
@@ -1090,8 +1000,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		)
 	on ui_arborescence		 mouseUp arg do  (
 		
-		--else (
--- 			debug "->>>>>>>>>>>>>------------->>>>>>>>>>>>----------->GAUCHE"
 			noeudClique = ui_arborescence.GetNodeAt (dotNetObject "System.Drawing.Point" arg.x arg.y)
 			if noeudClique != undefined then (
 				
@@ -1099,7 +1007,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 				_noeudArbo = biblio.arbo.getParNomUnique 	noeudClique.name 
 				
 				if _noeudArbo!=undefined then (
-					
 					
 					if _noeudArbo.nomUnique != "RECHERCHE" /*and _noeudArbo.nomUnique != "ROOT" */ then (
 						---- click droit ----
@@ -1133,7 +1040,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	(
 		debug " ------------- ItemDrag ARBO --------------"
 		b_dragDossier = true
--- 		noeudVueSelectBack = noeudVueSelect
 		
 		local sel = ui_listeVue.selectedItems
 
@@ -1173,8 +1079,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		debug ("	noeudVueSelect : " + noeudVueSelect as string )
 		debug (" --------- ----------------------- --------- " )
 		hitNodeDrop = ui_arborescence.GetNodeAt (dotNetObject "System.Drawing.Point" arg.x arg.y)	
--- 		
--- 		if noeudSelect.nomUnique !="RECHERCHE" then (
 		
 		selectionElems_NomsUniques = for elemNodes in elemNodesVueSelect collect elemNodes.name
 		noeudSelecBack = noeudSelect
@@ -1245,36 +1149,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			m_ordreInverse = not m_ordreInverse
 			remplirTreeView  	biblio.arbo.root
 			AfficherElements 	noeudSelect
--- 			noeudSelecNomUnique = noeudSelect.nomUnique
-			
-			/* 
-			fn classerNbrImports 	ordreInverse:false	 = (
-			qsort root 	sortParNbrImports
-		),
-		fn classerVertex 	ordreInverse:false	 = (
-			qsort root 	sortParVertex
-		),
-		fn classerNoms 
-			
-			
-			
-			
-			
-			
-			
-			
-			colClicked = cols[arg.Column+1]
-			
-			case of
-			(
-				(colClicked == "Object Name"): sortByCol = 0
-				(colClicked == "Type"): sortByCol = 1
-				(colClicked == "Verts"):  sortByCol = 2
-				(colClicked == "Faces"):  sortByCol = 3
-				(colClicked == "Materials"):  sortByCol = 4
-			)
-			populateList lv
-			changeForecolor() */
 		)
 		
 		
@@ -1311,18 +1185,13 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	on ui_listeVue		 mouseDown arg do  (
 		
-		---- click droit ----
-		if not (arg.Button.value__ == 1048576) then ( 
-			debug "mouseDown : DROITE"
+-- 		---- click droit ----
+-- 		if not (arg.Button.value__ == 1048576) then ( 
+-- 			debug "mouseDown : DROITE"
 		
 		---- click gauche ----
 		) else (
-			debug "////////////// mouseDown : GAUCHE //////"
 			
--- 			show arg 
-				debug ("	arg : " + arg as string )
-
-						
 			hitNode = ui_listeVue.GetItemAt  arg.x 	arg.y
 			
 			if hitNode != undefined then (
@@ -1330,13 +1199,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 				for i = 0 to ui_listeVue.SelectedItems.count - 1 do 
 					if ui_listeVue.SelectedItems.item[i] == hitNode then b_present = true
 					
-					if b_present	then (
-						
-					) else (
-						debug ( "hitNode : " + hitNode as string )
-						debug ( "	nom : " + hitNode.name as string )
-						
-						debug ( "	txt : " + hitNode.text as string )
+					if not b_present	do (
 						
 						elemIDVueSelect = #( hitNode.index )
 						elemNodesVueSelect = #( hitNode )
@@ -1354,7 +1217,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	on ui_listeVue 	ItemDrag 	arg do
 	(
-		debug " ------------- ItemDrag --------------"
 		
 		local sel = ui_listeVue.selectedItems
 		
@@ -1385,51 +1247,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 ---- Edition/Infos  elements ----
 	on ui_btnAfficherInfo changed state do	
 		biblio.afficherInfos () 
-	
-		
-	
-	
-	/* 
-	on ui_editNom 	entered  txt 	do (
-		if elemSelect.count == 1 do (
-			elemSelect[1].nom = txt
-			biblio.arbo.ecrireFichier()
-			
-			-- les selections --
-			for id in elemIDVueSelect do 
-				ui_listeVue.Items.item[id].text = txt
-		)
-	)
-	
-	on ui_editFichier 	entered  txt 	do (
-		if elemSelect.count == 1 do 
-			elemSelect[1].fichier = txt
-		biblio.arbo.ecrireFichier()
-	)
-
-	on ui_lblApercu 	entered  txt 	do (
-		if elemSelect.count == 1 do 
-			elemSelect[1].apercu = txt
-		biblio.arbo.ecrireFichier()
-	)
-	on ui_editDetail 	entered  txt 	do (
-		for elem in  elemSelect do 
-			elem.detail = txt
-		biblio.arbo.ecrireFichier()
-		afficherInfos()
-	)
-	on ui_editTags 	entered  txt 	do (
-		for elem in  elemSelect do 
-			elem.tags = txt
-		biblio.arbo.ecrireFichier()
-		maj_UI()
-	)
-	on ui_editNotes 	entered  txt 	do (
-		for elem in  elemSelect do 
-			elem.notes = txt
-		biblio.arbo.ecrireFichier()
-	)
-	 */
 	
 	
 	on ui_editRecherche 	entered  txt 	do (
@@ -1465,7 +1282,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 				biblio.arbo.ecrireFichier()
 				afficherInfos()
 			)
--- 					show 	( selectionTV )
+			
 		)
 		
 	)
@@ -1490,8 +1307,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	----- import dans scene Proxy corona ---------
 	on ui_btnOurvirAperc  pressed do (
--- 		biblio.importer.proxy elemSelect
--- 		ui_btnOurvirAperc
+		
 		apercu = selectBitMap caption:"Choisir le nouvel aperçu"
 		if apercu!= undefined do (
 			display apercu
@@ -1560,12 +1376,13 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		debug "Fermer Fenetre"
 		fermer_interface()
 		biblio.prefs.fenetre.isOpen = false
+		
 		updateToolbarButtons()
 		biblio.prefs.enregistrer()
 		
 		----on ferme les autres fenetres -----
-		try (	DestroyDialog biblio.m_rollInfos ) catch ( format  ("rien à destroy\n") )
-		try (	DestroyDialog biblio.m_rollPreferences ) catch ( format  ("rien à destroy\n") )
+		try (	DestroyDialog biblio.m_rollInfos ) catch ()
+		try (	DestroyDialog biblio.m_rollPreferences ) catch ()
 		
 	)
 	
@@ -1586,11 +1403,10 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			coinAccroche 			+= 	bordureDialogBox
 			
 			SetDialogPos 	biblio.m_rollEditerTags 	coinAccroche
-			-- 	biblio.setPosRolloutEdition 					coinAccroche
 			
 		)
 		
--- 		biblio.prefs.enregistrer()
+		biblio.prefs.enregistrer()
 		
 	)
 	
@@ -1611,7 +1427,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			
 		)
 		
--- 		biblio.prefs.enregistrer()
+		biblio.prefs.enregistrer()
 		
 	)
 	
