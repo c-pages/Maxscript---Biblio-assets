@@ -117,14 +117,14 @@ struct prefsRollPrincipale (
 	tailleApercus = [255, 255 ],
 	
 	---- les fonctions	----
-	fn enregistrer = (
-		setINISetting   fichier		"fenetre"   "tailleX"  	( taille.x 	as string )
-		setINISetting   fichier		"fenetre"   "tailleY"  	( taille.y 	as string )
-		setINISetting   fichier		"fenetre"   "posX"  		( pos.x 		as string )
-		setINISetting   fichier		"fenetre"   "posY"  		( pos.y 		as string )
-		setINISetting   fichier		"fenetre"   "infos"  		( infos 		as string )
-		setINISetting   fichier		"fenetre"   "edition"  	( edition 	as string )
-		setINISetting   fichier		"fenetre"   "accroche"	( accroche	as string )
+	fn enregistrer = (	
+		setINISetting   fichier		"fenetre"   "tailleX"  				( taille.x 				as string )
+		setINISetting   fichier		"fenetre"   "tailleY"  				( taille.y 				as string )
+		setINISetting   fichier		"fenetre"   "posX"  					( pos.x 					as string )
+		setINISetting   fichier		"fenetre"   "posY"  					( pos.y 					as string )
+		setINISetting   fichier		"fenetre"   "infos"  					( infos 					as string )
+		setINISetting   fichier		"fenetre"   "edition"  				( edition 				as string )
+		setINISetting   fichier		"fenetre"   "accroche"				( accroche				as string )
 		setINISetting   fichier		"fenetre"   "tailleApercusX"  	( tailleApercus.x 	as string )
 		setINISetting   fichier		"fenetre"   "tailleApercusY"  	( tailleApercus.y 	as string )
 	),

@@ -1,4 +1,4 @@
-/* #######################################################################################################################
+/*######################################################################################################################
 
 	2017 Christophe Pages (http://www.c-pages.fr) 
 
@@ -113,6 +113,7 @@ rollout m_rollInfos "Infos" width:280 height:597
 	
 	on m_rollInfos close do (
 		biblio.setInfosOuvert false
+		
 	)
 	
 	
@@ -133,20 +134,28 @@ rollout m_rollInfos "Infos" width:280 height:597
 					biblio.m_rollPrincipal.ui_listeVue.Items.item[id].text = txt
 			)
 		)
+	
+	
 	on ui_editFichier entered txt 	do
 	(
 			if biblio.m_rollPrincipal.elemSelect.count == 1 do 
 				biblio.m_rollPrincipal.elemSelect[1].fichier = txt
 			biblio.arbo.ecrireFichier()
 		)
+	
+	
 	on ui_lblApercu entered txt 	do
 	(
 			if biblio.m_rollPrincipal.elemSelect.count == 1 do 
 				biblio.m_rollPrincipal.elemSelect[1].apercu = txt
 			biblio.arbo.ecrireFichier()
 		)
-	on ui_btnCreerDetail pressed do
+	
+	
+		on ui_btnCreerDetail pressed do
 		biblio.creerDetail ()
+
+	
 	on ui_editDetail entered txt 	do
 	(
 			for elem in  biblio.m_rollPrincipal.elemSelect do 
@@ -154,6 +163,7 @@ rollout m_rollInfos "Infos" width:280 height:597
 			biblio.arbo.ecrireFichier()
 			biblio.m_rollPrincipal.afficherInfos()
 		)
+		
 	on ui_btnCreerApercu pressed do
 		biblio.creerApercu ()
 	on ui_editTags entered txt 	do
@@ -1186,11 +1196,11 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	on ui_listeVue		 mouseDown arg do  (
 		
 -- 		---- click droit ----
--- 		if not (arg.Button.value__ == 1048576) then ( 
+		if  (arg.Button.value__ == 1048576) then ( 
 -- 			debug "mouseDown : DROITE"
 		
 		---- click gauche ----
-		) else (
+-- 		) else (
 			
 			hitNode = ui_listeVue.GetItemAt  arg.x 	arg.y
 			
