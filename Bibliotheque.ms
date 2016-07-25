@@ -202,6 +202,10 @@ fn initBiblio = (
 			
 		--- apercus ----		
 			fn creerApercu = (
+				
+-- 				---- debug ----
+-- 				local  deb = true
+				
 				elemSelect = m_rollPrincipal.elemSelect
 				if elemSelect.count > 0 do 
 					if querybox "voulez vous créer l'aperçu ?" do (
@@ -239,6 +243,7 @@ fn initBiblio = (
 						m_rollPrincipal.AfficherElements 	noeudSelect					
 						m_rollPrincipal.afficherInfos()
 
+-- 						if not deb do 
 						fetchMaxFile quiet:true
 						
 					
@@ -295,9 +300,7 @@ fn initBiblio = (
 			fn afficherArbo = arbo.afficher(),
 			
 			-- la fenetre --	
-			fn ouvrirFenetre 		= (
-				
-				
+			fn ouvrirFenetre 		= (				
 				
 				debug "ouvrir fenetre ..."
 				
@@ -317,11 +320,10 @@ fn initBiblio = (
 				m_rollPrincipal.AfficherElements 	arbo.root 	--.enfants[1]
 				m_rollPrincipal.maj_UI()
 				
-				debug ("getInfosOuvert ()  : ouvr infos ? " + getInfosOuvert () as string  )
+				---- Ouverture de la fenetre info si necessaire	----
 				if ( getInfosOuvert () ) do (
 					
-					createDialog m_rollInfos 	pos:prefs.fenInfos.pos 		lockHeight:false		\
-															style:#(/*#style_resizing,*/	#style_titlebar	 /*, #style_toolwindow, #style_sysmenu*//*, #style_minimizebox, #style_maximizebox , #style_sunkenedge , #style_sysmenu */)	
+					createDialog m_rollInfos 	pos:prefs.fenInfos.pos 		lockHeight:false		style:#( #style_titlebar )	
 					m_rollInfos.biblio = this
 					m_rollPrincipal.afficherInfos()
 					
@@ -330,16 +332,35 @@ fn initBiblio = (
 			),
 			
 			fn fermerFenetre = (
-				try (	DestroyDialog m_rollPrincipal ) catch ()
+				
+				--- vider ecouteur	 ---
+				m_rollPrincipal.EcouteurChangeSelection = undefined
+				gc light:true
+				
+				---- pour le bouton macro	----
+				prefs.fenetre.isOpen = false
+				updateToolbarButtons()
+				
+				---- Enregistrement des preferences	----
+				prefs.enregistrer()
+				
+				---- On ferme les autres fenetres 	-----
+				try (	
+					if ( getInfosOuvert() ) do (
+						DestroyDialog m_rollInfos 
+						setInfosOuvert true 
+					)
+				) catch ( setInfosOuvert false )
+				try (	DestroyDialog m_rollPreferences ) 	catch ()
+				try (	DestroyDialog m_rollApercus ) 		catch ()
+				try (	DestroyDialog m_rollPrincipal ) 		catch ()
+				
 			),
 			
 			fn ouvrirPreferences = (
 				
 				try (	DestroyDialog m_rollPreferences ) catch ()
-				createDialog m_rollPreferences 	 \ --pos:prefs.fenetre.pos  width:prefs.fenetre.taille.x  height:prefs.fenetre.taille.y  \
-							lockHeight:false  style:#(/*#style_resizing,#style_titlebar , */#style_toolwindow/*, #style_sysmenu*//*, #style_minimizebox, #style_maximizebox , #style_sunkenedge , #style_sysmenu */)	\
-							--menu:(menu.getMenuRolloutPrincipal()	 )
-	-- 			m_rollPreferences.biblio 						= this
+				createDialog m_rollPreferences 		lockHeight:false  	style:#(#style_toolwindow	)
 				
 			),
 			
@@ -355,13 +376,13 @@ fn initBiblio = (
 				include  "$userScripts\biblio\Bibliotheque_rollouts.ms" 
 				
 				--- initialiser les structs ---
-				apercu.arbo = arbo
-				apercu.biblio = this
-				arbo.biblio = this
-				ajouter.biblio = this
-				importer.biblio = this
+				apercu.arbo 			= arbo
+				apercu.biblio 			= this
+				arbo.biblio 			= this
+				ajouter.biblio 		= this
+				importer.biblio 		= this
 				importer.m_rollout = m_rollPrincipal
-				conversion.biblio = this
+				conversion.biblio 	= this
 				
 				--- nettoyer le dossier des apercus (supprime les apercus non utilisé par l'arbo )  peut etre long ---
 	-- 			arbo.nettoyer()

@@ -109,7 +109,7 @@ struct Import (
 					deLockSelection ()
 					mergeMAXFile  	elem.fichier		#select  #autoRenameDups 	#renameMtlDups #neverReparent
 					
-					if 	biblio.m_convertToCoronaMats do
+					if 	biblio.prefs.apercus.convertToCoronaMats do
 						biblio.conversion.matsToCorona  (selection as array )
 					
 					local newMesh 

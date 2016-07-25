@@ -43,7 +43,7 @@ struct Menus (
 				seperator sep01
 				
 				subMenu  "Options d'import" (
-					menuItem matNeRienFaire 		"Matériaux bruts" 								checked:( not bibliotheque.prefs.apercus.convertToCoronaMats )
+					menuItem matNeRienFaire 		"Matériaux d'origine" 								checked:( not bibliotheque.prefs.apercus.convertToCoronaMats )
 					menuItem matconvertCorona 		"Convertir matériaux en Corona" 		checked:( bibliotheque.prefs.apercus.convertToCoronaMats )
 				)
 				
@@ -134,7 +134,7 @@ struct Menus (
 				)
 				subMenu "Vues" (
 					menuItem m_afficherInfos 	"Infos"  		checked:( bibliotheque.getInfosOuvert() )
-					menuItem m_afficherApercus	"Aperçus" 
+					menuItem m_afficherApercus	"Création des aperçus" 
 				)
 				subMenu "Préferences"	(
 					menuItem m_preferences 			"Préferences" 

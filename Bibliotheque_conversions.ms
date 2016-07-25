@@ -42,15 +42,15 @@ struct Conversions (
 			-- quelques params ----
 			nom = "_" + prefixProxy + _element.getIndexUnique() as string 
 			CoronaProxyExporterPerso.settings.exportToSingle 			= true
-			CoronaProxyExporterPerso.settings.outputPath					=	dossierProxy						
-			CoronaProxyExporterPerso.settings.exportToSingleName	 	= nom
+			CoronaProxyExporterPerso.settings.outputPath					=	biblio.prefs.proxies.dossier						
+			CoronaProxyExporterPerso.settings.exportToSingleName	 = nom
 			
 			--- conversion ---
 			CoronaProxyExporterPerso.runExport	 silent:false 
 			_proxy = selection[1]
 			_proxy.name = _element.nom
 			
-			_element.proxy = dossierProxy + "\\" + nom   + ".max"
+			_element.proxy = biblio.prefs.proxies.dossier + "\\" + nom   + ".max"
 			
 			saveNodes  #(_proxy)  _element.proxy quiet:true
 			

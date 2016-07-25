@@ -18,17 +18,234 @@
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------	Le rollout de réglages des aperçus -----------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
-rollout m_rollApercus "Parametres aperçus" width:500 height:500
+rollout m_rollApercus "Parametres aperçus" width:804 height:289
 (
+	
 	--- declarations locales -----
 	local biblio
+	local	type = #apercu
 	
 	---- ui  ----
+	checkbutton 'ckb_apercus' "Aperçu" pos:[18,17] width:55 height:55 align:#left
+	checkbutton 'ckb_detail' "Detail" pos:[83,16] width:55 height:55 align:#left
+	button 'btn_rendre' "Rendre" pos:[302,17] width:206 height:55 toolTip:"" align:#left
+	button 'btn_ouvrir' "Ouvrir" pos:[152,45] width:138 height:25 align:#left
+	button 'btn_defaut' "Defaut" pos:[152,16] width:138 height:25 align:#left
+	
+	bitmap 'bmp_ap' "Bitmap" pos:[531,17] width:255 height:255 align:#left
+	
+	spinner 'spn_angleVue' "" pos:[141,98] width:100 height:16 range:[0,1000,0] align:#left
+	label 'lbl_angleVue' "Angle de vue:" pos:[26,98] width:113 height:18 align:#left
+	spinner 'spn_posX' "" pos:[141,128] width:100 height:16 range:[-100000,100000,0] align:#left
+	label 'lbl_posX' "X:" pos:[111,128] width:25 height:18 align:#left
+	label 'lbl_pos' "Translation : " pos:[26,128] width:79 height:18 align:#left
+	spinner 'spn_posY' "" pos:[141,149] width:100 height:16 range:[-100000,100000,0] align:#left
+	label 'lbl_posY' "Y:" pos:[111,149] width:25 height:18 align:#left
+	spinner 'spn_posZ' "" pos:[141,170] width:100 height:16 range:[-100000,100000,0] align:#left
+	label 'lbl_posZ' "Z:" pos:[111,170] width:25 height:18 align:#left
+	spinner 'spn_rotX' "" pos:[141,203] width:100 height:16 range:[-100000,100000,0] align:#left
+	label 'lbl_rotX' "X:" pos:[111,203] width:25 height:18 align:#left
+	label 'lbl7' "Rotation:" pos:[26,203] width:79 height:18 align:#left
+	spinner 'spn_rotY' "" pos:[141,224] width:100 height:16 range:[-100000,100000,0] align:#left
+	label 'lbl_rotY' "Y:" pos:[111,224] width:25 height:18 align:#left
+	spinner 'spn_rotZ' "" pos:[141,245] width:100 height:16 range:[-100000,100000,0] align:#left
+	label 'lbl_rotZ' "Z:" pos:[111,245] width:25 height:18 align:#left
+	GroupBox 'grp_cam' "Camera" pos:[18,79] width:248 height:193 align:#left
+	spinner 'spn_expo' "" pos:[404,100] width:100 height:16 range:[-1000,1000,0] align:#left
+	label 'lbl10_expo' "Exposition:" pos:[289,100] width:113 height:18 align:#left
+	spinner 'spn_highLight' "" pos:[404,122] width:100 height:16 range:[-100000,100000,0] align:#left
+	label 'lbl_HLComp' "Hightlight comp.:" pos:[289,120] width:104 height:18 align:#left
+	spinner 'spn_whiteBalance' "" pos:[404,142] width:100 height:16 range:[-100000,100000,0] align:#left
+	label 'lbl13' "White balance:" pos:[289,143] width:100 height:18 align:#left
+	spinner 'spn_contraste' "" pos:[404,164] width:100 height:16 range:[-100000,100000,0] align:#left
+	label 'lbl_contrast' "Contrast:" pos:[289,163] width:107 height:18 align:#left
+	GroupBox 'grp_postEffect' "Post traitement" pos:[270,79] width:248 height:111 align:#left
+	spinner 'spn_noiseLevel' "" pos:[404,219] width:100 height:16 range:[-1000,1000,0] align:#left
+	label 'lbl_noiseLevel' "Noise level limit:" pos:[289,220] width:113 height:18 align:#left
+	spinner 'spn_denoiseAmount' "" pos:[404,242] width:100 height:16 range:[-100000,100000,0] align:#left
+	label 'lbl_denoiseAmount' "Denoise amount" pos:[289,240] width:104 height:18 align:#left
+	GroupBox 'grp_denoise' "Denoise" pos:[270,199] width:248 height:73 align:#left
 
 	-- methodes -----
+	fn initialiser = (
+		
+		local prefs = biblio.prefs.apercus
+		
+		case type of (
+			#apercu:	(
+				spn_angleVue.value 	= prefs.angleVue
+				spn_noiseLevel.value 	= prefs.noiseLevel
+				spn_denoiseAmount.value 	= prefs.denoiseAmount
+				
+				spn_posX.value 		= prefs.transX
+				spn_posY.value 			= prefs.transY
+				spn_posZ.value 		= prefs.transZ
+				spn_rotX.value 			= prefs.rotX
+				spn_rotY.value 			= prefs.rotY
+				spn_rotZ.value 			= prefs.rotZ				
+				
+			)
+			#detail:		(
+				spn_angleVue.value	= prefs.angleVueDetail
+				spn_noiseLevel.value 	= prefs.noiseLevelDetail
+				spn_denoiseAmount.value 	= prefs.denoiseAmountDetail
+				
+				spn_posX.value 		= prefs.transXDetail
+				spn_posY.value 			= prefs.transYDetail
+				spn_posZ.value 		= prefs.transZDetail
+				spn_rotX.value 			= prefs.rotXDetail
+				spn_rotY.value 			= prefs.rotYDetail
+				spn_rotZ.value 			= prefs.rotZDetail
+				
+			)
+		)
+		
+		spn_expo.value 					= prefs.exposition
+		spn_highLight.value 			= prefs.highlightCompress
+		spn_whiteBalance.value		= prefs.temperatureRendu
+		spn_contraste.value 			= prefs.contraste
+		
+		ckb_apercus.checked 	= type == #apercu
+		ckb_detail.checked 		= type !=  #apercu
+		
+	)
 	
-	--- evenements -----
-
+	
+	--- evenements -----	
+	on spn_angleVue changed val do
+	(
+		case type of (
+			#apercu:	biblio.prefs.apercus.angleVue			= val
+			#detail:		biblio.prefs.apercus.angleVueDetail	= val		
+		)		
+		biblio.prefs.apercus.enregistrer()
+	)
+	on spn_posX changed val do
+	(
+		case type of (
+			#apercu:	biblio.prefs.apercus.transX			= val
+			#detail:		biblio.prefs.apercus.transXDetail	= val
+		)		
+		biblio.prefs.apercus.enregistrer()
+		)
+	on spn_posY changed val do
+	(
+		case type of (
+			#apercu:	biblio.prefs.apercus.transY			= val
+			#detail:		biblio.prefs.apercus.transYDetail	= val
+		)		
+		biblio.prefs.apercus.enregistrer()
+		
+		)
+	on spn_posZ changed val do
+	(
+		case type of (
+			#apercu:	biblio.prefs.apercus.transZ			= val
+			#detail:		biblio.prefs.apercus.transZDetail	= val		
+		)		
+		biblio.prefs.apercus.enregistrer()
+	)
+	on spn_rotX changed val do
+	(
+		case type of (
+			#apercu:	biblio.prefs.apercus.rotX			= val
+			#detail:		biblio.prefs.apercus.rotXDetail	= val			
+		)		
+		biblio.prefs.apercus.enregistrer()
+	)
+	on spn_rotY changed val do
+	(		
+		case type of (
+			#apercu:	biblio.prefs.apercus.rotY			= val
+			#detail:		biblio.prefs.apercus.rotYDetail	=val
+		)		
+		biblio.prefs.apercus.enregistrer()
+	)
+	on spn_rotZ changed val do
+	(
+		
+		case type of (
+			#apercu:	biblio.prefs.apercus.rotZ			= val
+			#detail:		biblio.prefs.apercus.rotZDetail	= val
+		)		
+		biblio.prefs.apercus.enregistrer()
+	)
+	
+	
+	on spn_expo changed val do
+	(
+		biblio.prefs.apercus.exposition	= val
+		biblio.prefs.apercus.enregistrer()
+	)
+	on spn_highLight changed val do
+	(
+		biblio.prefs.apercus.highlightCompress	= val
+		biblio.prefs.apercus.enregistrer()
+	)
+	on spn_whiteBalance changed val do
+	(
+		biblio.prefs.apercus.temperatureRendu	= val
+		biblio.prefs.apercus.enregistrer()
+	)
+	on spn_contraste changed val do
+	(
+		biblio.prefs.apercus.contraste	= val
+		biblio.prefs.apercus.enregistrer()
+	)
+		
+	on spn_noiseLevel changed val do
+	(		
+		case type of (
+			#apercu:	biblio.prefs.apercus.noiseLevel			= val
+			#detail:		biblio.prefs.apercus.noiseLevelDetail	= val
+		)		
+		biblio.prefs.apercus.enregistrer()
+	)
+	on spn_denoiseAmount changed val do
+	(
+		case type of (
+			#apercu:	biblio.prefs.apercus.denoiseAmount				= val
+			#detail:		biblio.prefs.apercus.denoiseAmountDetail	= val
+		)		
+		biblio.prefs.apercus.enregistrer()
+	)
+	
+	
+	
+	
+	
+	
+	on btn_rendre 	pressed do	(
+		case type of (
+			#apercu:	biblio.creerApercu 	()
+			#detail:		biblio.creerDetail	()
+		)		
+	)
+	
+	on ckb_apercus changed state do
+	(
+		ckb_detail.checked = not state
+		type= #apercu
+		initialiser()
+		)
+	on ckb_detail changed state do
+	(
+		ckb_apercus.checked = not state
+		type= #detail
+		initialiser()
+		
+		)
+		
+	on btn_defaut pressed do (
+		biblio.prefs.resetApercus()
+		initialiser()
+	)
+		
+		
+	on btn_ouvrir pressed do
+	(
+		
+		)
 )
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -119,7 +336,7 @@ rollout m_rollInfos "Infos" width:280 height:597
 	
 	on m_rollInfos moved pos do (
 		biblio.prefs.fenInfos.pos = pos
-		biblio.prefs.enregistrer()
+-- 		biblio.prefs.enregistrer()
 	)
 	
 	
@@ -166,6 +383,7 @@ rollout m_rollInfos "Infos" width:280 height:597
 		
 	on ui_btnCreerApercu pressed do
 		biblio.creerApercu ()
+	
 	on ui_editTags entered txt 	do
 	(
 			for elem in  biblio.m_rollPrincipal.elemSelect do 
@@ -391,6 +609,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	local ico_BtnImporter						= "$userScripts\\biblio\\ico\\importerDansScene.bmp"
 	local ico_BtnImporterProxy				= "$userScripts\\biblio\\ico\\importerDansSceneProxy.bmp"
 	local ico_BtnImporterCorona				= "$userScripts\\biblio\\ico\\importerDansSceneCorona.bmp"
+	local ico_infos									= "$userScripts\\biblio\\ico\\infos.bmp"
 	
 	
 	-- Element selectionné ---
@@ -414,6 +633,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	
 	local caseVide = " - - "
 	local m_ordreInverse = true  -- pour inverser les ordres de classement dans la liste vue ---
+	
+	
+	
 --------------------------------------
 ---------- L'INTERFACE ----------
 --------------------------------------	
@@ -448,9 +670,9 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 															images:#( ico_BtnImporterProxy , undefined, 2, 	1,1,2,2)
 	
 	---- Navigation  ----
-	dotNetControl 	ui_arborescence 			"TreeView" pos:UIpos_exploration width:200 height:150 	enabled:true																		---------- l'arborescence 
-	MultiListBox 		ui_lstBoxTags				"Mots clés:" 		pos:( UIpos_exploration + [0,150 + UItaille_ecart.x] ) width:200 height:( 50 )
-	edittext 			ui_editRecherche 		"" 		pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x ,  UIpos_exploration.y ] width:200 height:17		
+	dotNetControl 	ui_arborescence 			"TreeView" 		pos:UIpos_exploration width:200 height:150 	enabled:true																		---------- l'arborescence 
+	MultiListBox 	ui_lstBoxTags				"Mots clés:" 		pos:( UIpos_exploration + [0,150 + UItaille_ecart.x] ) width:200 height:( 50 )
+	edittext 			ui_editRecherche 			"" 					pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x ,  UIpos_exploration.y ] width:200 height:17		
 	
 	button				ui_btnToogleStyleVue	"Im" pos:(ui_editRecherche.pos + [ui_editRecherche.width + UItaille_ecart.x, 0 ]) width:UItaille_petitsBtns.x height:UItaille_petitsBtns.y \
 															tooltip:"Basculer affichage Images / Liste"
@@ -458,16 +680,21 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	dotNetControl 	ui_listeVue 					"system.windows.forms.listView" pos:[UIpos_exploration.x + ui_arborescence.width + UItaille_ecart.x , UIpos_exploration.y + ui_editRecherche.height + UItaille_ecart.y ] width:200 height:200 border:false											---------- le contenu du dossier 	
 	
 	label 				ui_LabelProgress			 "" pos:[16,118] width:200 height:16
-	progressBar 		ui_progressBar				"ProgressBar" pos:[25,351] width:175 height:19 color:(color 50 150 246) tooltip:"action: \ntempsRestant:\n"
+	progressBar 	ui_progressBar				"ProgressBar" pos:[25,351] width:175 height:19 color:(color 50 150 246) tooltip:"action: \ntempsRestant:\n"
 	
 	button				ui_progressCancel		"X"	pos:[16,118] width:UItaille_petitsBtns.x height:UItaille_petitsBtns.y
 
 	---- Edition des infos----	
-	checkbutton 		ui_btnAfficherInfo		"I" pos:[ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x ,   ui_editRecherche.pos.y  + ui_arborescence.height + UItaille_ecart.y ] \
-															width:UItaille_petitsBtns.x 		height:UItaille_petitsBtns.y \
-															toolTip:"Afficher/cacher les infos"			border:false
+	checkbutton 	ui_btnAfficherInfo		"Infos" 												pos:[ ui_listeVue.pos.x + ui_listeVue.width -  UItaille_btns.x ,  UIpos_barreEdition.y  ] \
+															width:UItaille_btns.x 						height:UItaille_btns.y 	\
+															toolTip:"Afficher/cacher les infos"	border:false 			 	/* 	\
+															images:#( ico_infos ,  "$userScripts\\biblio\\ico\\infos_alpha.jpg" , 1, 	1,1,1,1) */
 	
 	
+	---- Edition des apercus----	
+	checkbutton 	ui_btnAfficherCreaApercus	"Aperçus" 												pos:[ ui_listeVue.pos.x + ui_listeVue.width -  ( 2*UItaille_btns.x +  UItaille_ecart.x),  UIpos_barreEdition.y  ] \
+															width:UItaille_btns.x 						height:UItaille_btns.y 	\
+															toolTip:"Afficher/cacher les infos"	border:false 	
 	
 ----------------------------------------
 ---------- les Methodes  -------------
@@ -516,7 +743,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		ui_btnAfficherInfo.checked 	= b_afficheInfos
 		
-		ui_listeVue.width			= tailleRollOut.x  - ( ui_arborescence.width + 5* UItaille_ecart.x + UItaille_petitsBtns.x  ) 
+		ui_listeVue.width			= tailleRollOut.x  - ( ui_arborescence.width + 5* UItaille_ecart.x /* + UItaille_petitsBtns.x */  ) 
 		ui_listeVue.height			= hauteurExplorateur - ( ui_editRecherche.height + UItaille_ecart.y )
 		ui_btnAfficherInfo.pos 	= [ui_listeVue.pos.x + ui_listeVue.width + UItaille_ecart.x   ,  ui_listeVue.pos.y  + ui_listeVue.height - ( UItaille_petitsBtns.y ) ]     
 		
@@ -524,6 +751,8 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		ui_btnToogleStyleVue.pos =ui_editRecherche.pos + [ui_editRecherche.width + UItaille_ecart.x, 0 ]
 		
+		ui_btnAfficherInfo.pos  = [ ui_listeVue.pos.x + ui_listeVue.width -  UItaille_btns.x ,  UIpos_barreEdition.y  ] 
+		ui_btnAfficherCreaApercus.pos  = [ ui_btnAfficherInfo.pos.x  -  ( UItaille_btns.x + UItaille_ecart.x ) ,  UIpos_barreEdition.y ] 
 		
 		-- on limite la taille du rollout 
 		thisRollout = biblio.m_rollPrincipal
@@ -535,16 +764,6 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	)
 
 
-	fn fermer_interface = (
-		
-		--- vider ecouteur ---
-		EcouteurChangeSelection = undefined
-		gc light:true
-		
-		-- fermer les rollout secondaires ---
-		try (	DestroyDialog biblio.m_rollEditerTags ) catch ( format  ("rien à destroy\n") )
-		
-	)
 
 
 	fn chercherNoeud  _noeud _nomAChercher = (
@@ -1371,30 +1590,24 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	)
 	
 	
-	
-	
-	
-	
-	
-	
------ events rollout ------
-	on m_rollPrincipal open do (
-		initialiser_interface()
+	on ui_btnAfficherCreaApercus	  changed state  do (
+		
+		case state of (
+			true:		(
+				createDialog biblio.m_rollApercus 	lockHeight:false  	style:#(#style_toolwindow	)
+				biblio.m_rollApercus.biblio = biblio
+				biblio.m_rollApercus.initialiser ()
+			)
+			false:	DestroyDialog biblio.m_rollApercus	-- ) catch ()
+		)
+		
 	)
+	
+	
+	----- events rollout ------
+	on m_rollPrincipal open do initialiser_interface()
 
-	on m_rollPrincipal close do (
-		debug "Fermer Fenetre"
-		fermer_interface()
-		biblio.prefs.fenetre.isOpen = false
-		
-		updateToolbarButtons()
-		biblio.prefs.enregistrer()
-		
-		----on ferme les autres fenetres -----
-		try (	DestroyDialog biblio.m_rollInfos ) catch ()
-		try (	DestroyDialog biblio.m_rollPreferences ) catch ()
-		
-	)
+	on m_rollPrincipal close do biblio.fermerFenetre()
 	
 	
 	on m_rollPrincipal resized 	tailleRollOut	 do (
@@ -1416,7 +1629,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			
 		)
 		
-		biblio.prefs.enregistrer()
+-- 		biblio.prefs.enregistrer()
 		
 	)
 	
@@ -1424,7 +1637,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		
 		biblio.setPosRolloutPrincipal 	posRollOut
 		biblio.prefs.fenetre.pos 	= 	posRollOut
-		
+		/* 
 		-- si Edition est accroché on le deplace avec ---
 		if biblio.getEditionAccroche() do (
 			
@@ -1436,12 +1649,10 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			biblio.setPosRolloutEdition 					coinAccroche
 			
 		)
-		
-		biblio.prefs.enregistrer()
+		 */
+-- 		biblio.prefs.enregistrer()
 		
 	)
 	
 ) -- fin rollout
-
-
 
