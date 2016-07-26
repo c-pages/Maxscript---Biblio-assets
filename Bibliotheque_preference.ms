@@ -37,7 +37,7 @@ struct prefsApercus (
 	moteur							= Corona_1_4(),	
 	exposition 					= -5,
 	highlightCompress			= 1.4,
-	temperatureRendu 		= 5000,
+	temperatureRendu 		= 5300,
 	contraste 						= 3,
 	
 	nom 								= "apercu_",

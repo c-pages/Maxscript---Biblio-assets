@@ -27,6 +27,7 @@ struct Apercus (
 		
 		-- la CAMERA --
 		cameraApercu,
+		soleilCorona,
 		
 		sol,
 	
@@ -159,33 +160,13 @@ struct Apercus (
 				Capture_FOV = biblio.prefs.apercus.angleVue
 			else 
 				Capture_FOV = biblio.prefs.apercus.angleVueDetail
-			tmpTarget = 
+			
 			cameraApercu =  Targetcamera fov:Capture_FOV pos:[CameraPosX,CameraPosY,CameraPosZ] name:"Camera_apercu" orthoProjection:false target:(Targetobject transform:(matrix3 [1,0,0] [0,1,0] [0,0,1] [TargetX,TargetY, TargetZ] ) name:"TargetCapture") 
 			viewport.setCamera cameraApercu
-			ptCam = point name:"point camera" 	pos:centre_import
-			cameraApercu.parent  = ptCam
-			cameraApercu.type = #free
-			
-			if not detail then (
-				
-				in coordsys world rotate ptCam ( eulerAngles biblio.prefs.apercus.rotX 		 biblio.prefs.apercus.rotY  	biblio.prefs.apercus.rotZ )
-				ptCam.pos = centre_import
-				in coordsys local 	move cameraApercu  [  biblio.prefs.apercus.transX  ,  biblio.prefs.apercus.transY ,  biblio.prefs.apercus.transZ  ]
-				
-			) else (
-				
-				in coordsys world rotate ptCam ( eulerAngles biblio.prefs.apercus.rotXDetail 		 biblio.prefs.apercus.rotYDetail  	biblio.prefs.apercus.rotZDetail )
-				ptCam.pos = centre_import
-				in coordsys local 	move cameraApercu  [  biblio.prefs.apercus.transXDetail  ,  biblio.prefs.apercus.transYDetail ,  biblio.prefs.apercus.transZDetail  ]
-				
-			)
-			
-			
-			
+			cameraApercu.type = #free			
 			
 			-- on l'ajoute à la liste import pour le suppr à la fin --
 			append a_objetsImport cameraApercu
-			append a_objetsImport ptCam
 			
 			cameraApercu
 			
@@ -212,13 +193,36 @@ struct Apercus (
 		),		
 		fn preparerLumieres		 =	(
 			
-			posLum = longueurMax_import * 2
+			posLum = 500 --longueurMax_import * 2
 			
 			debug ("posLum = " + posLum as string )
 			
 			-- creation de la lumiere pour l'apercu --
-			soleilCorona = CoronaSun targeted:on name:"Soleil_apercu" pos:[centre_import.x + .5*posLum ,centre_import.y - 2*posLum, centre_import.z + 2*posLum] isSelected:off  target:(Targetobject transform:(matrix3 [1,0,0] [0,1,0] [0,0,1] [centre_import.x,centre_import.y, centre_import.z] ) name:"TargetLumiereCapture") 
+			soleilCorona = CoronaSun targeted:on name:"Soleil_apercu" pos:[centre_import.x + 5*posLum ,centre_import.y + 5*posLum, centre_import.z + 10*posLum] isSelected:off  target:(Targetobject transform:(matrix3 [1,0,0] [0,1,0] [0,0,1] [centre_import.x,centre_import.y, centre_import.z] ) name:"TargetLumiereCapture") 
+			soleilCorona.targeted = off
+			),
+		fn poserOrigine 	detail = (
 			
+			ptCam = point name:"point camera" 	pos:centre_import
+			cameraApercu.parent  = ptCam
+			soleilCorona.parent = ptCam
+			
+			if not detail then (
+				
+				in coordsys world rotate ptCam ( eulerAngles biblio.prefs.apercus.rotX 		 biblio.prefs.apercus.rotY  	biblio.prefs.apercus.rotZ )
+				ptCam.pos = centre_import
+				in coordsys local 	move cameraApercu  [  biblio.prefs.apercus.transX  ,  biblio.prefs.apercus.transY ,  biblio.prefs.apercus.transZ  ]
+				
+			) else (
+				
+				in coordsys world rotate ptCam ( eulerAngles biblio.prefs.apercus.rotXDetail 		 biblio.prefs.apercus.rotYDetail  	biblio.prefs.apercus.rotZDetail )
+				ptCam.pos = centre_import
+				in coordsys local 	move cameraApercu  [  biblio.prefs.apercus.transXDetail  ,  biblio.prefs.apercus.transYDetail ,  biblio.prefs.apercus.transZDetail  ]
+				
+			)
+			
+			-- on l'ajoute à la liste import pour le suppr à la fin --
+			append a_objetsImport ptCam
 		),
 		fn preparerRendu 		detail:  =(
 			
@@ -230,6 +234,9 @@ struct Apercus (
 			
 			-- la camera --
 			poserCamera 	detail:detail
+			
+			---- l'origine qui sert de parent à camera et lumiere ----
+			poserOrigine  detail
 			
 			-- le sol --
 			poserSol()

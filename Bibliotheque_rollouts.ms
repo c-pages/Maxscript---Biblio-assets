@@ -27,15 +27,15 @@ rollout m_rollApercus "Parametres aperçus" width:804 height:289
 	
 	---- ui  ----
 	checkbutton 'ckb_apercus' "Aperçu" pos:[18,17] width:55 height:55 align:#left
-	checkbutton 'ckb_detail' "Detail" pos:[83,16] width:55 height:55 align:#left
+	checkbutton 'ckb_detail' "Detail" pos:[76,17] width:55 height:55 align:#left
 	button 'btn_rendre' "Rendre" pos:[302,17] width:206 height:55 toolTip:"" align:#left
-	button 'btn_ouvrir' "Ouvrir" pos:[152,45] width:138 height:25 align:#left
-	button 'btn_defaut' "Defaut" pos:[152,16] width:138 height:25 align:#left
+	button 'btn_ouvrir' "Ouvrir" pos:[161,45] width:138 height:25 align:#left
+	button 'btn_defaut' "Defaut" pos:[161,17] width:138 height:25 align:#left
 	
 	bitmap 'bmp_ap' "Bitmap" pos:[531,17] width:255 height:255 align:#left
 	
-	spinner 'spn_angleVue' "" pos:[141,98] width:100 height:16 range:[0,1000,0] align:#left
-	label 'lbl_angleVue' "Angle de vue:" pos:[26,98] width:113 height:18 align:#left
+	spinner 'spn_angleVue' "" pos:[141,100] width:100 height:16 range:[0,1000,0] align:#left
+	label 'lbl_angleVue' "Angle de vue:" pos:[26,100] width:113 height:18 align:#left
 	spinner 'spn_posX' "" pos:[141,128] width:100 height:16 range:[-100000,100000,0] align:#left
 	label 'lbl_posX' "X:" pos:[111,128] width:25 height:18 align:#left
 	label 'lbl_pos' "Translation : " pos:[26,128] width:79 height:18 align:#left
@@ -43,13 +43,11 @@ rollout m_rollApercus "Parametres aperçus" width:804 height:289
 	label 'lbl_posY' "Y:" pos:[111,149] width:25 height:18 align:#left
 	spinner 'spn_posZ' "" pos:[141,170] width:100 height:16 range:[-100000,100000,0] align:#left
 	label 'lbl_posZ' "Z:" pos:[111,170] width:25 height:18 align:#left
-	spinner 'spn_rotX' "" pos:[141,203] width:100 height:16 range:[-100000,100000,0] align:#left
-	label 'lbl_rotX' "X:" pos:[111,203] width:25 height:18 align:#left
 	label 'lbl7' "Rotation:" pos:[26,203] width:79 height:18 align:#left
-	spinner 'spn_rotY' "" pos:[141,224] width:100 height:16 range:[-100000,100000,0] align:#left
-	label 'lbl_rotY' "Y:" pos:[111,224] width:25 height:18 align:#left
-	spinner 'spn_rotZ' "" pos:[141,245] width:100 height:16 range:[-100000,100000,0] align:#left
-	label 'lbl_rotZ' "Z:" pos:[111,245] width:25 height:18 align:#left
+	spinner 'spn_rotY' "" pos:[141,203] width:50 height:16 range:[-360,360,0] align:#left
+	label 'lbl_rotY' "Vertic." pos:[95,203] width:35 height:18 align:#left
+	spinner 'spn_rotZ' "" pos:[141,224] width:50 height:16 range:[-360,360,0] align:#left
+	label 'lbl_rotZ' "Horiz." pos:[95,224] width:35 height:18 align:#left
 	GroupBox 'grp_cam' "Camera" pos:[18,79] width:248 height:193 align:#left
 	spinner 'spn_expo' "" pos:[404,100] width:100 height:16 range:[-1000,1000,0] align:#left
 	label 'lbl10_expo' "Exposition:" pos:[289,100] width:113 height:18 align:#left
@@ -66,6 +64,12 @@ rollout m_rollApercus "Parametres aperçus" width:804 height:289
 	label 'lbl_denoiseAmount' "Denoise amount" pos:[289,240] width:104 height:18 align:#left
 	GroupBox 'grp_denoise' "Denoise" pos:[270,199] width:248 height:73 align:#left
 
+-- 	button 'btn_rotY_m45' "-45°" pos:[194,201] width:30 height:20 align:#left		
+-- 	button 'btn_rotY_p45' "+45°" pos:[226,201] width:30 height:20 align:#left
+	button 'btn_rotZ_m45' "-45°" pos:[194,224] width:30 height:20 align:#left
+	button 'btn_rotZ_p45' "+45°" pos:[226,224] width:30 height:20 align:#left
+	
+	
 	-- methodes -----
 	fn initialiser = (
 		
@@ -80,7 +84,7 @@ rollout m_rollApercus "Parametres aperçus" width:804 height:289
 				spn_posX.value 		= prefs.transX
 				spn_posY.value 			= prefs.transY
 				spn_posZ.value 		= prefs.transZ
-				spn_rotX.value 			= prefs.rotX
+-- 				spn_rotX.value 			= prefs.rotX
 				spn_rotY.value 			= prefs.rotY
 				spn_rotZ.value 			= prefs.rotZ				
 				
@@ -93,7 +97,7 @@ rollout m_rollApercus "Parametres aperçus" width:804 height:289
 				spn_posX.value 		= prefs.transXDetail
 				spn_posY.value 			= prefs.transYDetail
 				spn_posZ.value 		= prefs.transZDetail
-				spn_rotX.value 			= prefs.rotXDetail
+-- 				spn_rotX.value 			= prefs.rotXDetail
 				spn_rotY.value 			= prefs.rotYDetail
 				spn_rotZ.value 			= prefs.rotZDetail
 				
@@ -110,8 +114,64 @@ rollout m_rollApercus "Parametres aperçus" width:804 height:289
 		
 	)
 	
+	fn setRotY val = 
+	(		
+		case type of (
+			#apercu:	biblio.prefs.apercus.rotY			= val
+			#detail:		biblio.prefs.apercus.rotYDetail	= val
+		)		
+		biblio.prefs.apercus.enregistrer()
+	)
+	fn setRotZ val = 
+	(		
+		case type of (
+			#apercu:	biblio.prefs.apercus.rotZ			= val
+			#detail:		biblio.prefs.apercus.rotZDetail	= val
+		)		
+		biblio.prefs.apercus.enregistrer()
+	)
 	
 	--- evenements -----	
+	
+	
+		
+	
+	
+	
+	
+	
+	
+	
+		
+	on ckb_apercus changed state do
+	(
+		ckb_detail.checked = not state
+		type= #apercu
+		initialiser()
+		)
+	on ckb_detail changed state do
+	(
+		ckb_apercus.checked = not state
+		type= #detail
+		initialiser()
+		
+		)
+	on btn_rendre pressed do
+	(
+			case type of (
+				#apercu:	biblio.creerApercu 	()
+				#detail:		biblio.creerDetail	()
+			)		
+		)
+	on btn_ouvrir pressed do
+	(
+		
+		)
+	on btn_defaut pressed do
+	(
+			biblio.prefs.resetApercus()
+			initialiser()
+		)
 	on spn_angleVue changed val do
 	(
 		case type of (
@@ -145,31 +205,12 @@ rollout m_rollApercus "Parametres aperçus" width:804 height:289
 		)		
 		biblio.prefs.apercus.enregistrer()
 	)
-	on spn_rotX changed val do
-	(
-		case type of (
-			#apercu:	biblio.prefs.apercus.rotX			= val
-			#detail:		biblio.prefs.apercus.rotXDetail	= val			
-		)		
-		biblio.prefs.apercus.enregistrer()
-	)
-	on spn_rotY changed val do
-	(		
-		case type of (
-			#apercu:	biblio.prefs.apercus.rotY			= val
-			#detail:		biblio.prefs.apercus.rotYDetail	=val
-		)		
-		biblio.prefs.apercus.enregistrer()
-	)
-	on spn_rotZ changed val do
-	(
-		
-		case type of (
-			#apercu:	biblio.prefs.apercus.rotZ			= val
-			#detail:		biblio.prefs.apercus.rotZDetail	= val
-		)		
-		biblio.prefs.apercus.enregistrer()
-	)
+	
+	
+	
+	on spn_rotY changed val do setRotY val
+	on spn_rotZ changed val do setRotZ val
+	
 	
 	
 	on spn_expo changed val do
@@ -192,7 +233,6 @@ rollout m_rollApercus "Parametres aperçus" width:804 height:289
 		biblio.prefs.apercus.contraste	= val
 		biblio.prefs.apercus.enregistrer()
 	)
-		
 	on spn_noiseLevel changed val do
 	(		
 		case type of (
@@ -209,43 +249,22 @@ rollout m_rollApercus "Parametres aperçus" width:804 height:289
 		)		
 		biblio.prefs.apercus.enregistrer()
 	)
-	
-	
-	
-	
-	
-	
-	on btn_rendre 	pressed do	(
-		case type of (
-			#apercu:	biblio.creerApercu 	()
-			#detail:		biblio.creerDetail	()
-		)		
+	on btn_rotY_m45 	pressed  do	(
+		spn_rotY.value -= 45
+		setRotY 	spn_rotY.value 
 	)
-	
-	on ckb_apercus changed state do
-	(
-		ckb_detail.checked = not state
-		type= #apercu
-		initialiser()
-		)
-	on ckb_detail changed state do
-	(
-		ckb_apercus.checked = not state
-		type= #detail
-		initialiser()
-		
-		)
-		
-	on btn_defaut pressed do (
-		biblio.prefs.resetApercus()
-		initialiser()
+	on btn_rotY_p45 	pressed  do	(
+		spn_rotY.value += 45
+		setRotY 	spn_rotY.value 
 	)
-		
-		
-	on btn_ouvrir pressed do
-	(
-		
-		)
+	on btn_rotZ_m45 	pressed  do	(
+		spn_rotZ.value -= 45
+		setRotZ 	spn_rotZ.value 
+	)
+	on btn_rotZ_p45 	pressed  do	(
+		spn_rotZ.value += 45
+		setRotZ 	spn_rotZ.value 
+	)
 )
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
