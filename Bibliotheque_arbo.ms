@@ -179,53 +179,6 @@ struct Arborescence (
 			format "----- Arborescence --------------\n\n"
 		),
 	
-		---- Creation des nouveaux élements ----
-		fn creerNoeud  nom: 	parent: 	nomUnique:		= ( 
-			
-			_nouveauNoeud = Noeud()
-			indexUnique += 1
-			_nouveauNoeud.nomUnique += indexUnique as string
-			if nom != unsupplied 			do  	_nouveauNoeud.nom 			= nom
-			if parent != unsupplied and  parent != undefined 		
-													do  parent.ajouterEnfant 	 _nouveauNoeud
-			if nomUnique != unsupplied 	do _nouveauNoeud.nomUnique	= nomUnique
-			
-			
-			return _nouveauNoeud
-		),
-		fn creerElement nom:  parent:  type:		fichier:	apercu:  	nomUnique:		= ( 
-			_nouvelElement = Element()
-			
-			indexUnique += 1
-			_nouvelElement.nomUnique += indexUnique as string
-			if nom != unsupplied 			do  	_nouvelElement.nom 			= nom
-			if parent != unsupplied  and  parent != undefined	
-													do parent.ajouterEnfant 			_nouvelElement
-			if type != unsupplied 			do  	_nouvelElement.type 			= type
-			if fichier != unsupplied 		do  	_nouvelElement.fichier			= fichier
-			if apercu != unsupplied 		do  	_nouvelElement.apercu		= apercu
-			if nomUnique != unsupplied 	then _nouvelElement.nomUnique		= nomUnique
-			
-			return _nouvelElement
-		),
-		
-		
-		
-		
-		fn vider = (
-			root 					= Noeud()
-			root.nom 			= "ROOT"
-			root.nomUnique 	= "ROOT"
-			
-			noeudRecherche					= Noeud()
-			noeudRecherche.nom 			= "RECHERCHE"
-			noeudRecherche.nomUnique 	= "RECHERCHE"
-			
-			nbrElements 		= 0
-			nbrNoeuds 			= 0
-			indexUnique 		= 0
-		),
-		
 		---- Ecriture du fichier INI ----
 		fn ecrireNoeud  _noeud 	= (
 			-- param communs --
@@ -248,19 +201,19 @@ struct Arborescence (
 				element: (
 					setINISetting   fichierArbo	_noeud.nomUnique   "composite"  #feuille
 					
-					setINISetting   fichierArbo	_noeud.nomUnique   "type"  		_noeud.type
-					setINISetting   fichierArbo	_noeud.nomUnique   "fichier"  	_noeud.fichier
-					setINISetting   fichierArbo	_noeud.nomUnique   "apercu"  	_noeud.apercu
-					setINISetting   fichierArbo	_noeud.nomUnique   "detail"  	_noeud.detail
-					setINISetting   fichierArbo	_noeud.nomUnique   "notes"  	_noeud.notes
-					setINISetting   fichierArbo	_noeud.nomUnique   "tags"  	_noeud.tags
-					setINISetting   fichierArbo	_noeud.nomUnique   "proxy"  	_noeud.proxy
+					setINISetting   fichierArbo	_noeud.nomUnique   "type"  		( _noeud.type		as string	)
+					setINISetting   fichierArbo	_noeud.nomUnique   "fichier"  	( _noeud.fichier		as string	)
+					setINISetting   fichierArbo	_noeud.nomUnique   "apercu"  	( _noeud.apercu	as string	)
+					setINISetting   fichierArbo	_noeud.nomUnique   "detail"  	( _noeud.detail		as string	)
+					setINISetting   fichierArbo	_noeud.nomUnique   "notes"  		( _noeud.notes		as string	)
+					setINISetting   fichierArbo	_noeud.nomUnique   "tags"  		( _noeud.tags		as string	)
+					setINISetting   fichierArbo	_noeud.nomUnique   "proxy"  	( _noeud.proxy		as string	)
 					
 					
-					setINISetting   fichierArbo	_noeud.nomUnique   "dateCreation"  		( _noeud.dateCreation as string )
-					setINISetting   fichierArbo	_noeud.nomUnique   "dateDernierImport"  ( _noeud.dateDernierImport as string )
+					setINISetting   fichierArbo	_noeud.nomUnique   "dateCreation"  			( _noeud.dateCreation as string )
+					setINISetting   fichierArbo	_noeud.nomUnique   "dateDernierImport"  	( _noeud.dateDernierImport as string )
 					setINISetting   fichierArbo	_noeud.nomUnique   "nbrImports"  			( _noeud.nbrImports as string )
-					setINISetting   fichierArbo	_noeud.nomUnique   "nbrVertex"  			( _noeud.nbrVertex as string )
+					setINISetting   fichierArbo	_noeud.nomUnique   "nbrVertex"  				( _noeud.nbrVertex as string )
 					
 				)
 			)
@@ -268,6 +221,60 @@ struct Arborescence (
 		),
 		fn ecrireFichier = (
 			ecrireNoeud Root
+		),
+		
+		---- Creation des nouveaux élements ----
+		fn creerNoeud  nom: 	parent: 	nomUnique:		= ( 
+			
+			_nouveauNoeud = Noeud()
+			indexUnique += 1
+			_nouveauNoeud.nomUnique += indexUnique as string
+			if nom != unsupplied 			do  	_nouveauNoeud.nom 			= nom
+			if parent != unsupplied and  parent != undefined 		
+														do  parent.ajouterEnfant 	 _nouveauNoeud
+			if nomUnique != unsupplied 	do _nouveauNoeud.nomUnique	= nomUnique
+			
+			ecrireFichier ()
+			
+			return _nouveauNoeud
+		),
+		fn creerElement nom:  parent:  type:		fichier:	apercu:  	nomUnique:		= ( 
+			_nouvelElement = Element()
+			
+			indexUnique += 1
+			_nouvelElement.nomUnique += indexUnique as string
+			if nom != unsupplied 			do  	_nouvelElement.nom 			= nom
+			if parent != unsupplied  and  parent != undefined	
+													do parent.ajouterEnfant 			_nouvelElement
+			if type != unsupplied 			do  	_nouvelElement.type 			= type
+			if fichier != unsupplied 		do  	_nouvelElement.fichier			= fichier
+			if apercu != unsupplied 		do  	_nouvelElement.apercu		= apercu
+			if nomUnique != unsupplied 	then _nouvelElement.nomUnique		= nomUnique
+			
+			ecrireFichier ()
+			
+			return _nouvelElement
+		),
+		
+		fn supprimer _noeuds = (
+			for noeud in _noeuds do 
+				noeud.retirer()
+			ecrireFichier ()
+		),
+		
+		
+		fn vider = (
+			root 					= Noeud()
+			root.nom 			= "ROOT"
+			root.nomUnique 	= "ROOT"
+			
+			noeudRecherche					= Noeud()
+			noeudRecherche.nom 			= "RECHERCHE"
+			noeudRecherche.nomUnique 	= "RECHERCHE"
+			
+			nbrElements 		= 0
+			nbrNoeuds 			= 0
+			indexUnique 		= 0
 		),
 		
 		
@@ -464,6 +471,7 @@ struct Arborescence (
 		fn nettoyer  = (
 			
 			debug "nettoyer arborescence (images et proxy inutilisés)"
+			
 			listeFichiers = getFiles ( biblio.apercu.dossierApercus + "\\*.jpg" )
 			debug ("listeFichiers : " + listeFichiers.count as string ) 
 			listeElements = getElements()

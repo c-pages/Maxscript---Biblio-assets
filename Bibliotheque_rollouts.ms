@@ -420,33 +420,41 @@ rollout m_rollInfos "Infos" width:280 height:597
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------	Le rollout des preferences  ---------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
-rollout m_rollPreferences "Préférences de la bibliothèque" width:716 height:136
+rollout m_rollPreferences "Préférences de la bibliothèque" width:716 height:226
 (
 	
 	local biblio
 	local cheminApercusBack
 	local cheminProxiesBack
 	
-	GroupBox 'grp_dossiers' "Dossiers" pos:[14,12] width:697 height:95 align:#left
+	GroupBox 'grp_dossiers' "Dossiers" pos:[14,12] width:697 height:88 align:#left
 	
 	edittext 'edt_apercus' "" pos:[112,32] width:560 height:17 align:#left
 	button 'btn_apercus' "..." pos:[684,32] width:17 height:17 align:#left
-	label 'lbl_apercus' "Aperçus:" pos:[23,32] width:90 height:16 align:#left	
+	label 'lbl_apercus' "Aperçus :" pos:[23,32] width:90 height:16 align:#left	
 	
 	
-	edittext 'edt_proxy' "" pos:[113,54] width:560 height:17 align:#left
+	
+	edittext 'edt_proxy' "" pos:[112,54] width:560 height:17 align:#left
 	button 'btn_proxy' "..." pos:[684,53] width:17 height:17 align:#left
-	label 'lbl_proxy' "Proxies:" pos:[23,54] width:90 height:16 align:#left
+	label 'lbl_proxy' "Proxies :" pos:[22,54] width:90 height:16 align:#left
 	
-	button 'btn_appliquer' "Appliquer" pos:[14,112] width:99 height:18 align:#left
-	button 'btn_annuler' "Annuler" pos:[604,111] width:99 height:18 align:#left
+	button 'btn_appliquer' "Appliquer" pos:[14,202] width:99 height:18 align:#left
+	button 'btn_annuler' "Annuler" pos:[604,201] width:99 height:18 align:#left
 	
 		
 	
 	
 	edittext 'edt_assets' "" pos:[112,75] width:560 height:17 align:#left
 	button 'btn_assets' "..." pos:[684,75] width:17 height:17 align:#left
-	label 'lbl_assets' "Assets" pos:[23,76] width:90 height:16 align:#left
+	label 'lbl_assets' "Assets :" pos:[23,76] width:90 height:16 align:#left
+	
+	
+	
+	
+	GroupBox 'grp_apercus' "Aperçus" pos:[15,108] width:697 height:89 align:#left
+	checkbox 'chk_VFB' "" pos:[112,132] width:15 height:18 align:#left
+	label 'lbl_VFB' "Afficher VFB :" pos:[23,132] width:90 height:16 align:#left
 	
 	
 	
@@ -460,6 +468,10 @@ rollout m_rollPreferences "Préférences de la bibliothèque" width:716 height:1
 			edt_apercus.text 		= biblio.prefs.apercus.dossier
 			edt_proxy.text 			= biblio.prefs.proxies.dossier
 			edt_assets.text 			= biblio.prefs.assets.dossier
+			
+			
+			chk_VFB.checked		= biblio.prefs.apercus.afficherVFB
+			
 		)
 	on edt_apercus entered txt do
 	(
@@ -477,7 +489,6 @@ rollout m_rollPreferences "Préférences de la bibliothèque" width:716 height:1
 		)
 	on edt_proxy entered txt do
 		if not doesFileExist txt do	edt_proxy.text	= cheminProxiesBack
-	
 	on btn_proxy pressed do
 	(
 		nouveauChemin = getSavePath	"Dossier pour les proxies"	 initialDir:edt_proxy.text
@@ -487,9 +498,12 @@ rollout m_rollPreferences "Préférences de la bibliothèque" width:716 height:1
 	)
 	on btn_appliquer pressed do
 	(
-			biblio.prefs.apercus.dossier	 	= m_rollPreferences.edt_apercus.text
-			biblio.prefs.proxies.dossier 		= m_rollPreferences.edt_proxy.text
-			biblio.prefs.assets.dossier 		= m_rollPreferences.edt_assets.text
+			biblio.prefs.apercus.dossier	 		= edt_apercus.text
+			biblio.prefs.proxies.dossier 			= edt_proxy.text
+			biblio.prefs.assets.dossier 			= edt_assets.text
+		
+			biblio.prefs.apercus.afficherVFB 	= chk_VFB.checked		
+		
 			biblio.prefs.enregistrer()
 		
 			try (	DestroyDialog biblio.m_rollPreferences ) catch ()
@@ -512,6 +526,10 @@ rollout m_rollPreferences "Préférences de la bibliothèque" width:716 height:1
 				edt_aassets.text 	=	nouveauChemin
 		
 		)
+	on chk_VFB changed state do
+(
+	
+	)
 )
 
 
@@ -854,52 +872,53 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 			result = caseVide
 		result
 	)
-
+	
 	-- afficher les elements --
 	fn AfficherElements 	_noeud = (
 		if _noeud != undefined do (
 			
-			debug ("AfficherElements : " + _noeud.nom )
 			noeudSelect = _noeud
 			
 			ui_listeVue.items.Clear()
 			tailleImage = biblio.prefs.apercus.taille
+			
 			apercusImages = dotNetObject "System.Windows.Forms.ImageList"
 			apercusImages.imageSize = dotNetObject "System.Drawing.Size" 	biblio.prefs.fenetre.tailleApercus.x 	biblio.prefs.fenetre.tailleApercus.y
 			apercusImages.ColorDepth = apercusImages.ColorDepth.Depth24Bit
 			
-			
-			
-			listeElementAAfficher =#()
-			elemIDVueSelect=#()
-			elemNodesVueSelect=#()
-			i = 0
+			listeElementAAfficher 	=#()
+			elemIDVueSelect			=#()
+			elemNodesVueSelect		=#()
+			i = 0			
 			for enfant in _noeud.enfants where classOf enfant == Element do (
+				
 				li=dotNetObject "System.Windows.Forms.ListViewItem" enfant.nomUnique
 				li.imageIndex = i
 				li.text = enfant.nom	--extrairenomDeAdresse (substitutestring ListeFichierMax[i] ".max"  "" )
 				li.name = enfant.nomUnique
 				
+				---- pour la vue liste ----
 				li.subItems.add 	( enfant.nbrVertex  as string )
 				li.subItems.add 	( dateToString 	enfant.dateDernierImport   )
-				li.subItems.add 	( if ( enfant.nbrImports  >0) then  enfant.nbrImports as string else caseVide )
-				li.subItems.add 	( if ( doesfileExist enfant.proxy ) then "true" else caseVide  )
-				li.subItems.add 	( if ( doesfileExist enfant.detail )  then "true" else caseVide  )
+				li.subItems.add 	( if ( enfant.nbrImports  > 0 ) 		then  enfant.nbrImports as string else caseVide )
+				li.subItems.add 	( if ( doesfileExist enfant.proxy ) 	then "true" else caseVide  )
+				li.subItems.add 	( if ( doesfileExist enfant.detail )  	then "true" else caseVide  )
 				li.subItems.add 	( dateToString 	enfant.dateCreation   )
 				
 				append listeElementAAfficher li	
 				
-				img = dotNetClass "System.Drawing.Image" --create an image
-				if doesfileexist enfant.apercu then (
-	-- 				debug "	APPERCU" 
-					apercusImages.images.add ( img.fromFile enfant.apercu )
-				) else (
-					apercusImages.images.add ( img.fromFile apercuVide )
-				)
+				---- pour la vue image ----
+				img = dotNetClass "System.Drawing.Image"
+				if doesfileexist enfant.apercu 	then apercusImages.images.add ( img.fromFile enfant.apercu )
+															else 	apercusImages.images.add ( img.fromFile apercuVide )
+				
 				i += 1
+				
 			)
+			
 			ui_listeVue.LargeImageList = apercusImages
-			ui_listeVue.items.addRange listeElementAAfficher	
+			ui_listeVue.items.addRange	listeElementAAfficher
+			
 		)
 		
 		selectElems elemSelect
@@ -1191,7 +1210,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 											filename:( biblio.prefs.apercus.dossierImport + "\\")
 			
 			if 	fichierAImporter != undefined  do 
-				biblio.ajouter.fichier  fichierAImporter
+				biblio.ajouter.fichier  	fichierAImporter
 		)
 	)
 	
@@ -1348,35 +1367,36 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 		)
 		debug ("	selectionElems_NomsUniques : " + selectionElems_NomsUniques as string )
 		--- maj interface ---
-		remplirTreeView 	biblio.arbo.root
+		remplirTreeView 		biblio.arbo.root
 		
 		AfficherElements 	noeudSelect
 		noeudSelecNomUnique = noeudSelect.nomUnique
 		
 		noeudSelect.enfants
-		 
+		
 		elemeAReselect = for nomUnique in selectionElems_NomsUniques collect biblio.arbo.getParNomUnique nomUnique
-			
+		
 		selectElems elemeAReselect
 		
 		
 		
 		noeudSelectmp = getTreeViewNodeByNomUnique  	noeudSelecNomUnique
 		debug ("	noeudSelectmp : " + noeudVueSelect.text as string )
+		
 		if noeudSelectmp != undefined do 
 			ui_arborescence.SelectedNode  = noeudSelectmp
 		
 		maj_UI ()
 		afficherInfos()
-			
+		
 		
 		b_dragDossier = false
 		noeudDrag 	=undefined
 	)
-
-		
-		
-		
+	
+	
+	
+	
 ----- vue de la liste des elements   ------------------
 	on ui_listeVue columnClick arg do
 		(
@@ -1403,32 +1423,30 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 	on ui_listeVue		 mouseUp arg do  (
 		
 		---- click droit ----
-		if not (arg.Button.value__ == 1048576) then ( 
+		if  (arg.Button.value__ == 2097152) then ( 
 			debug "  ui_listeVue  DROITE"
 			biblio.menu.creerMenuElements()
-		---- click gauche ----
-		) --else (
-			debug "   ui_listeVue     GAUCHE"
-			
-			
-			--- maj interface ---
-			elemSelect = #()
-			elemIDVueSelect = #()
-			elemNodesVueSelect = #()
-			for i = 0 to ui_listeVue.SelectedItems.count - 1 do (
-				elem = 	biblio.arbo.getParNomUnique 	 ui_listeVue.SelectedItems.item[i].name
-				if elem != undefined do (
-					append 	elemSelect 			elem
-					append 	elemNodesVueSelect		ui_listeVue.SelectedItems.item[i]
-					append 	elemIDVueSelect		ui_listeVue.SelectedItems.item[i].index
+		) --else ($
+		
+		
+		--- maj interface ---
+		elemSelect = #()
+		elemIDVueSelect = #()
+		elemNodesVueSelect = #()
+		for i = 0 to ui_listeVue.SelectedItems.count - 1 do (
+			elem = 	biblio.arbo.getParNomUnique 	 ui_listeVue.SelectedItems.item[i].name
+			if elem != undefined do (
+				append 	elemSelect 			elem
+				append 	elemNodesVueSelect		ui_listeVue.SelectedItems.item[i]
+				append 	elemIDVueSelect		ui_listeVue.SelectedItems.item[i].index
 -- 					debug (" <<< elem : " + elem as string  + " >>>")
-				)
 			)
-			
-			afficherInfos()
-			
-			maj_UI ()
-			
+		)
+		
+		afficherInfos()
+		
+		maj_UI ()
+		
 	)
 	
 	on ui_listeVue		 mouseDown arg do  (
@@ -1494,7 +1512,7 @@ rollout m_rollPrincipal "Bibliothèque" width:1272 height:575 (
 
 ---- Edition/Infos  elements ----
 	on ui_btnAfficherInfo changed state do	
-		biblio.afficherInfos () 
+		biblio.ouvrirInfos () 
 	
 	
 	on ui_editRecherche 	entered  txt 	do (

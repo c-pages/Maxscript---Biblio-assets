@@ -11,10 +11,30 @@
 	
 ##########################################################################################################################
 
+	todo:
+	-	renommage des assets selectionnés avec possibilité de numerotation auto
+	-	probleme de suppression d'elements qui se retire pas de la biblio ?!?!
+	-	attention menu Edit/suppression : pas claire, ça supprime le dossier, pas element. rendre plus claire
+	-	faire du ménage dans la mise a jour de la listView ( voir si on doit vraiment tout recharger à chaque fois ? )
+	-	listeVue : faire une vue détail ( image, détail, liste )
+	-	Bouton pour cacher/montrer le panneau de gauche (explorateur + mots clés + status barre)
+					-	faire apparaitre les dossiers dans la liseVue pour pouvoir entrer dedans
+					-	faire un bouton pour remonter dans l'arborescence
+	
+	
+	
+	
+	
+##########################################################################################################################
+
 	changelog:
-	*v0.0 - [2016/04/11] -----------------------------------------------------------------------------
+	*v0.0 - [2016/06] -----------------------------------------------------------------------------
 	- Mise en place globale
 
+	*v0.1 - [2016/07] -----------------------------------------------------------------------------
+	- reglages aperçus
+	- 
+	
 ######################################################################################################################## */ 
 
 
@@ -110,192 +130,6 @@ fn initBiblio = (
 		-- les methodes  publics ------------------------------------------------
 		public
 			
-			
-			
-			fn afficherInfos  = (
-					setInfosOuvert 			( not getInfosOuvert () )
-					m_rollPrincipal.ui_btnAfficherInfo.checked = getInfosOuvert ()	
-			-- 		repositionnerElementsUI		UItaille_fenetre
-					case ( getInfosOuvert () ) of (
-						true :	( 
-							createDialog m_rollInfos 	pos:prefs.fenInfos.pos 	lockHeight:false	\
-																	style:#(/*#style_resizing,*/#style_titlebar /*, #style_toolwindow, #style_sysmenu*//*, #style_minimizebox, #style_maximizebox , #style_sunkenedge , #style_sysmenu */)	
-							m_rollInfos.biblio = this
-							m_rollPrincipal.afficherInfos()
-						)
-						false :	try (	DestroyDialog m_rollInfos ) catch ( format  ("rien à destroy\n") )
-					)
-				),
-			fn afficherApercus = (
-	-- 				setInfosOuvert 			state
-			-- 		repositionnerElementsUI		UItaille_fenetre
-					case state of (
-						true :	( 
-							createDialog m_rollApercus 
-							m_rollApercus.biblio = this
-						)
-						false :	try (	DestroyDialog m_rollInfos ) catch ( format  ("rien à destroy\n") )
-					)
-				),
-			/* fn afficherNouvelAsset = (
-					createDialog m_rollNouvelAsset 
-					m_rollNouvelAsset.biblio = this
-				), */
-			
-		
-		
-		---- Suppression ----
-			fn  suprimerElems = (
-				if querybox "Etes-vous sûr de vouloir supprimer le ou les élément de la bibliothèque?" do (
-				
-					debug "supprimer" 
-					elemSelect = m_rollPrincipal.elemSelect
-					nbreASuprimer = elemSelect.count
-					if elemSelect.count>0 do (
-						for elem in elemSelect do 
-							elem.retirer()
-						
-						arbo.ecrireFichier()
-										--- maj interface ---
-						m_rollPrincipal.remplirTreeView 	arbo.root
-						m_rollPrincipal.majTotal ()
-						m_rollPrincipal.setProgress ( nbreASuprimer as string  + " élément(s) suprimé(s)") 0
-					)
-				)
-			),
-			fn  suprimerNoeud = (
-				if querybox "Etes-vous sûr de vouloir supprimer ce dossier et son contenu de la bibliothèque?" do (
-					debug "supprimer" 
-					noeudSelect = m_rollPrincipal.noeudSelect
-					if noeudSelect.nomUnique != "ROOT" do (
-						debug ("supprimer : noeudSelect : " + noeudSelect.nom )
-						noeudSelect.retirer()
-						arbo.ecrireFichier()
-						
-						--- maj interface ---
-						m_rollPrincipal.remplirTreeView 	arbo.root
-						m_rollPrincipal.majTotal ()
-					)
-					m_rollPrincipal.setProgress "Dossier suprimé" 0
-				)
-			),
-			
-		----  Nouveau Dossier ----
-			fn nouveauNoeud = (
-				
-				debug "nouveauDossier" 
-				noeudSelect = m_rollPrincipal.noeudSelect
-				if noeudSelect != undefined do (
-					arbo.creerNoeud  nom:"NouveauDossier" 	parent:noeudSelect 
-					
-					arbo.ecrireFichier()
-					--- maj interface ---				
-					m_rollPrincipal.remplirTreeView 	arbo.root
-					m_rollPrincipal.majTotal ()
-					m_rollPrincipal.setProgress "Nouveau dossier" 0
-				)
-				
-			),
-			
-		
-			
-			
-		--- apercus ----		
-			fn creerApercu = (
-				
--- 				---- debug ----
--- 				local  deb = true
-				
-				elemSelect = m_rollPrincipal.elemSelect
-				if elemSelect.count > 0 do 
-					if querybox "voulez vous créer l'aperçu ?" do (
-						m_rollPrincipal.setProgress "Rendu aperçu ..." 0	
-						m_rollPrincipal.cancelled = false
-						
-						holdMaxFile() 
-						
-						i = 1.
-						for elem in elemSelect do (
-							
-							if m_rollPrincipal.cancelled do continue
-							
-							pourcent = ( ( i - 1.) / elemSelect.count * 100. )
-							m_rollPrincipal.setProgress ("Rendu aperçu " + ( i as integer )  as string + "/" + elemSelect.count as string  ) 	pourcent
-							
-							if doesfileexist elem.fichier then( 
-								outils.viderScene()
-								resetMaxFile #noPrompt
-								elem.apercu = apercu.creer 	elem.fichier
-								arbo.ecrireFichier()
-								m_rollPrincipal.AfficherElements m_rollPrincipal.noeudSelect					
-								m_rollPrincipal.afficherInfos()
-							)	else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
-							i+=1
-						)
-						
-						
-						if m_rollPrincipal.cancelled then 
-							m_rollPrincipal.setProgress ("Rendu détail : " + ( i as integer )  as string + "/" + elemSelect.count as string  + " aperçus. *Annulé*") 100
-						else 
-							m_rollPrincipal.setProgress ("Rendu détail : " + ( i as integer )  as string + "/" + elemSelect.count as string  + " aperçus.") 100				
-						m_rollPrincipal.cancelled = false
-						
-						m_rollPrincipal.AfficherElements 	noeudSelect					
-						m_rollPrincipal.afficherInfos()
-
--- 						if not deb do 
-						fetchMaxFile quiet:true
-						
-					
-					)
-			),
-		
-			fn creerDetail  = (
-			
-				elemSelect = m_rollPrincipal.elemSelect
-				if elemSelect.count > 0 do 
-					if querybox "voulez vous créer l'aperçu Détail?" do (
-						m_rollPrincipal.setProgress "Rendu détail ..." 0	
-						m_rollPrincipal.cancelled = false
-						
-						holdMaxFile() 
-						i=1.
-						for elem in elemSelect do (
-							
-							if m_rollPrincipal.cancelled do continue
-							
-							pourcent = ( ( i - 1.) / elemSelect.count * 100. )
-							m_rollPrincipal.setProgress ("Rendu détail " + ( i as integer )  as string + "/" + elemSelect.count as string  ) 	pourcent
-							if doesfileexist elem.fichier then( 
-								outils.viderScene()
-								elem.detail = apercu.creer 	elem.fichier detail:true
-								arbo.ecrireFichier()
-								m_rollPrincipal.AfficherElements m_rollPrincipal.noeudSelect					
-								m_rollPrincipal.afficherInfos()
-							)	else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
-							i+=1
-						)
-						
-						if m_rollPrincipal.cancelled then 
-							m_rollPrincipal.setProgress ("Rendu détail : " + elemSelect.count   as string + " aperçus. *Annulé*") 100
-						else 
-							m_rollPrincipal.setProgress ("Rendu détail : " + elemSelect.count   as string + " aperçus.") 100				
-						m_rollPrincipal.cancelled = false
-				
-						m_rollPrincipal.AfficherElements 	m_rollPrincipal.noeudSelect					
-						m_rollPrincipal.afficherInfos()
-						fetchMaxFile quiet:true
-						
-						
-					)
-					
-			)	,
-			
-			
-			
-		-- les methodes  publics ------------------------------------------------
-		public
-			
 			-- debug --
 			fn afficherArbo = arbo.afficher(),
 			
@@ -365,6 +199,186 @@ fn initBiblio = (
 			),
 			
 			
+			fn ouvrirInfos  = (
+					setInfosOuvert 			( not getInfosOuvert () )
+					m_rollPrincipal.ui_btnAfficherInfo.checked = getInfosOuvert ()	
+			-- 		repositionnerElementsUI		UItaille_fenetre
+					case ( getInfosOuvert () ) of (
+						true :	( 
+							createDialog m_rollInfos 	pos:prefs.fenInfos.pos 	lockHeight:false	\
+																	style:#(/*#style_resizing,*/#style_titlebar /*, #style_toolwindow, #style_sysmenu*//*, #style_minimizebox, #style_maximizebox , #style_sunkenedge , #style_sysmenu */)	
+							m_rollInfos.biblio = this
+							m_rollPrincipal.afficherInfos()
+						)
+						false :	try (	DestroyDialog m_rollInfos ) catch ( format  ("rien à destroy\n") )
+					)
+				),
+				
+				
+			fn ouvrirApercus = (
+	-- 				setInfosOuvert 			state
+			-- 		repositionnerElementsUI		UItaille_fenetre
+					case state of (
+						true :	( 
+							createDialog m_rollApercus 
+							m_rollApercus.biblio = this
+						)
+						false :	try (	DestroyDialog m_rollInfos ) catch ( format  ("rien à destroy\n") )
+					)
+				),
+			
+		
+		
+		---- Suppression ----
+			fn  suprimerElems = (
+				if querybox "Etes-vous sûr de vouloir supprimer le ou les élément de la bibliothèque?" do (
+					
+					elemSelect = m_rollPrincipal.elemSelect				
+					if elemSelect.count>0 do (
+						
+						arbo.supprimer 		elemSelect
+						
+						--- maj interface ---
+						m_rollPrincipal.remplirTreeView 	arbo.root
+						m_rollPrincipal.majTotal ()
+						m_rollPrincipal.setProgress ( elemSelect.count as string  + " élément(s) suprimé(s)") 0
+					)
+				)
+			),
+			fn  suprimerNoeud = (
+				if querybox "Etes-vous sûr de vouloir supprimer ce dossier et son contenu de la bibliothèque?" do (
+					noeudSelect = m_rollPrincipal.noeudSelect
+					if noeudSelect.nomUnique != "ROOT" do (
+						
+						arbo.supprimer 	#(noeudSelect)
+						
+						--- maj interface ---
+						m_rollPrincipal.remplirTreeView 	arbo.root
+						m_rollPrincipal.majTotal ()
+						
+					)
+					m_rollPrincipal.setProgress "Dossier suprimé" 0
+				)
+			),
+			
+		----  Nouveau Dossier ----
+			fn nouveauNoeud = (
+				
+				debug "nouveauDossier" 
+				noeudSelect = m_rollPrincipal.noeudSelect
+				if noeudSelect != undefined do (
+					
+					arbo.creerNoeud  nom:"NouveauDossier" 	parent:noeudSelect 
+-- 					arbo.ecrireFichier()
+					
+					--- maj interface ---				
+					m_rollPrincipal.remplirTreeView 	arbo.root
+					m_rollPrincipal.majTotal ()
+					m_rollPrincipal.setProgress "Nouveau dossier" 0
+				)
+				
+			),
+			
+		
+			
+			
+		--- apercus ----		
+			fn creerApercu = (
+				
+				apercu.creer 		m_rollPrincipal.elemSelect
+				/* 
+-- 				---- debug ----
+				local  deb = true
+				
+				elemSelect = m_rollPrincipal.elemSelect
+				if elemSelect.count > 0 do 
+					if querybox "voulez vous créer l'aperçu ?" do (
+						m_rollPrincipal.setProgress "Rendu aperçu ..." 0	
+						m_rollPrincipal.cancelled = false
+						
+						holdMaxFile() 
+						
+						i = 1.
+						for elem in elemSelect do (
+							
+							if m_rollPrincipal.cancelled do continue
+							
+							pourcent = ( ( i - 1.) / elemSelect.count * 100. )
+							m_rollPrincipal.setProgress ("Rendu aperçu " + ( i as integer )  as string + "/" + elemSelect.count as string  ) 	pourcent
+							
+							if doesfileexist elem.fichier then( 
+								outils.viderScene()
+								resetMaxFile #noPrompt
+								elem.apercu = apercu.creer 	elem.fichier
+								arbo.ecrireFichier()
+								m_rollPrincipal.AfficherElements m_rollPrincipal.noeudSelect					
+								m_rollPrincipal.afficherInfos()
+							)	else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
+							i+=1
+						)
+						
+						
+						if m_rollPrincipal.cancelled then 
+							m_rollPrincipal.setProgress ("Rendu détail : " + ( i as integer )  as string + "/" + elemSelect.count as string  + " aperçus. *Annulé*") 100
+						else 
+							m_rollPrincipal.setProgress ("Rendu détail : " + ( i as integer )  as string + "/" + elemSelect.count as string  + " aperçus.") 100				
+						m_rollPrincipal.cancelled = false
+						
+						m_rollPrincipal.AfficherElements 	noeudSelect					
+						m_rollPrincipal.afficherInfos()
+
+						if not deb do 
+						fetchMaxFile quiet:true
+						
+					
+					) */
+			),
+		
+			fn creerDetail  = (
+				apercu.creer  	m_rollPrincipal.elemSelect 	detail:true
+				/* 
+				elemSelect = m_rollPrincipal.elemSelect
+				if elemSelect.count > 0 do 
+					if querybox "voulez vous créer l'aperçu Détail?" do (
+						m_rollPrincipal.setProgress "Rendu détail ..." 0	
+						m_rollPrincipal.cancelled = false
+						
+						holdMaxFile() 
+						i=1.
+						for elem in elemSelect do (
+							
+							if m_rollPrincipal.cancelled do continue
+							
+							pourcent = ( ( i - 1.) / elemSelect.count * 100. )
+							m_rollPrincipal.setProgress ("Rendu détail " + ( i as integer )  as string + "/" + elemSelect.count as string  ) 	pourcent
+							if doesfileexist elem.fichier then( 
+								outils.viderScene()
+								elem.detail = apercu.creer 	elem.fichier detail:true
+								arbo.ecrireFichier()
+								m_rollPrincipal.AfficherElements m_rollPrincipal.noeudSelect					
+								m_rollPrincipal.afficherInfos()
+							)	else format "elem : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
+							i+=1
+						)
+						
+						if m_rollPrincipal.cancelled then 
+							m_rollPrincipal.setProgress ("Rendu détail : " + elemSelect.count   as string + " aperçus. *Annulé*") 100
+						else 
+							m_rollPrincipal.setProgress ("Rendu détail : " + elemSelect.count   as string + " aperçus.") 100				
+						m_rollPrincipal.cancelled = false
+				
+						m_rollPrincipal.AfficherElements 	m_rollPrincipal.noeudSelect					
+						m_rollPrincipal.afficherInfos()
+						fetchMaxFile quiet:true
+						
+						
+					) */
+					
+			)	,
+			
+			
+			
+			
 	private
 			
 			---- l'initialisation globale ----
@@ -416,12 +430,18 @@ initBiblio ()
 /* 
 bibliotheque.ouvrirFenetre()
 roll = bibliotheque.m_rollPrincipal
+
  */
 -- bibliotheque.arbo.afficher()
 
 /*
-show roll.ui_listeVue.RightToLeft
+lv = roll.ui_listeVue
+show lv.Margin
 
+
+show roll.ui_listeVue
+showmethods  roll.ui_listeVue
+lv.Margin.All
 roll.ui_listeVue.RightToLeft.value__
 
 roll.ui_listeVue.margin.all = 1

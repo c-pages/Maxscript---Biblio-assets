@@ -29,6 +29,7 @@ struct prefsApercus (
 	nomCalqueImport 			= "ImportTemp",
 	dossier 							= "C:\\Users\\kris\\AppData\\Local\\Autodesk\\3dsMax\\2017 - 64bit\\ENU\\scripts\\biblio\\apercus",
 	dossierImport 				=	"C:\Users\kris\Documents\donnees 3D",
+	afficherVFB					= false,
 	
 	convertToCoronaMats 	= true,
 	taille								= [256,256],	

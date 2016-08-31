@@ -83,8 +83,11 @@ struct Menus (
 						bibliotheque.importer.proxy 	elemSelect
 				)
 				
-				on ouvirFichier picked do		
-					debug "ouvirFichier" 
+				on ouvirFichier picked do		(	
+					debug "importer" 
+					elemSelect = bibliotheque.m_rollPrincipal.elemSelect
+					if elemSelect.count>0 do loadMaxFile elemSelect[1].fichier
+				)
 				
 				on supprimer picked do			
 					bibliotheque.suprimerElems ()
@@ -151,9 +154,9 @@ struct Menus (
 					bibliotheque.suprimerNoeud()
 				
 				on m_afficherInfos picked do	
-					bibliotheque.afficherInfos()
+					bibliotheque.ouvrirInfos()
 				on m_afficherApercus picked do	
-					bibliotheque.afficherApercus()
+					bibliotheque.ouvrirApercus()
 				
 				on m_resetPreferences picked do 
 					if queryBox "Etes-vous sûr de vouloir réinitialiser les préférences de la bibliotheque ?" do

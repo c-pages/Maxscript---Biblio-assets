@@ -95,6 +95,12 @@ struct Import (
 			decalPointSuivant = [0,0,0]
 			ptsResult = #()
 			
+		/*	escapeEnable = true
+			progressStart "caption"
+			progressUpdate <percent>  
+			getProgressCancel() 
+			progressEnd()  */			
+			
 			for elem in elemSelect do (
 				
 				if m_rollout.cancelled do continue
@@ -121,7 +127,6 @@ struct Import (
 					append ptsResult pt
 					move pt 	decalPointSuivant
 					decalPointSuivant += [ m_espacement + pt.size , 0 , 0 ]
-					
 					
 				)	else format "ERREUR : % n'as pas de fichier valide : %\n" elem.nom elem.fichier
 				i+=1
@@ -211,11 +216,12 @@ struct Ajout (
 				-- le nom --
 				_nom = getFilenameFile  fichierMax
 				
-				-- apercu --
-				_apercu = biblio.apercu.creer 	fichierMax
 				
 				-- creation de l'element dans l'arbo ---
 				nouvelAsset = biblio.arbo.creerElement 	nom:_nom  type:#model	fichier:fichierMax  apercu:_apercu	parent:noeudParent
+				
+				-- apercu --
+				_apercu = biblio.apercu.creer 	#(nouvelAsset)
 				
 				nouvelAsset.nbrVertex = biblio.outils.compterVertex  (objects as array )
 				
